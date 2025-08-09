@@ -63,98 +63,82 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
         duration: const Duration(milliseconds: 120),
         builder: (_, width, child) => child!,
 
-        child: Stack(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: Theme.of(context).dividerColor),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 40),
-                child: ClipRect(
-                  child: NavigationRail(
-                    selectedIconTheme: IconThemeData(color: Colors.white),
-                    indicatorColor: ColorConsts.primaryColor,
-                    extended: _expanded,
-                    selectedIndex: _selectedIndex(uri),
-                    onDestinationSelected: _onSelect,
-                    destinations: [
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.home_outlined),
-                        label: _animatedLabel(routerConsts.dashboard.name),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.schedule_outlined),
-                        label: _animatedLabel(routerConsts.attendance.name),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.people_outline),
-                        label: _animatedLabel(
-                          routerConsts.freelancerMangement.name,
-                        ),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.search),
-                        label: _animatedLabel(routerConsts.courses.name),
-                      ),
-                    ],
-                    trailing: Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                icon: Icon(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(color: Theme.of(context).dividerColor),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 40),
+            child: ClipRect(
+              child: NavigationRail(
+                selectedIconTheme: IconThemeData(color: Colors.white),
+                indicatorColor: ColorConsts.primaryColor,
+                extended: _expanded,
+                selectedIndex: _selectedIndex(uri),
+                onDestinationSelected: _onSelect,
+                destinations: [
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.home_outlined),
+                    label: _animatedLabel(routerConsts.dashboard.name),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.schedule_outlined),
+                    label: _animatedLabel(routerConsts.attendance.name),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.people_outline),
+                    label: _animatedLabel(
+                      routerConsts.freelancerMangement.name,
+                    ),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.search),
+                    label: _animatedLabel(routerConsts.courses.name),
+                  ),
+                ],
+                trailing: Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              themeMode == ThemeMode.dark
+                                  ? Icons.dark_mode
+                                  : Icons.light_mode,
+                            ),
+                            tooltip: 'Toggle theme',
+                            onPressed: () {
+                              ref.read(themeModeProvider.notifier).state =
                                   themeMode == ThemeMode.dark
-                                      ? Icons.dark_mode
-                                      : Icons.light_mode,
-                                ),
-                                tooltip: 'Toggle theme',
-                                onPressed: () {
-                                  ref.read(themeModeProvider.notifier).state =
-                                      themeMode == ThemeMode.dark
-                                          ? ThemeMode.light
-                                          : ThemeMode.dark;
-                                },
-                              ),
-                              const SizedBox(height: 5),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Row(
-                                  children: [
-                                    const Icon(Icons.logout),
-                                    const SizedBox(width: 5),
-                                    _animatedLabel('Logout'),
-                                  ],
-                                ),
-                              ),
-                            ],
+                                      ? ThemeMode.light
+                                      : ThemeMode.dark;
+                            },
                           ),
-                        ),
+                          const SizedBox(height: 5),
+                          IconButton(
+                            onPressed: () {},
+                            icon: Row(
+                              children: [
+                                const Icon(Icons.logout),
+                                const SizedBox(width: 5),
+                                _animatedLabel('Logout'),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-            Positioned(
-              right: 1,
-              top: 10,
-              child: IconButton(
-                icon: Icon(
-                  _pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                  size: 20,
-                ),
-                onPressed: () => setState(() => _pinned = !_pinned),
-                tooltip: _pinned ? 'Unpin' : 'Pin',
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
