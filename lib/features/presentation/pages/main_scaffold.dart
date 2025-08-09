@@ -11,11 +11,24 @@ class MainScaffold extends StatelessWidget {
     return Scaffold(
       body: ClipRect(
         child: Material(
-          child: Row(
+          child: Stack(
             children: [
-              const AnimatedNavRail(),
-              VerticalDivider(),
-              Expanded(child: child),
+              // Background content
+              Row(
+                children: [
+                  SizedBox(width: 72),
+                  VerticalDivider(),
+                  Expanded(child: child),
+                ],
+              ),
+
+              // This will now be painted on top of everything
+              const Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: AnimatedNavRail(),
+              ),
             ],
           ),
         ),

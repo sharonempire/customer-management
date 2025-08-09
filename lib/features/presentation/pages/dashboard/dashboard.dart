@@ -65,182 +65,193 @@ class _DashboardState extends ConsumerState<Dashboard> {
           ),
           body: Padding(
             padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(20),
-                  height: 130,
-                  constraints: BoxConstraints(minWidth: double.infinity),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          H1Widget(
-                            color: Colors.black,
-                            title: 'Welcome back, John Doe  👋',
-                          ),
-                          height5,
-                          Text(
-                            "Here’s what’s happening with your leads and courses today",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          height5,
-                          Text(
-                            "Monday, July 28, 2025",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            "Last updated",
-                            style: myTextstyle(color: Colors.grey),
-                          ),
-                          height5,
-                          Text(
-                            "2 min ago",
-                            style: myTextstyle(color: ColorConsts.activeColor),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                height20,
-                Container(
-                  padding: EdgeInsets.all(20),
-                  height: 200,
-                  constraints: BoxConstraints(minWidth: double.infinity),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          ImageIconContainer(image: ImageConsts.targetIcon),
-                          width5,
-                          H2Widget(
-                            color: ColorConsts.secondaryColor,
-                            title: "Today's Goals",
-                          ),
-                        ],
-                      ),
-                      height20,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(3, (index) {
-                          return Container(
-                            padding: EdgeInsets.all(12),
-                            width: eachContainerWidth,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    height: 130,
+                    constraints: BoxConstraints(minWidth: double.infinity),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            H1Widget(
+                              color: Colors.black,
+                              title: 'Welcome back, John Doe  👋',
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      'New Leads',
-                                      style: myTextstyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
+                            height5,
+                            Text(
+                              "Here’s what’s happening with your leads and courses today",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            height5,
+                            Text(
+                              "Monday, July 28, 2025",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                              "Last updated",
+                              style: myTextstyle(color: Colors.grey),
+                            ),
+                            height5,
+                            Text(
+                              "2 min ago",
+                              style: myTextstyle(
+                                color: ColorConsts.activeColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  height20,
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    height: 200,
+                    constraints: BoxConstraints(minWidth: double.infinity),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            ImageIconContainer(image: ImageConsts.targetIcon),
+                            width5,
+                            H2Widget(
+                              color: ColorConsts.secondaryColor,
+                              title: "Today's Goals",
+                            ),
+                          ],
+                        ),
+                        height20,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(3, (index) {
+                            return Container(
+                              padding: EdgeInsets.all(12),
+                              width: eachContainerWidth,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'New Leads',
+                                        style: myTextstyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
                                       ),
-                                    ),
-                                    Spacer(),
-                                    Text(
-                                      '12/25',
-                                      style: myTextstyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
+                                      Spacer(),
+                                      Text(
+                                        '12/25',
+                                        style: myTextstyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                height10,
-                                LinearProgressionBar(
-                                  eachContainerWidth: eachContainerWidth,
-                                ),
-                                height10,
-                                Text(
-                                  '8 more to reach goal',
-                                  style: myTextstyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.grey,
+                                    ],
                                   ),
+                                  height10,
+                                  LinearProgressionBar(
+                                    eachContainerWidth: eachContainerWidth,
+                                  ),
+                                  height10,
+                                  Text(
+                                    '8 more to reach goal',
+                                    style: myTextstyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                  height20,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(4, (index) {
+                      return Container(
+                        padding: EdgeInsets.all(18),
+                        width: eachContainerWidth / 1.3,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'New Leads',
+                                  style: myTextstyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                Spacer(),
+                                ImageIconContainer(
+                                  image:
+                                      index == 0
+                                          ? ImageConsts.phoneIcon
+                                          : index == 1
+                                          ? ImageConsts.freelancerIcon
+                                          : index == 2
+                                          ? ImageConsts.counsellorIcon
+                                          : ImageConsts.performanceIcon,
+                                  size: 28,
                                 ),
                               ],
                             ),
-                          );
-                        }),
-                      ),
-                    ],
+                            Text(
+                              "329",
+                              style: myTextstyle(
+                                color: Colors.black,
+                                fontSize: 32,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            height10,
+                            Text(
+                              'vs last month',
+                              style: myTextstyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   ),
-                ),
-                height20,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(4, (index) {
-                    return Container(
-                      padding: EdgeInsets.all(18),
-                      width: eachContainerWidth / 1.3,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'New Leads',
-                                style: myTextstyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              Spacer(),
-                              ImageIconContainer(
-                                image: ImageConsts.targetIcon,
-                                size: 28,
-                              ),
-                            ],
-                          ),
-                          Text(
-                            "329",
-                            style: myTextstyle(
-                              color: Colors.black,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          height10,
-                          Text(
-                            'vs last month',
-                            style: myTextstyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
