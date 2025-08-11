@@ -33,19 +33,12 @@ class RouterConsts {
     return const Dashboard();
   });
 
-    final RouteModel enquiries = RouteModel('/enquiries', 'Enquiries', (
+  final RouteModel enquiries = RouteModel('/enquiries', 'Enquiries', (
     context,
     state,
   ) {
     return const Enquiries();
   });
-
-  // final RouteModel courses = RouteModel('/courses', 'Course Finder', (
-  //   context,
-  //   state,
-  // ) {
-  //   return const CoursesScreen();
-  // });
 }
 
 class RouteModel {
