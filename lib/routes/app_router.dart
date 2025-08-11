@@ -34,14 +34,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: routeConsts.attendance.builder,
           ),
           GoRoute(
+            path: routeConsts.enquiries.route,
+            name: routeConsts.enquiries.name,
+            builder: routeConsts.enquiries.builder,
+          ),
+          GoRoute(
             path: routeConsts.freelancerMangement.route,
             name: routeConsts.freelancerMangement.name,
             builder: routeConsts.freelancerMangement.builder,
-          ),
-          GoRoute(
-            path: routeConsts.courses.route,
-            name: routeConsts.courses.name,
-            builder: routeConsts.courses.builder,
           ),
         ],
       ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/presentation/pages/attendance/attendance.dart';
 import 'package:management_software/features/presentation/pages/auth/login_page.dart';
-import 'package:management_software/features/presentation/pages/courses/courses.dart';
 import 'package:management_software/features/presentation/pages/dashboard/dashboard.dart';
+import 'package:management_software/features/presentation/pages/enquiries/enquiries.dart';
 import 'package:management_software/features/presentation/pages/freelancer_mangement/freelancer_mangement.dart';
 
 class RouterConsts {
@@ -33,12 +33,19 @@ class RouterConsts {
     return const Dashboard();
   });
 
-  final RouteModel courses = RouteModel('/courses', 'Course Finder', (
+    final RouteModel enquiries = RouteModel('/enquiries', 'Enquiries', (
     context,
     state,
   ) {
-    return const CoursesScreen();
+    return const Enquiries();
   });
+
+  // final RouteModel courses = RouteModel('/courses', 'Course Finder', (
+  //   context,
+  //   state,
+  // ) {
+  //   return const CoursesScreen();
+  // });
 }
 
 class RouteModel {

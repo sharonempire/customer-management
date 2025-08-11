@@ -22,10 +22,8 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
   int _selectedIndex(String loc) =>
       loc.startsWith(routerConsts.attendance.route)
           ? 1
-          : loc.startsWith(routerConsts.freelancerMangement.route)
+          : loc.startsWith(routerConsts.enquiries.route)
           ? 2
-          : loc.startsWith(routerConsts.courses.route)
-          ? 3
           : 0;
 
   void _onSelect(int i) {
@@ -36,12 +34,8 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
       case 1:
         context.go(routerConsts.attendance.route);
         break;
-
       case 2:
-        context.go(routerConsts.freelancerMangement.route);
-        break;
-      case 3:
-        context.go(routerConsts.courses.route);
+        context.go(routerConsts.enquiries.route);
         break;
     }
   }
@@ -92,14 +86,8 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
                         label: _animatedLabel(routerConsts.attendance.name),
                       ),
                       NavigationRailDestination(
-                        icon: const Icon(Icons.people_outline),
-                        label: _animatedLabel(
-                          routerConsts.freelancerMangement.name,
-                        ),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.search),
-                        label: _animatedLabel(routerConsts.courses.name),
+                        icon: const Icon(Icons.call_outlined),
+                        label: _animatedLabel(routerConsts.enquiries.name),
                       ),
                     ],
                     trailing: Expanded(
