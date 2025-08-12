@@ -29,54 +29,85 @@ class AttendanceTableWidget extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16),
-
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Table(
-              columnWidths: const {
-                0: FlexColumnWidth(2),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(2),
-                3: FlexColumnWidth(2),
-                4: FlexColumnWidth(1.5),
-              },
-              border: TableBorder(
-                horizontalInside: BorderSide(
-                  color: Colors.grey.shade300,
-                  width: 1,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Table(
+                columnWidths: const {
+                  0: FlexColumnWidth(1), // ID
+                  1: FlexColumnWidth(2), // Lead Name
+                  2: FlexColumnWidth(2), // Freelancer Manager
+                  3: FlexColumnWidth(2), // Freelancer
+                  4: FlexColumnWidth(1.5), // Source
+                  5: FlexColumnWidth(2), // Phone
+                  6: FlexColumnWidth(1.5), // Status
+                  7: FlexColumnWidth(2), // Follow-up Date
+                  8: FlexColumnWidth(3), // Remark
+                  9: FlexColumnWidth(2), // Assigned Staff
+                  10: FlexColumnWidth(1.5), // Actions
+                },
+                border: TableBorder(
+                  horizontalInside: BorderSide(
+                    color: Colors.grey.shade300,
+                    width: 1,
+                  ),
+                  bottom: BorderSide(color: Colors.grey.shade300, width: 1),
                 ),
-                bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+                children: [
+                  /// Header Row
+                  TableRow(
+                    decoration: BoxDecoration(color: Colors.grey.shade100),
+                    children: [
+                      tableHeaderCell("ID"),
+                      tableHeaderCell("Lead Name"),
+                      tableHeaderCell("Freelancer Manager"),
+                      tableHeaderCell("Freelancer"),
+                      tableHeaderCell("Source"),
+                      tableHeaderCell("Phone"),
+                      tableHeaderCell("Status"),
+                      tableHeaderCell("Follow-up Date"),
+                      tableHeaderCell("Remark"),
+                      tableHeaderCell("Assigned Staff"),
+                      tableHeaderCell("Actions"),
+                    ],
+                  ),
+
+                  /// Example Data Row
+                  TableRow(
+                    children: [
+                      tableCell("1"),
+                      tableCell("John Doe"),
+                      tableCell("Alice Smith"),
+                      tableCell("Mike Johnson"),
+                      tableCell("LinkedIn"),
+                      tableCell("+1 555-1234"),
+                      statusCell("Active", Colors.green),
+                      tableCell("2025-08-15"),
+                      tableCell("Interested in package B"),
+                      tableCell("Sarah Parker"),
+                      actionCell("View"),
+                    ],
+                  ),
+
+                  /// Another Example Row
+                  TableRow(
+                    children: [
+                      tableCell("2"),
+                      tableCell("Jane Roe"),
+                      tableCell("Robert White"),
+                      tableCell("Emma Brown"),
+                      tableCell("Referral"),
+                      tableCell("+1 555-5678"),
+                      statusCell("Pending", Colors.orange),
+                      tableCell("2025-08-18"),
+                      tableCell("Waiting for documents"),
+                      tableCell("James Lee"),
+                      actionCell("View"),
+                    ],
+                  ),
+                ],
               ),
-              children: [
-                TableRow(
-                  decoration: BoxDecoration(color: Colors.grey.shade100),
-                  children: [
-                    _tableHeaderCell("Name"),
-                    _tableHeaderCell("Role"),
-                    _tableHeaderCell("Check-In Time"),
-                    _tableHeaderCell("Status"),
-                    _tableHeaderCell("Action"),
-                  ],
-                ),
-                TableRow(
-                  children: [
-                    _tableCell("John Doe"),
-                    _tableCell("Counsellor"),
-                    _tableCell("09:15AM"),
-                    _statusCell("Present", Colors.green),
-                    _actionCell("View History"),
-                  ],
-                ),
-                TableRow(
-                  children: [
-                    _tableCell("John Doe"),
-                    _tableCell("Counsellor"),
-                    _tableCell("09:15AM"),
-                    _statusCell("Present", Colors.green),
-                    _actionCell("View History"),
-                  ],
-                ),
-              ],
             ),
           ),
         ],
@@ -85,7 +116,7 @@ class AttendanceTableWidget extends StatelessWidget {
   }
 }
 
-Widget _tableHeaderCell(String text) {
+Widget tableHeaderCell(String text) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0),
     child: Text(
@@ -95,14 +126,14 @@ Widget _tableHeaderCell(String text) {
   );
 }
 
-Widget _tableCell(String text) {
+Widget tableCell(String text) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0),
     child: Text(text, style: TextStyle(color: Colors.black87)),
   );
 }
 
-Widget _statusCell(String status, Color color) {
+Widget statusCell(String status, Color color) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0),
     child: Text(
@@ -112,7 +143,7 @@ Widget _statusCell(String status, Color color) {
   );
 }
 
-Widget _actionCell(String label) {
+Widget actionCell(String label) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4.0),
     child: TextButton(

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
-import 'package:management_software/shared/providers/theme_providers.dart';
 
 class AnimatedNavRail extends ConsumerStatefulWidget {
   const AnimatedNavRail({super.key});
@@ -42,7 +41,6 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeModeProvider);
     final uri = GoRouterState.of(context).uri.toString();
 
     return MouseRegion(
@@ -90,44 +88,6 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
                         label: _animatedLabel(routerConsts.enquiries.name),
                       ),
                     ],
-                    trailing: Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  themeMode == ThemeMode.dark
-                                      ? Icons.dark_mode
-                                      : Icons.light_mode,
-                                ),
-                                tooltip: 'Toggle theme',
-                                onPressed: () {
-                                  ref.read(themeModeProvider.notifier).state =
-                                      themeMode == ThemeMode.dark
-                                          ? ThemeMode.light
-                                          : ThemeMode.dark;
-                                },
-                              ),
-                              const SizedBox(height: 5),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Row(
-                                  children: [
-                                    const Icon(Icons.logout),
-                                    const SizedBox(width: 5),
-                                    _animatedLabel('Logout'),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
