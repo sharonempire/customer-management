@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/presentation/pages/attendance/widgets/attendance_table.dart';
+import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
+import 'package:management_software/features/presentation/pages/lead_management/widgets/search_lead_widget.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart'
     show CommonAppbar;
-import 'package:management_software/features/presentation/widgets/common_dropdowns.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
@@ -35,88 +36,75 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
           child: CommonAppbar(title: "Lead Management"),
         ),
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+          child: SingleChildScrollView(
+            // ✅ Makes the whole screen scrollable
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        "Track and manage student enquiries and follow-ups",
+                        style: myTextstyle(),
+                      ),
+                      const Spacer(),
+                      PrimaryButton(
+                        onpressed: () {},
+                        icon: Icons.add,
+                        text: "New Lead",
+                      ),
+                    ],
+                  ),
+                  height30,
+                  SearchLeadsWidget(),
+                  height20,
+                  LeadFiltersWidget(),
+                  height20,
+                  Center(
+                    child: Container(
+                      height: 50,
+                      width: screenWidth / 2.5,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: ColorConsts.backgroundColorScaffold,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TabBar(
+                        tabs: const [
+                          Tab(text: "Current Follow ups"),
+                          Tab(text: "New Enquiries"),
+                        ],
+                        indicator: BoxDecoration(
+                          color: ColorConsts.primaryColor,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                  height20,
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    child: TabBarView(
                       children: [
-                        Text(
-                          "Track and manage student enquiries and follow-ups",
-                          style: myTextstyle(),
-                        ),
-                        const Spacer(),
-                        PrimaryButton(
-                          onpressed: () {},
-                          icon: Icons.add,
-                          text: "New Lead",
-                        ),
+                        Column(children: [LeadListingWidget()]),
+                        Column(children: [LeadListingWidget()]),
                       ],
                     ),
-                    height30,
-                    SearchLeadsWidget(),
-                    height20,
-                    LeadFiltersWidget(),
-                    height20,
-                    Center(
-                      child: Container(
-                        height: 50,
-                        width: screenWidth / 2.5,
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color:
-                              ColorConsts
-                                  .backgroundColorScaffold, // grey background
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TabBar(
-                          tabs: const [
-                            Tab(text: "Current Follow ups"),
-                            Tab(text: "New Enquiries"),
-                          ],
-                          indicator: BoxDecoration(
-                            color: ColorConsts.primaryColor,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          labelColor: Colors.white,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          unselectedLabelStyle: const TextStyle(
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: TabBarView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: SingleChildScrollView(
-                        child: Column(children: [LeadListingWidget()]),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: SingleChildScrollView(
-                        child: Column(children: [LeadListingWidget()]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -127,29 +115,108 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
 class LeadListingWidget extends StatelessWidget {
   const LeadListingWidget({super.key});
 
+  void _showLeadDetails(BuildContext context, Map<String, String> lead) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text("Lead Details"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children:
+                  lead.entries
+                      .map((e) => Text("${e.key}: ${e.value}"))
+                      .toList(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Close"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  TableRow _clickableRow(BuildContext context, Map<String, String> lead) {
+    return TableRow(
+      children: [
+        _clickableCell(context, lead, lead["ID"]!),
+        _clickableCell(context, lead, lead["Lead Name"]!),
+        _clickableCell(context, lead, lead["Freelancer Manager"]!),
+        _clickableCell(context, lead, lead["Freelancer"]!),
+        _clickableCell(context, lead, lead["Source"]!),
+        _clickableCell(context, lead, lead["Phone"]!),
+        _clickableCell(context, lead, lead["Status"]!),
+        _clickableCell(context, lead, lead["Follow-up Date"]!),
+        _clickableCell(context, lead, lead["Remark"]!),
+        _clickableCell(context, lead, lead["Assigned Staff"]!),
+      ],
+    );
+  }
+
+  Widget _clickableCell(
+    BuildContext context,
+    Map<String, String> lead,
+    String text,
+  ) {
+    return InkWell(
+      onTap: () => _showLeadDetails(context, lead),
+      child: Padding(padding: const EdgeInsets.all(8.0), child: Text(text)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final leads = [
+      {
+        "ID": "1",
+        "Lead Name": "John Doe",
+        "Freelancer Manager": "Alice Smith",
+        "Freelancer": "Mike Johnson",
+        "Source": "LinkedIn",
+        "Phone": "+1 555-1234",
+        "Status": "Active",
+        "Follow-up Date": "2025-08-15",
+        "Remark": "Interested in package B",
+        "Assigned Staff": "Sarah Parker",
+      },
+      {
+        "ID": "2",
+        "Lead Name": "Jane Roe",
+        "Freelancer Manager": "Robert White",
+        "Freelancer": "Emma Brown",
+        "Source": "Referral",
+        "Phone": "+1 555-5678",
+        "Status": "Pending",
+        "Follow-up Date": "2025-08-18",
+        "Remark": "Waiting for documents",
+        "Assigned Staff": "James Lee",
+      },
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Table(
         columnWidths: const {
-          0: FlexColumnWidth(1.5),
+          0: FlexColumnWidth(1),
           1: FlexColumnWidth(2),
-          2: FlexColumnWidth(2.5),
+          2: FlexColumnWidth(2),
           3: FlexColumnWidth(2),
-          4: FlexColumnWidth(2),
+          4: FlexColumnWidth(1.5),
           5: FlexColumnWidth(2),
-          6: FlexColumnWidth(2),
+          6: FlexColumnWidth(1.5),
           7: FlexColumnWidth(2),
-          8: FlexColumnWidth(2),
+          8: FlexColumnWidth(3),
           9: FlexColumnWidth(2),
-          10: FlexColumnWidth(1.5),
         },
         border: TableBorder(
           horizontalInside: BorderSide(color: Colors.grey.shade300, width: 1),
           bottom: BorderSide(color: Colors.grey.shade300, width: 1),
         ),
         children: [
+          // Header Row
           TableRow(
             decoration: BoxDecoration(color: Colors.grey.shade100),
             children: [
@@ -160,177 +227,13 @@ class LeadListingWidget extends StatelessWidget {
               tableHeaderCell("Source"),
               tableHeaderCell("Phone"),
               tableHeaderCell("Status"),
-              tableHeaderCell("Follow Up Date"),
-              tableHeaderCell("Action"),
+              tableHeaderCell("Follow-up Date"),
+              tableHeaderCell("Remark"),
+              tableHeaderCell("Assigned Staff"),
             ],
           ),
-          TableRow(
-            children: [
-              tableCell("0001"),
-              tableCell("John Doe"),
-              tableCell("Sarah Smith"),
-              tableCell("John honaai"),
-              tableCell("Website"),
-              tableCell("Counsellor"),
-              tableCell("09:15AM"),
-              statusCell("Present", Colors.green),
-              actionCell("View History"),
-            ],
-          ),
-          TableRow(
-            children: [
-              tableCell("0001"),
-              tableCell("John Doe"),
-              tableCell("Sarah Smith"),
-              tableCell("John honaai"),
-              tableCell("Website"),
-              tableCell("Counsellor"),
-              tableCell("09:15AM"),
-              statusCell("Present", Colors.green),
-              actionCell("View History"),
-            ],
-          ),
+          for (var lead in leads) _clickableRow(context, lead),
         ],
-      ),
-    );
-  }
-}
-
-class LeadFiltersWidget extends StatelessWidget {
-  const LeadFiltersWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        child: Row(
-          children: [
-            width10,
-            Expanded(
-              child: _dropdownColumn(
-                "Source",
-                "Select Source",
-                '',
-                [],
-                (value) {},
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _dropdownColumn(
-                "Status",
-                "Select Status",
-                '',
-                [],
-                (value) {},
-              ),
-            ),
-            width10,
-            Expanded(
-              child: _dropdownColumn(
-                "Freelancer",
-                "Select Status",
-                '',
-                [],
-                (value) {},
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _dropdownColumn(
-                "Lead Type",
-                "Select Owner",
-                '',
-                [],
-                (value) {},
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _dropdownColumn(
-                "Period",
-                "Select Priority",
-                '',
-                [],
-                (value) {},
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Widget _dropdownColumn(
-  String label,
-  String hint,
-  String value,
-  List<String> items,
-  Function(String?) onChanged,
-) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: myTextstyle(color: Colors.grey, fontSize: 14)),
-      SizedBox(height: 5),
-      dropdownField(
-        label: hint,
-        value: value,
-        items: items,
-        onChanged: onChanged,
-      ),
-    ],
-  );
-}
-
-class SearchLeadsWidget extends StatelessWidget {
-  const SearchLeadsWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 350,
-              height: 28,
-              child: TextField(
-                decoration: InputDecoration(
-                  labelText: "Search Leads...",
-                  labelStyle: TextStyle(color: Colors.grey, fontSize: 12),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey, size: 18),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 0,
-                    horizontal: 8,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey, width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey, width: 1.5),
-                  ),
-                ),
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

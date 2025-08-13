@@ -29,85 +29,54 @@ class AttendanceTableWidget extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16),
+
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Table(
-                columnWidths: const {
-                  0: FlexColumnWidth(1), // ID
-                  1: FlexColumnWidth(2), // Lead Name
-                  2: FlexColumnWidth(2), // Freelancer Manager
-                  3: FlexColumnWidth(2), // Freelancer
-                  4: FlexColumnWidth(1.5), // Source
-                  5: FlexColumnWidth(2), // Phone
-                  6: FlexColumnWidth(1.5), // Status
-                  7: FlexColumnWidth(2), // Follow-up Date
-                  8: FlexColumnWidth(3), // Remark
-                  9: FlexColumnWidth(2), // Assigned Staff
-                  10: FlexColumnWidth(1.5), // Actions
-                },
-                border: TableBorder(
-                  horizontalInside: BorderSide(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
-                  bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+            child: Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(2),
+                2: FlexColumnWidth(2),
+                3: FlexColumnWidth(2),
+                4: FlexColumnWidth(1.5),
+              },
+              border: TableBorder(
+                horizontalInside: BorderSide(
+                  color: Colors.grey.shade300,
+                  width: 1,
                 ),
-                children: [
-                  /// Header Row
-                  TableRow(
-                    decoration: BoxDecoration(color: Colors.grey.shade100),
-                    children: [
-                      tableHeaderCell("ID"),
-                      tableHeaderCell("Lead Name"),
-                      tableHeaderCell("Freelancer Manager"),
-                      tableHeaderCell("Freelancer"),
-                      tableHeaderCell("Source"),
-                      tableHeaderCell("Phone"),
-                      tableHeaderCell("Status"),
-                      tableHeaderCell("Follow-up Date"),
-                      tableHeaderCell("Remark"),
-                      tableHeaderCell("Assigned Staff"),
-                      tableHeaderCell("Actions"),
-                    ],
-                  ),
-
-                  /// Example Data Row
-                  TableRow(
-                    children: [
-                      tableCell("1"),
-                      tableCell("John Doe"),
-                      tableCell("Alice Smith"),
-                      tableCell("Mike Johnson"),
-                      tableCell("LinkedIn"),
-                      tableCell("+1 555-1234"),
-                      statusCell("Active", Colors.green),
-                      tableCell("2025-08-15"),
-                      tableCell("Interested in package B"),
-                      tableCell("Sarah Parker"),
-                      actionCell("View"),
-                    ],
-                  ),
-
-                  /// Another Example Row
-                  TableRow(
-                    children: [
-                      tableCell("2"),
-                      tableCell("Jane Roe"),
-                      tableCell("Robert White"),
-                      tableCell("Emma Brown"),
-                      tableCell("Referral"),
-                      tableCell("+1 555-5678"),
-                      statusCell("Pending", Colors.orange),
-                      tableCell("2025-08-18"),
-                      tableCell("Waiting for documents"),
-                      tableCell("James Lee"),
-                      actionCell("View"),
-                    ],
-                  ),
-                ],
+                bottom: BorderSide(color: Colors.grey.shade300, width: 1),
               ),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.grey.shade100),
+                  children: [
+                    tableHeaderCell("Name"),
+                    tableHeaderCell("Role"),
+                    tableHeaderCell("Check-In Time"),
+                    tableHeaderCell("Status"),
+                    tableHeaderCell("Action"),
+                  ],
+                ),
+                TableRow(
+                  children: [
+                    tableCell("John Doe"),
+                    tableCell("Counsellor"),
+                    tableCell("09:15AM"),
+                    statusCell("Present", Colors.green),
+                    actionCell("View History"),
+                  ],
+                ),
+                TableRow(
+                  children: [
+                    tableCell("John Doe"),
+                    tableCell("Counsellor"),
+                    tableCell("09:15AM"),
+                    statusCell("Present", Colors.green),
+                    actionCell("View History"),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

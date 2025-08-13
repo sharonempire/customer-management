@@ -13,7 +13,6 @@ class MainScaffold extends StatelessWidget {
         child: Material(
           child: Stack(
             children: [
-              // Background content
               Row(
                 children: [
                   SizedBox(width: 72),
@@ -21,8 +20,6 @@ class MainScaffold extends StatelessWidget {
                   Expanded(child: child),
                 ],
               ),
-
-              // This will now be painted on top of everything
               const Positioned(
                 left: 0,
                 top: 0,
