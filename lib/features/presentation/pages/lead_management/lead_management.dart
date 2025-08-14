@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/presentation/pages/attendance/widgets/attendance_table.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/lead_details.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/search_lead_widget.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart'
@@ -118,24 +119,7 @@ class LeadListingWidget extends StatelessWidget {
   void _showLeadDetails(BuildContext context, Map<String, String> lead) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text("Lead Details"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  lead.entries
-                      .map((e) => Text("${e.key}: ${e.value}"))
-                      .toList(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Close"),
-              ),
-            ],
-          ),
+      builder: (context) => LeaadDetailsPopup(context: context),
     );
   }
 

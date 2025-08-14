@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:management_software/features/presentation/widgets/image_icon.dart';
+import 'package:management_software/shared/consts/images.dart';
 import '../widgets/animated_navigation_rail.dart';
 
 class MainScaffold extends StatelessWidget {
@@ -15,11 +17,24 @@ class MainScaffold extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  SizedBox(width: 72),
-                  VerticalDivider(),
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: 79,
+                        child: Center(
+                          child: ImageIconContainer(
+                            size: 45,
+                            image: ImageConsts.logo,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const VerticalDivider(width: 2.5),
                   Expanded(child: child),
                 ],
               ),
+
               const Positioned(
                 left: 0,
                 top: 0,
