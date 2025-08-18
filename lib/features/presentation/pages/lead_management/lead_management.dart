@@ -54,7 +54,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
                       const Spacer(),
                       PrimaryButton(
                         onpressed: () {
-                          context.push(
+                          context.go(
                             '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
                           );
                         },
