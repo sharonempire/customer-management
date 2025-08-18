@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:management_software/features/presentation/pages/attendance/widgets/attendance_table.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_details.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
@@ -8,6 +9,7 @@ import 'package:management_software/features/presentation/widgets/common_appbar.
     show CommonAppbar;
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
+import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
@@ -38,7 +40,6 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            // ✅ Makes the whole screen scrollable
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -52,7 +53,11 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
                       ),
                       const Spacer(),
                       PrimaryButton(
-                        onpressed: () {},
+                        onpressed: () {
+                          context.push(
+                            '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
+                          );
+                        },
                         icon: Icons.add,
                         text: "New Lead",
                       ),

@@ -5,6 +5,7 @@ import 'package:management_software/features/presentation/pages/auth/login_page.
 import 'package:management_software/features/presentation/pages/dashboard/dashboard.dart';
 import 'package:management_software/features/presentation/pages/lead_management/lead_management.dart';
 import 'package:management_software/features/presentation/pages/freelancer_mangement/freelancer_mangement.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 
 class RouterConsts {
   final RouteModel login = RouteModel('/login', 'Login', (context, state) {
@@ -40,6 +41,13 @@ class RouterConsts {
       return const LeadManagement();
     },
   );
+
+  final RouteModel leadInfo = RouteModel('lead-info', 'Lead Info', (
+    context,
+    state,
+  ) {
+    return const LeadInfoPopup();
+  });
 }
 
 class RouteModel {

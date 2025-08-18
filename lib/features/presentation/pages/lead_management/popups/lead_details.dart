@@ -14,6 +14,7 @@ class LeaadDetailsPopup extends StatelessWidget {
       BasicInformationBox(containerWidth: containerWidth),
       ContactInformationBox(containerWidth: containerWidth),
       AssignmentDetailsBox(containerWidth: containerWidth),
+      TimelineAndFollowup(containerWidth: containerWidth),
     ];
     return SizedBox(
       height: MediaQuery.of(context).size.height * .8,
@@ -40,7 +41,7 @@ class LeaadDetailsPopup extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(children: [items.first]),
+                Column(children: [items.first, items[3]]),
                 Column(children: [items[2], items[1]]),
               ],
             ),
@@ -57,8 +58,8 @@ class LeaadDetailsPopup extends StatelessWidget {
   }
 }
 
-class ContactInformationBox extends StatelessWidget {
-  const ContactInformationBox({super.key, required this.containerWidth});
+class TimelineAndFollowup extends StatelessWidget {
+  const TimelineAndFollowup({super.key, required this.containerWidth});
 
   final double containerWidth;
 
@@ -78,6 +79,49 @@ class ContactInformationBox extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.chat_outlined, color: ColorConsts.primaryColor),
+                width5,
+                Text(
+                  "Timeline & Follow-up",
+                  style: myTextstyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            height5,
+            InfoItemsWidget(title: 'Lead Crated', value: 'Jan 20, 2024'),
+            height5,
+            InfoItemsWidget(title: "Course Sent", value: "Mar 22, 2024"),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ContactInformationBox extends StatelessWidget {
+  const ContactInformationBox({super.key, required this.containerWidth});
+
+  final double containerWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: ColorConsts.activeColor, width: 1),
+        ),
+        width: containerWidth,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.phone_outlined, color: ColorConsts.primaryColor),
                 width5,
                 Text(
                   "Contact information",
@@ -118,7 +162,7 @@ class AssignmentDetailsBox extends StatelessWidget {
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey, width: 1),
+          border: Border.all(color: ColorConsts.activeColor, width: 1),
         ),
         width: containerWidth,
         child: Column(
