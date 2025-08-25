@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/basic_info_box.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
@@ -7,9 +9,15 @@ import 'package:management_software/shared/styles/textstyles.dart';
 
 import '../widgets/info_pregression_Icons.dart';
 
-class LeadInfoPopup extends StatelessWidget {
+class LeadInfoPopup extends StatefulWidget {
   const LeadInfoPopup({super.key});
 
+  @override
+  State<LeadInfoPopup> createState() => _LeadInfoPopupState();
+}
+
+class _LeadInfoPopupState extends State<LeadInfoPopup> {
+  int progressedIndex = 1;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,144 +44,254 @@ class LeadInfoPopup extends StatelessWidget {
                   child: Column(
                     children: [
                       height10,
-                      InfoProgressionIcons(progressedIndex: 0),
+                      InfoProgressionIcons(progressedIndex: progressedIndex),
                       height30,
-                      LeadInfoSubtitles(progressionIndex: 0),
+                      LeadInfoSubtitles(progressionIndex: progressedIndex),
                       height30,
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 45),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                CommonTextField(text: "First Name"),
-                                width20,
-                                CommonTextField(text: "Second Name"),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                CommonDropdown(
-                                  label: "Gender",
-                                  items: ["Male", "Female", "Other"],
-                                  value: "Male",
-                                  onChanged: (val) {},
-                                ),
-                                width20,
-                                CommonDropdown(
-                                  label: "Marital Status",
-                                  items: ["Married", "Single"],
-                                  value: "Single",
-                                  onChanged: (val) {},
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                CommonDatePicker(label: "Date Of Birth"),
-                                width20,
-                                Expanded(child: SizedBox()),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Container(
-                                padding: EdgeInsets.all(25),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: const Color.fromARGB(
-                                    255,
-                                    235,
-                                    239,
-                                    246,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CommonDropdown(
-                                          label: 'Status',
-                                          items: [
-                                            "Lead Created",
-                                            "Lead Converted",
-                                            "Course sent",
-                                          ],
-                                          onChanged: (val) {},
-                                        ),
-                                        width20,
-                                        CommonDatePicker(
-                                          label: "Follow Up Date",
-                                        ),
-                                      ],
-                                    ),
-                                    height30,
-                                    Row(
-                                      children: [
-                                        width20,
-                                        Text(
-                                          "Counsellor Remarks",
-                                          style: myTextstyle(
-                                            fontSize: 18,
-                                            color: ColorConsts.textColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        CommonTextField(
-                                          minLines: 5,
-                                          text:
-                                              "Enter any additional remarks, notes, or special considerations...",
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            height20,
-                            Row(
-                              children: [
-                                width10,
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Row(
-                                    children: [
-                                      Icon(Icons.arrow_back_ios_new, size: 16),
-                                      width10,
-                                      Text(
-                                        "Previous",
-                                        style: myTextstyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Spacer(),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: Text(
-                                    "Save",
-                                    style: myTextstyle(fontSize: 16),
-                                  ),
-                                ),
-                                width30,
-                                PrimaryButton(onpressed: () {}, text: "Next"),
-                                width10,
-                              ],
-                            ),
-                            height20,
-                          ],
-                        ),
-                      ),
+                      if (progressedIndex == 0)
+                        BasicInfoCollection()
+                      else if (progressedIndex == 1)
+                        EducationInfoCollection(),
                     ],
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class EducationInfoCollection extends StatelessWidget {
+  const EducationInfoCollection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 45),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(22.0),
+            child: Text(
+              "High School(+2)",
+              style: myTextstyle(fontSize: 20, color: Colors.black),
+            ),
+          ),
+          Row(
+            children: [
+              CommonDropdown(
+                label: "Board",
+                items: [
+                  "CBSE",
+                  "CISCE (ICSE / ISC)",
+                  "NIOS",
+                  "IB (International Baccalaureate)",
+                  "Cambridge International (CIE/CAIE)",
+                  "Andhra Pradesh Board of Intermediate Education (BIEAP)",
+                  "Assam Higher Secondary Education Council (AHSEC)",
+                  "Bihar School Examination Board (BSEB)",
+                  "Chhattisgarh Board of Secondary Education (CGBSE)",
+                  "Goa Board of Secondary and Higher Secondary Education (GBSHSE)",
+                  "Gujarat Secondary and Higher Secondary Education Board (GSEB)",
+                  "Haryana Board of School Education (BSEH)",
+                  "Himachal Pradesh Board of School Education (HPBOSE)",
+                  "Jammu and Kashmir Board of School Education (JKBOSE)",
+                  "Jharkhand Academic Council (JAC)",
+                  "Karnataka Pre-University Education Board (PUE/KSEEB)",
+                  "Kerala Board of Higher Secondary Education (DHSE Kerala)",
+                  "Madhya Pradesh Board of Secondary Education (MPBSE)",
+                  "Maharashtra State Board of Secondary and Higher Secondary Education (MSBSHSE)",
+                  "Manipur Council of Higher Secondary Education (COHSEM)",
+                  "Meghalaya Board of School Education (MBOSE)",
+                  "Mizoram Board of School Education (MBSE)",
+                  "Nagaland Board of School Education (NBSE)",
+                  "Odisha Council of Higher Secondary Education (CHSE Odisha)",
+                  "Punjab School Education Board (PSEB)",
+                  "Rajasthan Board of Secondary Education (RBSE)",
+                  "Tamil Nadu State Board (TNBSE)",
+                  "Telangana Board of Intermediate Education (TSBIE)",
+                  "Tripura Board of Secondary Education (TBSE)",
+                  "Uttar Pradesh Madhyamik Shiksha Parishad (UPMSP)",
+                  "Uttarakhand Board of School Education (UBSE)",
+                  "West Bengal Council of Higher Secondary Education (WBCHSE)",
+                ],
+                value: "CBSE",
+                onChanged: (val) {},
+              ),
+
+              width20,
+              CommonDropdown(
+                label: "Stream",
+                items: [
+                  // Science
+                  "Science – PCM (Physics, Chemistry, Maths)",
+                  "Science – PCB (Physics, Chemistry, Biology)",
+                  "Science – PCMB (Physics, Chemistry, Maths, Biology)",
+                  "Science with Computer Science",
+                  "Science with Informatics Practices",
+                  "Science with Biotechnology",
+                  "Science with Electronics",
+                  "Science with Home Science",
+
+                  // Commerce
+                  "Commerce with Mathematics",
+                  "Commerce without Mathematics",
+                  "Commerce with Computer Applications",
+                  "Commerce with Entrepreneurship",
+                  "Commerce with Informatics Practices",
+
+                  // Humanities / Arts
+                  "Humanities – History, Political Science, Geography",
+                  "Humanities – Political Science, Sociology, Psychology",
+                  "Humanities – Economics, Political Science, History",
+                  "Humanities with Fine Arts",
+                  "Humanities with Performing Arts (Music/Dance/Theatre)",
+                  "Humanities with Literature",
+                  "Humanities with Philosophy / Logic",
+                  "Humanities with Physical Education",
+
+                  // Vocational
+                  "Vocational – Computer Applications",
+                  "Vocational – Information Technology",
+                  "Vocational – Electronics",
+                  "Vocational – Electrical Technology",
+                  "Vocational – Automobile Technology",
+                  "Vocational – Civil/Mechanical Drafting",
+                  "Vocational – Tourism & Travel",
+                  "Vocational – Agriculture",
+                  "Vocational – Dairy Technology",
+                  "Vocational – Health & Paramedical",
+                  "Vocational – Fashion & Textile Design",
+                  "Vocational – Home Science",
+
+                  // International Boards
+                  "IB – Language & Literature",
+                  "IB – Language Acquisition",
+                  "IB – Individuals & Societies",
+                  "IB – Sciences",
+                  "IB – Mathematics",
+                  "IB – The Arts",
+
+                  "Cambridge A Levels – Sciences",
+                  "Cambridge A Levels – Commerce",
+                  "Cambridge A Levels – Arts & Humanities",
+                  "Cambridge A Levels – Creative & Applied",
+                ],
+                value: "Science – PCM (Physics, Chemistry, Maths)",
+                onChanged: (val) {},
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              CommonTextField(text: "Passout Year"),
+              width20,
+              CommonTextField(text: "Percentage"),
+            ],
+          ),
+          height10,
+          Row(
+            children: [
+              SizedBox(width: 22),
+              Text(
+                "Subjects and Marks",
+                style: myTextstyle(color: Colors.black, fontSize: 18),
+              ),
+              Spacer(),
+              TextButton.icon(
+                onPressed: () {},
+                label: Text("Add Subject"),
+                icon: Icon(Icons.add),
+              ),
+              width10,
+            ],
+          ),
+          CommonInfoBox(),
+          height20,
+          Row(
+            children: [
+              width10,
+              IconButton(
+                onPressed: () {},
+                icon: Row(
+                  children: [
+                    Icon(Icons.arrow_back_ios_new, size: 16),
+                    width10,
+                    Text("Previous", style: myTextstyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+              Spacer(),
+              TextButton(
+                onPressed: () {},
+                child: Text("Save", style: myTextstyle(fontSize: 16)),
+              ),
+              width30,
+              PrimaryButton(onpressed: () {}, text: "Next"),
+              width10,
+            ],
+          ),
+          height20,
+        ],
+      ),
+    );
+  }
+}
+
+class CommonInfoBox extends StatelessWidget {
+  const CommonInfoBox({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Container(
+        padding: EdgeInsets.all(25),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color.fromARGB(255, 235, 239, 246),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CommonDropdown(
+                  label: 'Status',
+                  items: ["Lead Created", "Lead Converted", "Course sent"],
+                  onChanged: (val) {},
+                ),
+                width20,
+                CommonDatePicker(label: "Follow Up Date"),
+              ],
+            ),
+            height30,
+            Row(
+              children: [
+                width20,
+                Text(
+                  "Counsellor Remarks",
+                  style: myTextstyle(
+                    fontSize: 18,
+                    color: ColorConsts.textColor,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                CommonTextField(
+                  minLines: 5,
+                  text:
+                      "Enter any additional remarks, notes, or special considerations...",
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -268,101 +386,172 @@ class CommonDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ If less than or equal to 10 items → normal dropdown
+    if (items.length <= 10) {
+      return Expanded(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: DropdownButtonFormField<String>(
+            value: value,
+            decoration: InputDecoration(
+              label: Text(
+                label,
+                style: myTextstyle(color: Colors.grey, fontSize: 18),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey, width: 1.5),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+            ),
+            items:
+                items
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e, style: myTextstyle(fontSize: 16)),
+                      ),
+                    )
+                    .toList(),
+            onChanged: onChanged,
+          ),
+        ),
+      );
+    }
+
+    // ✅ If more than 10 items → searchable
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: DropdownButtonFormField<String>(
-          value: value,
-          decoration: InputDecoration(
-            label: Text(
-              label,
-              style: myTextstyle(color: Colors.grey, fontSize: 18),
+        child: InkWell(
+          onTap: () async {
+            final selected = await showSearch<String?>(
+              context: context,
+              delegate: _StringSearchDelegate(
+                items: items,
+                label: label,
+                initialQuery: value ?? '',
+              ),
+            );
+            if (selected != null) {
+              onChanged(selected);
+            }
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              label: Text(
+                label,
+                style: myTextstyle(color: Colors.grey, fontSize: 18),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey, width: 1.5),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              suffixIcon: const Icon(Icons.search),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            isEmpty: value == null || value!.isEmpty,
+            child: Text(
+              value?.trim().isNotEmpty == true ? value! : 'Select $label',
+              style: myTextstyle(
+                fontSize: 16,
+                color:
+                    (value == null || value!.isEmpty)
+                        ? Colors.grey
+                        : Colors.black,
+              ),
             ),
           ),
-          items:
-              items
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e, style: myTextstyle(fontSize: 16)),
-                    ),
-                  )
-                  .toList(),
-          onChanged: onChanged,
         ),
       ),
     );
   }
 }
 
-class CommonDatePicker extends StatefulWidget {
+/// Minimal SearchDelegate for picking a String from a list with filtering.
+class _StringSearchDelegate extends SearchDelegate<String?> {
+  final List<String> items;
   final String label;
-  const CommonDatePicker({super.key, required this.label});
+
+  _StringSearchDelegate({
+    required this.items,
+    required this.label,
+    String? initialQuery,
+  }) : super(
+         searchFieldLabel: 'Search $label...',
+         textInputAction: TextInputAction.search,
+       ) {
+    query = initialQuery ?? '';
+  }
 
   @override
-  State<CommonDatePicker> createState() => _CommonDatePickerState();
-}
-
-class _CommonDatePickerState extends State<CommonDatePicker> {
-  DateTime? selectedDate;
-  final TextEditingController _controller = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: TextFormField(
-          controller: _controller,
-          readOnly: true, // prevent typing
-          decoration: InputDecoration(
-            label: Text(
-              widget.label,
-              style: myTextstyle(color: Colors.grey, fontSize: 18),
-            ),
-            suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
-            ),
-          ),
-          onTap: () async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: selectedDate ?? DateTime.now(),
-              firstDate: DateTime(1900),
-              lastDate: DateTime(2100),
-            );
-            if (picked != null) {
-              setState(() {
-                selectedDate = picked;
-                _controller.text =
-                    "${picked.day}/${picked.month}/${picked.year}";
-              });
-            }
-          },
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () => query = '',
+          tooltip: 'Clear',
         ),
-      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+      tooltip: 'Back',
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => _buildList(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _buildList(context);
+
+  Widget _buildList(BuildContext context) {
+    final q = query.toLowerCase().trim();
+    final filtered =
+        (q.isEmpty)
+            ? items
+            : items.where((e) => e.toLowerCase().contains(q)).toList();
+
+    // Optional: sort alphabetically when filtered
+    filtered.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text('No results for "$query"'),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: filtered.length,
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemBuilder: (context, i) {
+        final item = filtered[i];
+        return ListTile(title: Text(item), onTap: () => close(context, item));
+      },
     );
   }
 }
