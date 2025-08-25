@@ -7,4 +7,5 @@ class ColorConsts {
   static const Color backgroundColorScaffold = Color(0xFFF9F9FA);
   static const Color activeColor = Color(0xFF16A249);
   static const Color textColor = Color(0xFF5D626A);
+  static const Color greyContainer = Color(0xFFF5F5F5);
 }

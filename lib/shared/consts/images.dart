@@ -15,4 +15,7 @@ class ImageConsts {
   static const String budgetIcon = "assets/images/budget.png";
   static const String preferences = "assets/images/preferences.png";
   static const String language = "assets/images/language.png";
+  static const String educationSelected = "assets/images/education_selected.png";
+  static const String workExperienceSelected =
+      "assets/images/workexperience_selected.png";
 }
