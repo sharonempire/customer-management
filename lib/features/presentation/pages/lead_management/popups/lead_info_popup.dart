@@ -38,7 +38,7 @@ class LeadInfoPopup extends StatelessWidget {
                       height10,
                       InfoProgressionIcons(progressedIndex: 0),
                       height30,
-                      LeadInfoSubtitles(subtitle: "Step 1: Basic Info"),
+                      LeadInfoSubtitles(progressionIndex: 0),
                       height30,
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 45),
@@ -217,8 +217,8 @@ class CommonTextField extends StatelessWidget {
 }
 
 class LeadInfoSubtitles extends StatelessWidget {
-  final String subtitle;
-  const LeadInfoSubtitles({super.key, required this.subtitle});
+  final int progressionIndex;
+  const LeadInfoSubtitles({super.key, required this.progressionIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -226,10 +226,21 @@ class LeadInfoSubtitles extends StatelessWidget {
       children: [
         width30,
         width30,
-        Icon(Icons.person_2_outlined, color: Colors.blue, size: 40),
         width10,
         Text(
-          subtitle,
+          progressionIndex == 0
+              ? "Step 1: Basic Info"
+              : progressionIndex == 1
+              ? "Step 2: Education"
+              : progressionIndex == 2
+              ? "Step 3: Work Experience"
+              : progressionIndex == 3
+              ? "Step 4: Budget Info"
+              : progressionIndex == 4
+              ? "Step 5: Preferences"
+              : progressionIndex == 5
+              ? "Step 6: English Proficiency"
+              : "",
           style: myTextstyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
