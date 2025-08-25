@@ -3,7 +3,6 @@ import 'package:management_software/features/presentation/pages/lead_management/
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/education_info_collection.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
-import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
@@ -18,7 +17,7 @@ class LeadInfoPopup extends StatefulWidget {
 }
 
 class _LeadInfoPopupState extends State<LeadInfoPopup> {
-  int progressedIndex = 1;
+  int progressedIndex = 2;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,79 +53,7 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
                       else if (progressedIndex == 1)
                         EducationInfoCollection()
                       else if (progressedIndex == 2)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 45),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  CommonTextField(text: "First Name"),
-                                  width20,
-                                  CommonTextField(text: "Second Name"),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  CommonDropdown(
-                                    label: "Gender",
-                                    items: ["Male", "Female", "Other"],
-                                    value: "Male",
-                                    onChanged: (val) {},
-                                  ),
-                                  width20,
-                                  CommonDropdown(
-                                    label: "Marital Status",
-                                    items: ["Married", "Single"],
-                                    value: "Single",
-                                    onChanged: (val) {},
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  CommonDatePicker(label: "Date Of Birth"),
-                                  width20,
-                                  Expanded(child: SizedBox()),
-                                ],
-                              ),
-                              CommonInfoBox(),
-                              height20,
-                              Row(
-                                children: [
-                                  width10,
-                                  IconButton(
-                                    onPressed: () {},
-                                    icon: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.arrow_back_ios_new,
-                                          size: 16,
-                                        ),
-                                        width10,
-                                        Text(
-                                          "Previous",
-                                          style: myTextstyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: Text(
-                                      "Save",
-                                      style: myTextstyle(fontSize: 16),
-                                    ),
-                                  ),
-                                  width30,
-                                  PrimaryButton(onpressed: () {}, text: "Next"),
-                                  width10,
-                                ],
-                              ),
-                              height20,
-                            ],
-                          ),
-                        ),
+                        WorkExperienceInfo(),
                     ],
                   ),
                 ),
@@ -134,6 +61,39 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class WorkExperienceInfo extends StatefulWidget {
+  const WorkExperienceInfo({super.key});
+
+  @override
+  State<WorkExperienceInfo> createState() => _WorkExperienceInfoState();
+}
+
+class _WorkExperienceInfoState extends State<WorkExperienceInfo> {
+  bool haveWorkExperience = false;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 45),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CommonSwitch(
+                text: "Work experience",
+                onChanged: (val) {
+                  haveWorkExperience = val;
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+          height20,
+        ],
       ),
     );
   }
@@ -148,6 +108,70 @@ class SubHeading extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(22.0),
       child: Text(text, style: myTextstyle(fontSize: 20, color: Colors.black)),
+    );
+  }
+}
+
+class CommonSwitch extends StatefulWidget {
+  final String text;
+  final bool initialValue;
+  final ValueChanged<bool> onChanged;
+
+  const CommonSwitch({
+    super.key,
+    required this.text,
+    this.initialValue = false,
+    required this.onChanged,
+  });
+
+  @override
+  State<CommonSwitch> createState() => _CommonSwitchState();
+}
+
+class _CommonSwitchState extends State<CommonSwitch> {
+  late bool value;
+
+  @override
+  void initState() {
+    super.initState();
+    value = widget.initialValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey, width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.text,
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Switch(
+                value: value,
+                activeColor: Colors.white,
+                activeTrackColor: Colors.grey,
+                onChanged: (val) {
+                  setState(() => value = val);
+                  widget.onChanged(val);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
