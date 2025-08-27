@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/basic_info_box.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/budget_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
-import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/education_info_collection.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/education_info_box.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/preferences_info_box.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/work_experience_box.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
+import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
@@ -17,7 +21,7 @@ class LeadInfoPopup extends StatefulWidget {
 }
 
 class _LeadInfoPopupState extends State<LeadInfoPopup> {
-  int progressedIndex = 2;
+  int progressedIndex = 4;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +57,30 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
                       else if (progressedIndex == 1)
                         EducationInfoCollection()
                       else if (progressedIndex == 2)
-                        WorkExperienceInfo(),
+                        WorkExperienceInfo()
+                      else if (progressedIndex == 3)
+                        BudgetInfoSection()
+                      else if (progressedIndex == 4)
+                        PreferencesSection(),
+                      height10,
+                      CommonInfoBox(),
+
+                      height20,
+                      PreviousAndNextButtons(
+                        onPrevPressed: () {
+                          if (progressedIndex > 0) {
+                            progressedIndex--;
+                            setState(() {});
+                          }
+                        },
+                        onNextPressed: () {
+                          if (progressedIndex < 5) {
+                            progressedIndex++;
+                            setState(() {});
+                          }
+                        },
+                      ),
+                      height20,
                     ],
                   ),
                 ),
@@ -66,35 +93,46 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
   }
 }
 
-class WorkExperienceInfo extends StatefulWidget {
-  const WorkExperienceInfo({super.key});
+class PreviousAndNextButtons extends StatelessWidget {
+  final Function onPrevPressed;
+  final Function onNextPressed;
+  const PreviousAndNextButtons({
+    super.key,
+    required this.onPrevPressed,
+    required this.onNextPressed,
+  });
 
-  @override
-  State<WorkExperienceInfo> createState() => _WorkExperienceInfoState();
-}
-
-class _WorkExperienceInfoState extends State<WorkExperienceInfo> {
-  bool haveWorkExperience = false;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 45),
-      child: Column(
-        children: [
-          Row(
+    return Row(
+      children: [
+        width30,
+        IconButton(
+          onPressed: () {
+            onPrevPressed();
+          },
+          icon: Row(
             children: [
-              CommonSwitch(
-                text: "Work experience",
-                onChanged: (val) {
-                  haveWorkExperience = val;
-                  setState(() {});
-                },
-              ),
+              Icon(Icons.arrow_back_ios_new, size: 16),
+              width10,
+              Text("Previous", style: myTextstyle(fontSize: 16)),
             ],
           ),
-          height20,
-        ],
-      ),
+        ),
+        Spacer(),
+        TextButton(
+          onPressed: () {},
+          child: Text("Save", style: myTextstyle(fontSize: 16)),
+        ),
+        width30,
+        PrimaryButton(
+          onpressed: () {
+            onNextPressed();
+          },
+          text: "Next",
+        ),
+        width20,
+      ],
     );
   }
 }
