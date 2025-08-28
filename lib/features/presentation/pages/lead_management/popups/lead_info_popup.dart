@@ -21,7 +21,7 @@ class LeadInfoPopup extends StatefulWidget {
 }
 
 class _LeadInfoPopupState extends State<LeadInfoPopup> {
-  int progressedIndex = 4;
+  int progressedIndex = 5;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,7 +61,46 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
                       else if (progressedIndex == 3)
                         BudgetInfoSection()
                       else if (progressedIndex == 4)
-                        PreferencesSection(),
+                        PreferencesSection()
+                      else if (progressedIndex == 5)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 45),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  CommonTextField(text: "First Name"),
+                                  width20,
+                                  CommonTextField(text: "Second Name"),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  CommonDropdown(
+                                    label: "Gender",
+                                    items: ["Male", "Female", "Other"],
+                                    value: "Male",
+                                    onChanged: (val) {},
+                                  ),
+                                  width20,
+                                  CommonDropdown(
+                                    label: "Marital Status",
+                                    items: ["Married", "Single"],
+                                    value: "Single",
+                                    onChanged: (val) {},
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  CommonDatePicker(label: "Date Of Birth"),
+                                  width20,
+                                  Expanded(child: SizedBox()),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       height10,
                       CommonInfoBox(),
 
@@ -216,7 +255,6 @@ class _CommonSwitchState extends State<CommonSwitch> {
 
 class CommonInfoBox extends StatelessWidget {
   const CommonInfoBox({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Padding(

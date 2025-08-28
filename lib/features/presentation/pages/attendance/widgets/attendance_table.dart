@@ -87,10 +87,14 @@ class AttendanceTableWidget extends StatelessWidget {
 
 Widget tableHeaderCell(String text) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    padding: const EdgeInsets.symmetric(vertical: 5.0),
     child: Text(
       text,
-      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+        fontSize: 18,
+      ),
     ),
   );
 }

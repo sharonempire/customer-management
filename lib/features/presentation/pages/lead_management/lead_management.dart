@@ -152,7 +152,10 @@ class LeadListingWidget extends StatelessWidget {
   ) {
     return InkWell(
       onTap: () => _showLeadDetails(context, lead),
-      child: Padding(padding: const EdgeInsets.all(8.0), child: Text(text)),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(text, style: myTextstyle(fontSize: 18)),
+      ),
     );
   }
 
