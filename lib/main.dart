@@ -1,11 +1,31 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/routes/app_router.dart';
 import 'package:management_software/shared/providers/theme_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: 'https://YOUR-PROJECT-REF.supabase.co',
+    anonKey: 'YOUR-ANON-KEY',
+  );
+
+  final prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPrefsProvider.overrideWithValue(SharedPrefsHelper(prefs)),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {

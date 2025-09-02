@@ -1,25 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/features/presentation/pages/main_scaffold.dart';
 import 'package:management_software/routes/router_consts.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final routeConsts = RouterConsts();
+  final prefs = ref.read(sharedPrefsProvider);
 
   return GoRouter(
-    initialLocation: routeConsts.dashboard.route,
     debugLogDiagnostics: true,
 
-    redirect: (context, state) async {
-      return null;
+    initialLocation:
+        prefs.isLoggedIn()
+            ? routeConsts.dashboard.route
+            : routeConsts.login.route,
+
+    redirect: (context, state) {
+      final loggedIn = prefs.isLoggedIn();
+
+      final goingToLogin = state.matchedLocation == routeConsts.login.route;
+      if (!loggedIn && !goingToLogin) {
+        return routeConsts.login.route;
+      }
+
+      if (loggedIn && goingToLogin) {
+        return routeConsts.dashboard.route;
+      }
+
+      return null; // No redirect
     },
 
     routes: [
+      // Login Route
       GoRoute(
         path: routeConsts.login.route,
         name: routeConsts.login.name,
         builder: routeConsts.login.builder,
       ),
+
+      // Shell for main layout
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
