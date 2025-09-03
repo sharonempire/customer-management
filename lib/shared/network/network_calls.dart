@@ -1,5 +1,257 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+final networkServiceProvider = Provider<NetworkService>((ref) {
+  return NetworkService();
+});
+
+final snackbarServiceProvider = Provider<SnackbarService>((ref) {
+  return SnackbarService();
+});
+
+class SnackbarService {
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void showSuccess(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
 
 class NetworkService {
- 
+  final SupabaseClient _supabase = Supabase.instance.client;
+  Future<List<Map<String, dynamic>>> pull({
+    required String table,
+    String? filterColumn,
+    dynamic filterValue,
+    int? limit,
+    String? orderBy,
+    bool ascending = true,
+  }) async {
+    try {
+      final baseQuery = _supabase.from(table).select();
+      dynamic query = baseQuery;
+      if (filterColumn != null && filterValue != null) {
+        query = query.eq(filterColumn, filterValue);
+      }
+      if (orderBy != null) {
+        query = query.order(orderBy, ascending: ascending);
+      }
+      if (limit != null) {
+        query = query.limit(limit);
+      }
+      final response = await query;
+      return List<Map<String, dynamic>>.from(response);
+    } on PostgrestException catch (e) {
+      throw _parseError(e.message, 'Failed to fetch data');
+    } catch (e) {
+      throw 'Failed to fetch data: ${e.toString()}';
+    }
+  }
+
+  Future<Map<String, dynamic>?> pullById({
+    required String table,
+    required String id,
+  }) async {
+    try {
+      final response =
+          await _supabase.from(table).select().eq('id', id).single();
+
+      return response as Map<String, dynamic>?;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST116') {
+        return null; // No data found
+      }
+      throw _parseError(e.message, 'Failed to fetch item');
+    } catch (e) {
+      throw 'Failed to fetch item: ${e.toString()}';
+    }
+  }
+
+  Future<Map<String, dynamic>> push({
+    required String table,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response =
+          await _supabase.from(table).insert(data).select().single();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw _parseError(e.message, 'Failed to create item');
+    } catch (e) {
+      throw 'Failed to create item: ${e.toString()}';
+    }
+  }
+
+  Future<Map<String, dynamic>> update({
+    required String table,
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response =
+          await _supabase
+              .from(table)
+              .update(data)
+              .eq('id', id)
+              .select()
+              .single();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw _parseError(e.message, 'Failed to update item');
+    } catch (e) {
+      throw 'Failed to update item: ${e.toString()}';
+    }
+  }
+
+  Future<void> delete({required String table, required String id}) async {
+    try {
+      await _supabase.from(table).delete().eq('id', id);
+    } on PostgrestException catch (e) {
+      throw _parseError(e.message, 'Failed to delete item');
+    } catch (e) {
+      throw 'Failed to delete item: ${e.toString()}';
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> subscribeToTable({
+    required String table,
+    String? filterColumn,
+    dynamic filterValue,
+  }) {
+    try {
+      final baseStream = _supabase.from(table).stream(primaryKey: ['id']);
+
+      // Apply filter if provided
+      if (filterColumn != null && filterValue != null) {
+        return baseStream.map(
+          (list) =>
+              list
+                  .where((item) => item[filterColumn] == filterValue)
+                  .map((item) => item)
+                  .toList(),
+        );
+      }
+
+      return baseStream.map((list) => list.map((item) => item).toList());
+    } catch (e) {
+      return Stream.error(e);
+    }
+  }
+
+  Future<String> uploadFile({
+    required String bucketName,
+    required String filePath,
+    required Uint8List fileBytes,
+  }) async {
+    try {
+      await _supabase.storage
+          .from(bucketName)
+          .uploadBinary(filePath, fileBytes);
+
+      return _supabase.storage.from(bucketName).getPublicUrl(filePath);
+    } on StorageException catch (e) {
+      throw _parseError(e.message, 'Failed to upload file');
+    } catch (e) {
+      throw 'Failed to upload file: ${e.toString()}';
+    }
+  }
+
+  Future<Uint8List> downloadFile({
+    required String bucketName,
+    required String filePath,
+  }) async {
+    try {
+      return await _supabase.storage.from(bucketName).download(filePath);
+    } on StorageException catch (e) {
+      throw _parseError(e.message, 'Failed to download file');
+    } catch (e) {
+      throw 'Failed to download file: ${e.toString()}';
+    }
+  }
+
+  String _parseError(String error, String defaultMessage) {
+    if (error.contains('violates foreign key constraint')) {
+      return 'Related item not found';
+    } else if (error.contains('duplicate key value')) {
+      return 'Item already exists';
+    } else if (error.contains('network error')) {
+      return 'Network connection failed';
+    } else if (error.contains('JWT')) {
+      return 'Authentication failed. Please login again.';
+    }
+    return '$defaultMessage: ${error.split(']').last.trim()}';
+  }
+
+  Future<bool> checkConnection() async {
+    try {
+      await _supabase
+          .from('_dummy')
+          .select()
+          .limit(1)
+          .timeout(const Duration(seconds: 5));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  String? get currentUserId {
+    return _supabase.auth.currentUser?.id;
+  }
+
+  bool get isAuthenticated {
+    return _supabase.auth.currentUser != null;
+  }
+
+  Future<void> signOut() async {
+    await _supabase.auth.signOut();
+  }
+
+  GoTrueClient get auth => _supabase.auth;
 }
+
+final todosProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((
+  ref,
+) {
+  final networkService = ref.watch(networkServiceProvider);
+  final userId = networkService.currentUserId;
+
+  if (userId == null) {
+    return const Stream.empty();
+  }
+
+  return networkService.subscribeToTable(
+    table: 'todos',
+    filterColumn: 'user_id',
+    filterValue: userId,
+  );
+});
+
+final usersProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
+  ref,
+) {
+  final networkService = ref.watch(networkServiceProvider);
+  return networkService.pull(
+    table: 'users',
+    orderBy: 'created_at',
+    ascending: false,
+  );
+});

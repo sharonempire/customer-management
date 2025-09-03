@@ -3,18 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/routes/app_router.dart';
 import 'package:management_software/shared/providers/theme_providers.dart';
+import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  WidgetsFlutterBinding.ensureInitialized();
-
   // Initialize Supabase
-  await Supabase.initialize(
-    url: 'https://YOUR-PROJECT-REF.supabase.co',
-    anonKey: 'YOUR-ANON-KEY',
-  );
+  await Supabase.initialize(url: SUPABASEURL, anonKey: SUPABASEKEY);
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -37,7 +33,7 @@ class MyApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'CRM Demo',
+      title: 'CRM',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: ThemeData.light(useMaterial3: true),
