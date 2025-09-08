@@ -88,6 +88,7 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
                         label: _animatedLabel(routerConsts.enquiries.name),
                       ),
                     ],
+                    
                   ),
                 ),
               ],

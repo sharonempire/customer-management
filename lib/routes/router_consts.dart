@@ -9,7 +9,7 @@ import 'package:management_software/features/presentation/pages/lead_management/
 
 class RouterConsts {
   final RouteModel login = RouteModel('/login', 'Login', (context, state) {
-    return Material(child: const LoginPage());
+    return const LoginPage();
   });
 
   final RouteModel attendance = RouteModel('/attendance', 'Attendance', (

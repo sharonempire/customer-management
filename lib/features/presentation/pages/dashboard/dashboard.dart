@@ -167,15 +167,6 @@ class _DashboardState extends ConsumerState<Dashboard> {
                     }),
                   ),
                   height20,
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //   children: List.generate(3, (index) {
-                  //     return ShortcutBox(
-                  //       index: index,
-                  //       eachContainerWidth: eachContainerWidth * 1.37,
-                  //     );
-                  //   }),
-                  // ),
                 ],
               ),
             ),

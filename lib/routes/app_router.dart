@@ -28,7 +28,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return routeConsts.dashboard.route;
       }
 
-      return null; // No redirect
+      return null; 
     },
 
     routes: [
