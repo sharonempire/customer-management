@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/lead_management/controller/lead_management.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/basic_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/budget_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
@@ -13,17 +15,18 @@ import 'package:management_software/shared/styles/textstyles.dart';
 
 import '../widgets/info_pregression_Icons.dart';
 
-class LeadInfoPopup extends StatefulWidget {
+class LeadInfoPopup extends ConsumerStatefulWidget {
   const LeadInfoPopup({super.key});
 
   @override
-  State<LeadInfoPopup> createState() => _LeadInfoPopupState();
+  ConsumerState<LeadInfoPopup> createState() => _LeadInfoPopupState();
 }
 
-class _LeadInfoPopupState extends State<LeadInfoPopup> {
-  int progressedIndex = 5;
+class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
   @override
   Widget build(BuildContext context) {
+    int progressedIndex = ref.watch(infoCollectionProgression);
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
@@ -48,7 +51,7 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
                   child: Column(
                     children: [
                       height10,
-                      InfoProgressionIcons(progressedIndex: progressedIndex),
+                      InfoProgressionIcons(),
                       height30,
                       LeadInfoSubtitles(progressionIndex: progressedIndex),
                       height30,
@@ -108,14 +111,16 @@ class _LeadInfoPopupState extends State<LeadInfoPopup> {
                       PreviousAndNextButtons(
                         onPrevPressed: () {
                           if (progressedIndex > 0) {
-                            progressedIndex--;
-                            setState(() {});
+                            ref
+                                .read(leadMangementcontroller.notifier)
+                                .decreaseProgression();
                           }
                         },
                         onNextPressed: () {
                           if (progressedIndex < 5) {
-                            progressedIndex++;
-                            setState(() {});
+                            ref
+                                .read(leadMangementcontroller.notifier)
+                                .increaseProgression();
                           }
                         },
                       ),
