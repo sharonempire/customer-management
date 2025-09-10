@@ -23,6 +23,8 @@ class LeadInfoPopup extends ConsumerStatefulWidget {
 }
 
 class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     int progressedIndex = ref.watch(infoCollectionProgression);
@@ -72,9 +74,9 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
                             children: [
                               Row(
                                 children: [
-                                  CommonTextField(text: "First Name"),
+                                  CommonTextField(text: "First Name",controller: firstNameController,),
                                   width20,
-                                  CommonTextField(text: "Second Name"),
+                                  CommonTextField(text: "Second Name",controller: lastNameController,),
                                 ],
                               ),
                               Row(
@@ -300,6 +302,7 @@ class CommonInfoBox extends StatelessWidget {
             Row(
               children: [
                 CommonTextField(
+                  controller: TextEditingController(),
                   minLines: 5,
                   text:
                       "Enter any additional remarks, notes, or special considerations...",
@@ -313,10 +316,34 @@ class CommonInfoBox extends StatelessWidget {
   }
 }
 
+
 class CommonTextField extends StatelessWidget {
   final String text;
-  final int? minLines;
-  const CommonTextField({super.key, required this.text, this.minLines});
+  final TextEditingController controller;
+  final String? hint;
+  final bool requiredField;
+  final bool rounded;
+  final IconData? icon;
+  final TextInputType keyboardType;
+  final int minLines;
+  final int maxLines;
+  final Function(String)? onChanged;
+  final Function(String)? onSubmitted;
+
+  const CommonTextField({
+    super.key,
+    required this.text,
+    required this.controller,
+    this.hint,
+    this.requiredField = false,
+    this.rounded = true,
+    this.icon,
+    this.keyboardType = TextInputType.text,
+    this.minLines = 1,
+    this.maxLines = 1,
+    this.onChanged,
+    this.onSubmitted,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -324,25 +351,36 @@ class CommonTextField extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: TextFormField(
-          maxLines: minLines,
+          controller: controller,
+          keyboardType: keyboardType,
+          minLines: minLines,
+          maxLines: maxLines,
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
-            label: Text(
-              text,
-              style: myTextstyle(color: Colors.grey, fontSize: 18),
-            ),
+            prefixIcon: icon != null ? Icon(icon, size: 20) : null,
+            labelText: text,
+            labelStyle: myTextstyle(color: Colors.grey, fontSize: 16),
+            hintText: hint,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey, width: 1),
+              borderRadius: BorderRadius.circular(rounded ? 10 : 0),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey, width: 1.5),
+              borderRadius: BorderRadius.circular(rounded ? 10 : 0),
+              borderSide: const BorderSide(color: Colors.grey, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey, width: 1),
+              borderRadius: BorderRadius.circular(rounded ? 10 : 0),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
             ),
           ),
+          validator: requiredField
+              ? (value) => (value == null || value.trim().isEmpty) ? 'Required' : null
+              : null,
+          onChanged: onChanged,
+          onFieldSubmitted: onSubmitted,
         ),
       ),
     );

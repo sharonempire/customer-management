@@ -3,9 +3,16 @@ import 'package:management_software/features/presentation/pages/lead_management/
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 
-class BasicInfoCollection extends StatelessWidget {
+class BasicInfoCollection extends StatefulWidget {
   const BasicInfoCollection({super.key});
 
+  @override
+  State<BasicInfoCollection> createState() => _BasicInfoCollectionState();
+}
+
+class _BasicInfoCollectionState extends State<BasicInfoCollection> {
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController secondNameController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -14,9 +21,9 @@ class BasicInfoCollection extends StatelessWidget {
         children: [
           Row(
             children: [
-              CommonTextField(text: "First Name"),
+              CommonTextField(text: "First Name", controller: firstNameController),
               width20,
-              CommonTextField(text: "Second Name"),
+              CommonTextField(text: "Second Name",controller: secondNameController,),
             ],
           ),
           Row(

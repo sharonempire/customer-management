@@ -12,6 +12,7 @@ class BudgetInfoSection extends StatefulWidget {
 }
 
 class _BudgetInfoSectionState extends State<BudgetInfoSection> {
+  final budgetController = TextEditingController();
   String _selectedOption = "self";
 
   Widget _buildBudgetOption({
@@ -123,7 +124,8 @@ class _BudgetInfoSectionState extends State<BudgetInfoSection> {
           const SizedBox(height: 20),
           Row(
             children: [
-              const CommonTextField(
+              CommonTextField(
+                controller: budgetController,
                 text: "Enter your budget amount",
                 minLines: 1,
               ),

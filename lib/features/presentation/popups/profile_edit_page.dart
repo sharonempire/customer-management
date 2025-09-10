@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 import 'package:management_software/features/presentation/widgets/common_dropdowns.dart';
-import 'package:management_software/features/presentation/widgets/common_textfield.dart';
 import 'package:management_software/features/presentation/widgets/h1_widget.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
@@ -89,6 +89,8 @@ class _ProfileEditPopupState extends State<ProfileEditPopup> {
             children: [
               const H1Widget(title: "Edit Profile"),
               const SizedBox(height: 16),
+
+              // Profile Picture
               Center(
                 child: GestureDetector(
                   onTap: _pickImage,
@@ -117,18 +119,33 @@ class _ProfileEditPopupState extends State<ProfileEditPopup> {
               ),
               const SizedBox(height: 16),
 
-              // Name Field
-              textField(nameController, "Display Name", required: true),
+              // Name Field with new CommonTextField
+              Row(
+                children: [
+                  CommonTextField(
+                    text: "Display Name",
+                    controller: nameController,
+                    requiredField: true,
+                    icon: Icons.person,
+                  ),
+                ],
+              ),
 
               // Phone Field
-              textField(
-                phoneController,
-                "Phone",
-                keyboard: TextInputType.phone,
-                required: true,
+              Row(
+                children: [
+                  CommonTextField(
+                    text: "Phone",
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    requiredField: true,
+                    icon: Icons.phone,
+                  ),
+                ],
               ),
+
               // Designation Dropdown
-              dropdownField(
+              CommonDropdown(
                 label: "Designation",
                 value: selectedDesignation,
                 items: designationOptions,
@@ -141,7 +158,15 @@ class _ProfileEditPopupState extends State<ProfileEditPopup> {
               const SizedBox(height: 8),
 
               // Location Field
-              textField(locationController, "Location"),
+              Row(
+                children: [
+                  CommonTextField(
+                    text: "Location",
+                    controller: locationController,
+                    icon: Icons.location_on,
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 20),
               PrimaryButton(

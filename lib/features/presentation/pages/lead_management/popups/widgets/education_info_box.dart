@@ -16,6 +16,9 @@ class EducationInfoCollection extends StatefulWidget {
 class _EducationInfoCollectionState extends State<EducationInfoCollection> {
   String selectedDecipline = "Engineering & Technology";
   String selectedSpecialization = "";
+  final TextEditingController passoutController = TextEditingController();
+  final TextEditingController percentageController = TextEditingController();
+  final TextEditingController backlogsController = TextEditingController();
 
   @override
   void initState() {
@@ -145,9 +148,9 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
           ),
           Row(
             children: [
-              CommonTextField(text: "Passout Year"),
+              CommonTextField(text: "Passout Year",controller: passoutController,),
               width20,
-              CommonTextField(text: "Percentage"),
+              CommonTextField(text: "Percentage",controller: percentageController,),
             ],
           ),
           height10,
@@ -206,8 +209,8 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
           ),
           Row(
             children: [
-              CommonTextField(text: "Percentatage"),
-              CommonTextField(text: "No: of Backlogs"),
+              CommonTextField(text: "Percentatage",controller: percentageController,),
+              CommonTextField(text: "No: of Backlogs",controller: backlogsController,),
             ],
           ),
           Row(

@@ -12,6 +12,7 @@ class PreferencesSection extends StatefulWidget {
 }
 
 class _PreferencesSectionState extends State<PreferencesSection> {
+  final interestedUniversityController = TextEditingController();
   // Multi-select countries
   List<String> selectedCountries = [];
 
@@ -202,7 +203,8 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           // Interested Universities
           Row(
             children: [
-              const CommonTextField(
+               CommonTextField(
+                controller: interestedUniversityController ,
                 text: "Interested Universities",
                 minLines: 1,
               ),

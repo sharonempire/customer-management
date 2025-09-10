@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
@@ -7,9 +6,16 @@ import 'package:management_software/features/presentation/widgets/primary_button
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
-class BasicInfoCollection extends StatelessWidget {
+class BasicInfoCollection extends StatefulWidget {
   const BasicInfoCollection({super.key});
 
+  @override
+  State<BasicInfoCollection> createState() => _BasicInfoCollectionState();
+}
+
+class _BasicInfoCollectionState extends State<BasicInfoCollection> {
+  final firstNameController = TextEditingController();
+  final secondController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -18,9 +24,15 @@ class BasicInfoCollection extends StatelessWidget {
         children: [
           Row(
             children: [
-              CommonTextField(text: "First Name"),
+              CommonTextField(
+                text: "First Name",
+                controller: firstNameController,
+              ),
               width20,
-              CommonTextField(text: "Second Name"),
+              CommonTextField(
+                text: "Second Name",
+                controller: secondController,
+              ),
             ],
           ),
           Row(

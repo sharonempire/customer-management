@@ -14,6 +14,10 @@ class WorkExperienceInfo extends StatefulWidget {
 }
 
 class _WorkExperienceInfoState extends State<WorkExperienceInfo> {
+  final companyNameController = TextEditingController();
+  final descriptionController = TextEditingController();
+   final companyAdressController = TextEditingController();
+  final designationController = TextEditingController();
   bool haveWorkExperience = false;
   @override
   Widget build(BuildContext context) {
@@ -46,8 +50,8 @@ class _WorkExperienceInfoState extends State<WorkExperienceInfo> {
           height20,
           Row(
             children: [
-              CommonTextField(text: "Company Name"),
-              CommonTextField(text: "Designation"),
+              CommonTextField(controller: companyAdressController,text: "Company Name"),
+              CommonTextField(controller: designationController,text: "Designation"),
             ],
           ),
           Row(
@@ -70,8 +74,8 @@ class _WorkExperienceInfoState extends State<WorkExperienceInfo> {
               CommonDatePicker(label: "Date of Leaving"),
             ],
           ),
-          Row(children: [CommonTextField(text: "Company Address")]),
-          Row(children: [CommonTextField(text: "Description")]),
+          Row(children: [CommonTextField(controller: companyNameController,text: "Company Address")]),
+          Row(children: [CommonTextField(controller: descriptionController,text: "Description")]),
           Row(
             children: [
               Spacer(),
