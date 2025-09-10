@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
+import 'package:management_software/features/presentation/popups/profile_edit_page.dart';
 import 'package:management_software/features/presentation/widgets/h1_widget.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/providers/theme_providers.dart';
@@ -76,6 +77,31 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                           leading: CircleAvatar(radius: 16, child: Text("Jh")),
                           title: Text("John deo"),
                           onTap: () {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (context) => ProfileEditPopup(
+                                    displayName: "John Doe",
+                                    profilePicture:
+                                        null,
+                                    designation: "Admin",
+                                    phone: "9876543210",
+                                    location: "Mumbai",
+                                    onSave: (
+                                      name,
+                                      picture,
+                                      designation,
+                                      phone,
+                                      location,
+                                    ) {
+                                      print(
+                                        "Updated: $name, $picture, $designation, $phone, $location",
+                                      );
+                                      // Call Supabase update API here
+                                    },
+                                  ),
+                            );
+
                             _toggleOverlay();
                           },
                         ),
