@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -262,52 +261,3 @@ final usersProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
 });
 
 List studentData = [];
-
-class HttpRequest {
-  static Future<Response> httpGetRequest({
-    Map<String, dynamic>? bodyData,
-    String endPoint = '',
-  }) async {
-    final Dio dio = Dio(
-      BaseOptions(baseUrl: 'https://empireapi.ufstech.net.in'),
-    );
-    final String token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsiVXNlcl9EZXRhaWxzX0lkIjozOTcsIkVtYWlsIjoibWFub2ttYW5pa2FuZGFuQGdtYWlsLmNvbSIsIlVzZXJfRGV0YWlsc19OYW1lIjoiTWFubyBLIE0gKFNlbGYpIn0sImlhdCI6MTc1NzMwNzg2Mn0.ohRONejK0Bs6nKTD_7ZVto0FNTrRIcjrUhERXCAw8XE";
-
-    final response = await dio.get(
-      endPoint,
-      options: Options(
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      ),
-      queryParameters: bodyData,
-    );
-    return response;
-  }
-}
-
-// Call like this:
-searchStudent() async {
-  try {
-    final response = await HttpRequest.httpGetRequest(
-      bodyData: {"By_User_Id_": 397},
-      endPoint: 'https://empireapi.ufstech.net.in/Student/Search_Profile_Agent',
-    );
-
-    if (response.statusCode == 200) {
-      final data = response.data;
-      if (data.isNotEmpty && data[0] is List) {
-        final students = data[0];
-        for (var student in students) {
-          print(
-            "Name: ${student['Student_Name']}, Phone: ${student['Phone_Number']}",
-          );
-        }
-      }
-    }
-  } catch (e) {
-    print("Error: $e");
-  }
-}
