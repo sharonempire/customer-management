@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
@@ -37,6 +38,27 @@ class SnackbarService {
 
 class NetworkService {
   final SupabaseClient _supabase = Supabase.instance.client;
+
+    Future<bool> rowExists({
+    required String table,
+    required String id,
+  }) async {
+    try {
+      final response = await _supabase
+          .from(table)
+          .select('id')
+          .eq('id', id)
+          .maybeSingle();
+
+      return response != null; // true if row exists
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST116') return false; // No row found
+      throw _parseError(e.message, 'Failed to check row');
+    } catch (e) {
+      throw 'Failed to check row: ${e.toString()}';
+    }
+  }
+  
   Future<List<Map<String, dynamic>>> pull({
     required String table,
     String? filterColumn,
@@ -101,11 +123,12 @@ class NetworkService {
     }
   }
 
-  Future<Map<String, dynamic>> update({
+  Future<Map<String, dynamic>?> update({
     required String table,
     required String id,
     required Map<String, dynamic> data,
   }) async {
+    log(id.toString());
     try {
       final response =
           await _supabase
@@ -113,8 +136,7 @@ class NetworkService {
               .update(data)
               .eq('id', id)
               .select()
-              .single();
-
+              .maybeSingle();
       return response;
     } on PostgrestException catch (e) {
       throw _parseError(e.message, 'Failed to update item');

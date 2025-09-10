@@ -1,13 +1,18 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
-import 'package:management_software/features/presentation/widgets/common_dropdowns.dart';
 import 'package:management_software/features/presentation/widgets/h1_widget.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
+import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
+import 'package:management_software/shared/network/network_calls.dart';
+import 'package:management_software/shared/supabase/keys.dart';
 
-class ProfileEditPopup extends StatefulWidget {
+class ProfileEditPopup extends ConsumerStatefulWidget {
   final String displayName;
   final String? profilePicture;
   final String designation;
@@ -15,7 +20,7 @@ class ProfileEditPopup extends StatefulWidget {
   final String location;
   final Function(
     String name,
-    String? picture,
+    Uint8List? picture,
     String designation,
     String phone,
     String location,
@@ -33,12 +38,12 @@ class ProfileEditPopup extends StatefulWidget {
   });
 
   @override
-  State<ProfileEditPopup> createState() => _ProfileEditPopupState();
+  ConsumerState<ProfileEditPopup> createState() => _ProfileEditPopupState();
 }
 
-class _ProfileEditPopupState extends State<ProfileEditPopup> {
+class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
   final ImagePicker _picker = ImagePicker();
-  File? _imageFile;
+  Uint8List? _imageFile;
   late TextEditingController nameController;
   late TextEditingController phoneController;
   late TextEditingController locationController;
@@ -70,9 +75,8 @@ class _ProfileEditPopupState extends State<ProfileEditPopup> {
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+      _imageFile = await pickedFile.readAsBytes();
+      setState(() {});
     }
   }
 
@@ -80,109 +84,146 @@ class _ProfileEditPopupState extends State<ProfileEditPopup> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const H1Widget(title: "Edit Profile"),
-              const SizedBox(height: 16),
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.5,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const H1Widget(title: "Edit Profile"),
+                const SizedBox(height: 16),
 
-              // Profile Picture
-              Center(
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: ColorConsts.lightGrey,
-                    backgroundImage:
-                        _imageFile != null
-                            ? FileImage(_imageFile!)
-                            : (widget.profilePicture != null &&
-                                widget.profilePicture!.isNotEmpty)
-                            ? NetworkImage(widget.profilePicture!)
-                            : null,
-                    child:
-                        (_imageFile == null &&
-                                (widget.profilePicture == null ||
-                                    widget.profilePicture!.isEmpty))
-                            ? const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: Colors.grey,
-                            )
-                            : null,
+                // Profile Picture
+                Center(
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: ColorConsts.lightGrey,
+                      backgroundImage:
+                          _imageFile != null
+                              ? MemoryImage(_imageFile!)
+                              : (widget.profilePicture != null &&
+                                  widget.profilePicture!.isNotEmpty)
+                              ? NetworkImage(widget.profilePicture!)
+                              : null,
+                      child:
+                          (_imageFile == null &&
+                                  (widget.profilePicture == null ||
+                                      widget.profilePicture!.isEmpty))
+                              ? const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.grey,
+                              )
+                              : null,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Name Field with new CommonTextField
-              Row(
-                children: [
-                  CommonTextField(
-                    text: "Display Name",
-                    controller: nameController,
-                    requiredField: true,
-                    icon: Icons.person,
+                // Name Field with new CommonTextField
+                Row(
+                  children: [
+                    CommonTextField(
+                      text: "Display Name",
+                      controller: nameController,
+                      requiredField: true,
+                      icon: Icons.person,
+                    ),
+                  ],
+                ),
+
+                // Phone Field
+                Row(
+                  children: [
+                    CommonTextField(
+                      text: "Phone",
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      requiredField: true,
+                      icon: Icons.phone,
+                    ),
+                  ],
+                ),
+
+                Row(
+                  children: [
+                    CommonDropdown(
+                      label: "Designation",
+                      value: selectedDesignation,
+                      items: designationOptions,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedDesignation = value ?? selectedDesignation;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    CommonTextField(
+                      text: "Location",
+                      controller: locationController,
+                      icon: Icons.location_on,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: 200,
+                  child: Row(
+                    children: [
+                      width20,
+                      PrimaryButton(
+                        icon: Icons.save,
+                        text: "Save",
+                        onpressed: () async {
+                          if (_imageFile == null) {
+                            ref
+                                .read(snackbarServiceProvider)
+                                .showError(context, "Pick an image");
+                          } else {
+                            final String fileName =
+                                'profile_${DateTime.now().millisecondsSinceEpoch}.png';
+                            final pictureUrl = await ref
+                                .read(networkServiceProvider)
+                                .uploadFile(
+                                  bucketName: SupabaseBuckets.userImages,
+                                  filePath: fileName,
+                                  fileBytes: _imageFile ?? Uint8List(0),
+                                );
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .updateUserProfile(
+                                  context: context,
+                                  updatedData:
+                                      UserProfileModel(
+                                        displayName: nameController.text,
+                                        profilePicture: pictureUrl,
+                                        designation: selectedDesignation,
+                                        phone: int.parse(phoneController.text),
+                                        location: locationController.text,
+                                      ).toJson(),
+                                )
+                                .then((value) {
+                                  Navigator.pop(context);
+                                });
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
-
-              // Phone Field
-              Row(
-                children: [
-                  CommonTextField(
-                    text: "Phone",
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    requiredField: true,
-                    icon: Icons.phone,
-                  ),
-                ],
-              ),
-
-              // Designation Dropdown
-              CommonDropdown(
-                label: "Designation",
-                value: selectedDesignation,
-                items: designationOptions,
-                onChanged: (value) {
-                  setState(() {
-                    selectedDesignation = value ?? selectedDesignation;
-                  });
-                },
-              ),
-              const SizedBox(height: 8),
-
-              // Location Field
-              Row(
-                children: [
-                  CommonTextField(
-                    text: "Location",
-                    controller: locationController,
-                    icon: Icons.location_on,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-              PrimaryButton(
-                text: "Save",
-                onpressed: () {
-                  widget.onSave(
-                    nameController.text,
-                    _imageFile?.path,
-                    selectedDesignation,
-                    phoneController.text,
-                    locationController.text,
-                  );
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

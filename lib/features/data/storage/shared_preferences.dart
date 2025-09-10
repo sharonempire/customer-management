@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefsHelper {
   static const _keyIsLoggedIn = "is_logged_in";
-  static const _userId = "user_id";
+  static const userId = "user_id";
 
   final SharedPreferences prefs;
 
@@ -11,7 +11,7 @@ class SharedPrefsHelper {
 
   Future<void> setLoggedIn(bool value, {required String id}) async {
     await prefs.setBool(_keyIsLoggedIn, value);
-    await prefs.setBool(_userId, value);
+    await prefs.setString(userId, id);
   }
 
   bool isLoggedIn() {

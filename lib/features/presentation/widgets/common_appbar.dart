@@ -70,53 +70,55 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                   borderRadius: BorderRadius.circular(8),
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width * .14,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          leading: CircleAvatar(radius: 16, child: Text("Jh")),
-                          title: Text("John deo"),
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder:
-                                  (context) => ProfileEditPopup(
-                                    displayName: "John Doe",
-                                    profilePicture:
-                                        null,
-                                    designation: "Admin",
-                                    phone: "9876543210",
-                                    location: "Mumbai",
-                                    onSave: (
-                                      name,
-                                      picture,
-                                      designation,
-                                      phone,
-                                      location,
-                                    ) {
-                                      print(
-                                        "Updated: $name, $picture, $designation, $phone, $location",
-                                      );
-                                      // Call Supabase update API here
-                                    },
-                                  ),
-                            );
-
-                            _toggleOverlay();
-                          },
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.logout),
-                          title: const Text("Logout"),
-                          onTap: () {
-                            ref
-                                .read(authControllerProvider.notifier)
-                                .logout(context);
-                            _toggleOverlay();
-                          },
-                        ),
-                      ],
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: CircleAvatar(
+                                radius: 16,
+                                child: Text("Jh"),
+                              ),
+                              title: Text("John deo"),
+                              onTap: () {
+                                _toggleOverlay();
+                                showDialog(
+                                  context: context,
+                                  builder:
+                                      (context) => ProfileEditPopup(
+                                        displayName: "John Doe",
+                                        profilePicture: null,
+                                        designation: "Admin",
+                                        phone: "9876543210",
+                                        location: "Mumbai",
+                                        onSave: (
+                                          name,
+                                          picture,
+                                          designation,
+                                          phone,
+                                          location,
+                                        ) async {
+                                        
+                                        },
+                                      ),
+                                );
+                              },
+                            ),
+                            const Divider(height: 1),
+                            ListTile(
+                              leading: const Icon(Icons.logout),
+                              title: const Text("Logout"),
+                              onTap: () {
+                                ref
+                                    .read(authControllerProvider.notifier)
+                                    .logout(context);
+                                _toggleOverlay();
+                              },
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

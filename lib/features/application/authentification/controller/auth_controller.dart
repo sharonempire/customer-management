@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/network/network_calls.dart';
+import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -90,6 +91,64 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
+  Future<void> updateUserProfile({
+    required BuildContext context,
+    required Map<String, dynamic> updatedData,
+  }) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? userId = prefs.getString(SharedPrefsHelper.userId);
+
+      if (userId == null || userId.isEmpty) {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'User ID not found. Please login again.');
+        return;
+      }
+
+      // 1️⃣ Check if the row exists
+      final bool exists = await _networkService.rowExists(
+        table: SupabaseTables.profiles,
+        id: userId,
+      );
+
+      Map<String, dynamic>? response;
+
+      // 2️⃣ If exists → update, otherwise → create (insert)
+      if (exists) {
+        response = await _networkService.update(
+          table: SupabaseTables.profiles,
+          id: userId,
+          data: updatedData,
+        );
+      } else {
+        // Ensure the row has correct `id`
+        final dataWithId = {'id': userId, ...updatedData};
+        response = await _networkService.push(
+          table: SupabaseTables.profiles,
+          data: dataWithId,
+        );
+      }
+
+      // 3️⃣ Show result
+      if (response != null) {
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'Profile saved successfully!');
+        log('Profile save response: $response');
+      } else {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to save profile.');
+      }
+    } catch (e) {
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to update profile: ${e.toString()}');
+      log('Profile update error: $e');
+    }
+  }
+
   /// LOGOUT
   Future<void> logout(BuildContext context) async {
     try {
@@ -108,7 +167,6 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  /// CHECK AUTH STATE (optional, can be used on app startup)
   void checkAuth() {
     state = _networkService.isAuthenticated;
   }
