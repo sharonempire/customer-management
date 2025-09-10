@@ -3,20 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
+import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/consts/images.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+class CreatePassword extends ConsumerStatefulWidget {
+  const CreatePassword({super.key});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  ConsumerState<CreatePassword> createState() => _CreatePasswordState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _CreatePasswordState extends ConsumerState<CreatePassword> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController confrimPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Login',
+                      'Create password',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
@@ -67,7 +69,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 10),
+                    height10,
                     TextFormField(
                       controller: passwordController,
                       obscureText: true,
@@ -82,7 +84,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    height10,
+                    TextFormField(
+                      controller: confrimPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Confirm Password",
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter password again';
+                        }
+                        return null;
+                      },
+                    ),
+                    height20,
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
@@ -132,14 +149,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             text: 'Click to ',
                             children: [
                               TextSpan(
-                                text: 'Create password',
+                                text: 'Login',
                                 style: TextStyle(color: Colors.blue),
                                 recognizer:
                                     TapGestureRecognizer()
                                       ..onTap = () {
-                                        context.go(
-                                          RouterConsts().createPassword.route,
-                                        );
+                                        context.go(RouterConsts().login.route);
                                       },
                               ),
                             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/presentation/pages/attendance/attendance.dart';
+import 'package:management_software/features/presentation/pages/auth/create_password.dart';
 import 'package:management_software/features/presentation/pages/auth/login_page.dart';
 import 'package:management_software/features/presentation/pages/dashboard/dashboard.dart';
 import 'package:management_software/features/presentation/pages/lead_management/lead_management.dart';
@@ -11,6 +12,14 @@ class RouterConsts {
   final RouteModel login = RouteModel('/login', 'Login', (context, state) {
     return const LoginPage();
   });
+
+  final RouteModel createPassword = RouteModel(
+    '/createPasswored',
+    'Create Password',
+    (context, state) {
+      return const CreatePassword();
+    },
+  );
 
   final RouteModel attendance = RouteModel('/attendance', 'Attendance', (
     context,

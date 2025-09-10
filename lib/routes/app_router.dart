@@ -20,7 +20,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final loggedIn = prefs.isLoggedIn();
 
       final goingToLogin = state.matchedLocation == routeConsts.login.route;
-      if (!loggedIn && !goingToLogin) {
+      final goingToCreatePassword =
+          state.matchedLocation == routeConsts.createPassword.route;
+
+      if (!loggedIn && !goingToLogin && !goingToCreatePassword) {
         return routeConsts.login.route;
       }
 
@@ -28,7 +31,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return routeConsts.dashboard.route;
       }
 
-      return null; 
+      return null;
     },
 
     routes: [
@@ -37,6 +40,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: routeConsts.login.route,
         name: routeConsts.login.name,
         builder: routeConsts.login.builder,
+      ),
+
+      GoRoute(
+        path: routeConsts.createPassword.route,
+        name: routeConsts.createPassword.name,
+        builder: routeConsts.createPassword.builder,
       ),
 
       // Shell for main layout
