@@ -132,14 +132,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             text: 'Click to ',
                             children: [
                               TextSpan(
-                                text: 'Create password',
+                                text: 'Sign up',
                                 style: TextStyle(color: Colors.blue),
                                 recognizer:
                                     TapGestureRecognizer()
                                       ..onTap = () {
-                                        context.go(
-                                          RouterConsts().createPassword.route,
-                                        );
+                                        context.go(RouterConsts().signUp.route);
                                       },
                               ),
                             ],

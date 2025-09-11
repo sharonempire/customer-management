@@ -8,6 +8,7 @@ class UserProfileModel {
   final String? designation;
   final String? freelancerStatus;
   final String? location;
+  final String? email; // ✅ New field
 
   UserProfileModel({
     this.id,
@@ -19,13 +20,16 @@ class UserProfileModel {
     this.designation,
     this.freelancerStatus,
     this.location,
+    this.email, // ✅ Added to constructor
   });
 
-  /// Convert Supabase data (Map) to Profile object
   factory UserProfileModel.fromMap(Map<String, dynamic> map) {
     return UserProfileModel(
-      id: map['id'] as String,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      id: map['id'] as String?,
+      createdAt:
+          map['created_at'] != null
+              ? DateTime.tryParse(map['created_at'] as String)
+              : null,
       displayName: map['diplay_name'] as String?, // DB typo kept
       profilePicture: map['profilepicture'] as String?,
       userType: map['user_type'] as String?,
@@ -34,13 +38,13 @@ class UserProfileModel {
       designation: map['designation'] as String?,
       freelancerStatus: map['freelancer_status'] as String?,
       location: map['location'] as String?,
+      email: map['email'] as String?, // ✅ Added here
     );
   }
 
-  /// Convert to JSON for update - excludes null fields
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-
+    if (id != null) data['id'] = id;
     if (displayName != null) data['diplay_name'] = displayName;
     if (profilePicture != null) data['profilepicture'] = profilePicture;
     if (userType != null) data['user_type'] = userType;
@@ -48,11 +52,11 @@ class UserProfileModel {
     if (designation != null) data['designation'] = designation;
     if (freelancerStatus != null) data['freelancer_status'] = freelancerStatus;
     if (location != null) data['location'] = location;
+    if (email != null) data['email'] = email; // ✅ Added here
 
     return data;
   }
 
-  /// Copy object with updated fields
   UserProfileModel copyWith({
     String? displayName,
     String? profilePicture,
@@ -61,6 +65,7 @@ class UserProfileModel {
     String? designation,
     String? freelancerStatus,
     String? location,
+    String? email, // ✅ Added here
   }) {
     return UserProfileModel(
       id: id,
@@ -72,6 +77,7 @@ class UserProfileModel {
       designation: designation ?? this.designation,
       freelancerStatus: freelancerStatus ?? this.freelancerStatus,
       location: location ?? this.location,
+      email: email ?? this.email, // ✅ Added here
     );
   }
 }

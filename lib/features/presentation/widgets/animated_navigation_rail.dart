@@ -23,6 +23,8 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
           ? 1
           : loc.startsWith(routerConsts.enquiries.route)
           ? 2
+          : loc.startsWith(routerConsts.employeeManagement.route)
+          ? 3
           : 0;
 
   void _onSelect(int i) {
@@ -35,6 +37,9 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
         break;
       case 2:
         context.go(routerConsts.enquiries.route);
+        break;
+      case 3:
+        context.go(routerConsts.employeeManagement.route);
         break;
     }
   }
@@ -87,8 +92,13 @@ class _AnimatedNavRailState extends ConsumerState<AnimatedNavRail> {
                         icon: const Icon(Icons.call_outlined),
                         label: _animatedLabel(routerConsts.enquiries.name),
                       ),
+                      NavigationRailDestination(
+                        icon: const Icon(Icons.support_agent_outlined),
+                        label: _animatedLabel(
+                          routerConsts.employeeManagement.name,
+                        ),
+                      ),
                     ],
-                    
                   ),
                 ),
               ],

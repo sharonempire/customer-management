@@ -7,14 +7,14 @@ import 'package:management_software/features/presentation/widgets/space_widgets.
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/consts/images.dart';
 
-class CreatePassword extends ConsumerStatefulWidget {
-  const CreatePassword({super.key});
+class SignUpPage extends ConsumerStatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  ConsumerState<CreatePassword> createState() => _CreatePasswordState();
+  ConsumerState<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _CreatePasswordState extends ConsumerState<CreatePassword> {
+class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -48,7 +48,7 @@ class _CreatePasswordState extends ConsumerState<CreatePassword> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Create password',
+                      'Sign Up',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
@@ -59,7 +59,7 @@ class _CreatePasswordState extends ConsumerState<CreatePassword> {
                     TextFormField(
                       controller: usernameController,
                       decoration: const InputDecoration(
-                        labelText: "Username",
+                        labelText: "Email",
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
@@ -107,7 +107,7 @@ class _CreatePasswordState extends ConsumerState<CreatePassword> {
                         ElevatedButton(
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
-                              await authProvider.login(
+                              await authProvider.signUp(
                                 email: usernameController.text,
                                 password: passwordController.text,
                                 context: context,
@@ -135,7 +135,7 @@ class _CreatePasswordState extends ConsumerState<CreatePassword> {
                             ),
                           ),
                           child: const Text(
-                            'Login',
+                            'Sign up',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -149,7 +149,7 @@ class _CreatePasswordState extends ConsumerState<CreatePassword> {
                             text: 'Click to ',
                             children: [
                               TextSpan(
-                                text: 'Login',
+                                text: 'login',
                                 style: TextStyle(color: Colors.blue),
                                 recognizer:
                                     TapGestureRecognizer()

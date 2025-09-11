@@ -11,6 +11,7 @@ import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, UserProfileModel>((ref) {
@@ -43,7 +44,6 @@ class AuthController extends StateNotifier<UserProfileModel> {
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Login successful!');
         getUserDetails(context: context);
-
         context.pushReplacement(RouterConsts().dashboard.route);
       } else {
         ref
@@ -65,10 +65,22 @@ class AuthController extends StateNotifier<UserProfileModel> {
     required BuildContext context,
   }) async {
     try {
+      final exists = await ref
+          .read(networkServiceProvider)
+          .emailExists(table: SupabaseTables.profiles, email: email);
+
+      if (exists == false) {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Email does not exists');
+        return;
+      }
+
       final response = await _networkService.auth.signUp(
         email: email,
         password: password,
       );
+
       final SharedPreferences prefs = await SharedPreferences.getInstance();
 
       if (response.user != null) {
@@ -76,7 +88,11 @@ class AuthController extends StateNotifier<UserProfileModel> {
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Signup successful!');
-        getUserDetails(context: context);
+        updateUserUuid(
+          context: context,
+          email: email,
+          userId: response.user!.id,
+        );
         context.pushReplacement(RouterConsts().dashboard.route);
       } else {
         ref
@@ -155,6 +171,91 @@ class AuthController extends StateNotifier<UserProfileModel> {
     }
   }
 
+  Future<void> updateUserUuid({
+    required BuildContext context,
+    required String email,
+    required String userId,
+  }) async {
+    try {
+      if (userId.isEmpty) {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'User ID not found. Please login again.');
+        return;
+      }
+
+      final response = await _networkService.updateWithEmail(
+        table: SupabaseTables.profiles,
+        email: email,
+        data: {'id': userId},
+      );
+      getUserDetails(context: context);
+
+      // 3️⃣ Show result
+      if (response != null) {
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'Profile saved successfully!');
+        log('Profile save response: $response');
+      } else {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to save profile.');
+      }
+    } catch (e) {
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to update profile: ${e.toString()}');
+      log('Profile update error: $e');
+    }
+  }
+
+  String generateUniqueId() {
+    var uuid = Uuid();
+    return uuid.v4(); // Generates a unique UUID v4
+  }
+
+  Future<void> addEmployee({
+    required BuildContext context,
+    required Map<String, dynamic> updatedData,
+  }) async {
+    try {
+      final bool exists = await _networkService.emailExists(
+        table: SupabaseTables.profiles,
+        email: updatedData['email'],
+      );
+      if (exists) {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Email already exists.');
+        return;
+      }
+      Map<String, dynamic>? response;
+      log(updatedData.toString());
+
+      response = await _networkService.push(
+        table: SupabaseTables.profiles,
+        data: updatedData,
+      );
+
+      if (response != null) {
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'User added employee!');
+        log('Profile save response: $response');
+      } else {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to add employee.');
+      }
+    } catch (e) {
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to add employee: ${e.toString()}');
+      log('Profile update error: $e');
+    }
+  }
+
   Future<void> getUserDetails({required BuildContext context}) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -182,7 +283,6 @@ class AuthController extends StateNotifier<UserProfileModel> {
         storeToSharedPreferences(response!);
       }
 
-      // 3️⃣ Show result
       if (response != null) {
         log('Profile save response: $response');
       } else {

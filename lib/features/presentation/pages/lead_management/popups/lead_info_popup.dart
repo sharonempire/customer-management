@@ -74,9 +74,15 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
                             children: [
                               Row(
                                 children: [
-                                  CommonTextField(text: "First Name",controller: firstNameController,),
+                                  CommonTextField(
+                                    text: "First Name",
+                                    controller: firstNameController,
+                                  ),
                                   width20,
-                                  CommonTextField(text: "Second Name",controller: lastNameController,),
+                                  CommonTextField(
+                                    text: "Second Name",
+                                    controller: lastNameController,
+                                  ),
                                 ],
                               ),
                               Row(
@@ -316,7 +322,6 @@ class CommonInfoBox extends StatelessWidget {
   }
 }
 
-
 class CommonTextField extends StatelessWidget {
   final String text;
   final TextEditingController controller;
@@ -362,7 +367,10 @@ class CommonTextField extends StatelessWidget {
             labelStyle: myTextstyle(color: Colors.grey, fontSize: 16),
             hintText: hint,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(rounded ? 10 : 0),
               borderSide: const BorderSide(color: Colors.grey, width: 1),
@@ -376,9 +384,13 @@ class CommonTextField extends StatelessWidget {
               borderSide: const BorderSide(color: Colors.grey, width: 1),
             ),
           ),
-          validator: requiredField
-              ? (value) => (value == null || value.trim().isEmpty) ? 'Required' : null
-              : null,
+          validator:
+              requiredField
+                  ? (value) =>
+                      (value == null || value.trim().isEmpty)
+                          ? 'Required'
+                          : null
+                  : null,
           onChanged: onChanged,
           onFieldSubmitted: onSubmitted,
         ),
@@ -428,6 +440,7 @@ class CommonDropdown extends StatelessWidget {
   final List<String> items;
   final String? value;
   final void Function(String?) onChanged;
+  final bool rounded; // ✅ same as TextField
 
   const CommonDropdown({
     super.key,
@@ -435,6 +448,7 @@ class CommonDropdown extends StatelessWidget {
     required this.items,
     this.value,
     required this.onChanged,
+    this.rounded = true, // ✅ default same as TextField
   });
 
   @override
@@ -442,28 +456,35 @@ class CommonDropdown extends StatelessWidget {
     if (items.length <= 10) {
       return Expanded(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 10,
+          ), // ✅ same padding as TextField
           child: DropdownButtonFormField<String>(
             hint: Text(
               label,
-              style: myTextstyle(color: Colors.grey, fontSize: 18),
+              style: myTextstyle(color: Colors.grey, fontSize: 16),
             ),
             value: value,
             decoration: InputDecoration(
-              label: Text(
-                label,
-                style: myTextstyle(color: Colors.grey, fontSize: 18),
+              labelText: label,
+              labelStyle: myTextstyle(color: Colors.grey, fontSize: 16),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                // ✅ same content padding
+                vertical: 10,
+                horizontal: 12,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
             ),
@@ -482,10 +503,13 @@ class CommonDropdown extends StatelessWidget {
       );
     }
 
-    // ✅ If more than 10 items → searchable
+    // ✅ Searchable version
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 10,
+        ), // ✅ matched
         child: InkWell(
           onTap: () async {
             final selected = await showSearch<String?>(
@@ -500,23 +524,26 @@ class CommonDropdown extends StatelessWidget {
               onChanged(selected);
             }
           },
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(rounded ? 10 : 0),
           child: InputDecorator(
             decoration: InputDecoration(
-              label: Text(
-                label,
-                style: myTextstyle(color: Colors.grey, fontSize: 18),
+              labelText: label,
+              labelStyle: myTextstyle(color: Colors.grey, fontSize: 16),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 10,
+                horizontal: 12,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
               suffixIcon: const Icon(Icons.search),

@@ -18,23 +18,16 @@ class ProfileEditPopup extends ConsumerStatefulWidget {
   final String designation;
   final String phone;
   final String location;
-  final Function(
-    String name,
-    Uint8List? picture,
-    String designation,
-    String phone,
-    String location,
-  )
-  onSave;
+  final String email;
 
   const ProfileEditPopup({
     super.key,
     required this.displayName,
     this.profilePicture,
     required this.designation,
+    required this.email,
     required this.phone,
     required this.location,
-    required this.onSave,
   });
 
   @override
@@ -46,6 +39,7 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
   Uint8List? _imageFile;
   late TextEditingController nameController;
   late TextEditingController phoneController;
+  late TextEditingController emailController;
   late TextEditingController locationController;
   String selectedDesignation = "Admin";
 
@@ -64,6 +58,7 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.displayName);
+    emailController = TextEditingController(text: widget.email);
     phoneController = TextEditingController(text: widget.phone);
     locationController = TextEditingController(text: widget.location);
     selectedDesignation =
@@ -125,7 +120,6 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
                 ),
                 const SizedBox(height: 16),
 
-                // Name Field with new CommonTextField
                 Row(
                   children: [
                     CommonTextField(
@@ -146,6 +140,17 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
                       keyboardType: TextInputType.phone,
                       requiredField: true,
                       icon: Icons.phone,
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    CommonTextField(
+                      text: "Email",
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      requiredField: true,
+                      icon: Icons.email,
                     ),
                   ],
                 ),
@@ -201,7 +206,7 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
                                 .uploadFile(
                                   bucketName: SupabaseBuckets.userImages,
                                   filePath: fileName,
-                                  fileBytes: _imageFile ,
+                                  fileBytes: _imageFile,
                                 );
 
                             await ref
@@ -211,7 +216,11 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
                                   updatedData:
                                       UserProfileModel(
                                         displayName: nameController.text,
-                                        profilePicture:_imageFile != null ? pictureUrl : widget.profilePicture ?? pictureUrl,
+                                        profilePicture:
+                                            _imageFile != null
+                                                ? pictureUrl
+                                                : widget.profilePicture ??
+                                                    pictureUrl,
                                         designation: selectedDesignation,
                                         phone: int.parse(phoneController.text),
                                         location: locationController.text,

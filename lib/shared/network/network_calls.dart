@@ -53,6 +53,20 @@ class NetworkService {
     }
   }
 
+    Future<bool> emailExists({required String table, required String email}) async {
+    try {
+      final response =
+          await _supabase.from(table).select('id').eq('email', email).maybeSingle();
+
+      return response != null; // true if row exists
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST116') return false; // No row found
+      throw _parseError(e.message, 'Failed to check row');
+    } catch (e) {
+      throw 'Failed to check row: ${e.toString()}';
+    }
+  }
+
   Future<List<Map<String, dynamic>>> pull({
     required String table,
     String? filterColumn,
@@ -129,6 +143,28 @@ class NetworkService {
               .from(table)
               .update(data)
               .eq('id', id)
+              .select()
+              .maybeSingle();
+      return response;
+    } on PostgrestException catch (e) {
+      throw _parseError(e.message, 'Failed to update item');
+    } catch (e) {
+      throw 'Failed to update item: ${e.toString()}';
+    }
+  }
+
+    Future<Map<String, dynamic>?> updateWithEmail({
+    required String table,
+    required String email,
+    required Map<String, dynamic> data,
+  }) async {
+    log(AutofillHints.email.toString());
+    try {
+      final response =
+          await _supabase
+              .from(table)
+              .update(data)
+              .eq('email', email)
               .select()
               .maybeSingle();
       return response;

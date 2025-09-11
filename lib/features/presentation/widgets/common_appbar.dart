@@ -120,6 +120,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                                   context: context,
                                   builder:
                                       (context) => ProfileEditPopup(
+                                        email: userProfile.email ?? '',
                                         displayName:
                                             userProfile.displayName ?? '',
                                         profilePicture:
@@ -128,14 +129,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                                             userProfile.designation ?? '',
                                         phone: userProfile.phone.toString(),
                                         location: userProfile.location ?? '',
-                                        onSave:
-                                            (
-                                              name,
-                                              picture,
-                                              designation,
-                                              phone,
-                                              location,
-                                            ) async {},
+                                                  
                                       ),
                                 );
                               },
