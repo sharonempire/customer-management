@@ -56,6 +56,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
   }
 
   OverlayEntry _createOverlay() {
+    final userProfile = ref.watch(authControllerProvider);
     return OverlayEntry(
       builder:
           (context) => Positioned(
@@ -79,20 +80,23 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                             ListTile(
                               leading: CircleAvatar(
                                 radius: 16,
-                                child: Text("Jh"),
+                                child: Text(userProfile.displayName?[0] ?? ''),
                               ),
-                              title: Text("John deo"),
+                              title: Text(userProfile.displayName ?? ''),
                               onTap: () {
                                 _toggleOverlay();
                                 showDialog(
                                   context: context,
                                   builder:
                                       (context) => ProfileEditPopup(
-                                        displayName: "John Doe",
-                                        profilePicture: null,
-                                        designation: "Admin",
-                                        phone: "9876543210",
-                                        location: "Mumbai",
+                                        displayName:
+                                            userProfile.displayName ?? '',
+                                        profilePicture:
+                                            userProfile.profilePicture ?? '',
+                                        designation:
+                                            userProfile.designation ?? '',
+                                        phone: userProfile.phone.toString(),
+                                        location: userProfile.location ?? '',
                                         onSave:
                                             (
                                               name,
@@ -138,6 +142,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
+    final userProfile = ref.watch(authControllerProvider);
 
     return AppBar(
       backgroundColor: Colors.white,
@@ -169,9 +174,15 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
             onTap: _toggleOverlay,
             child: Row(
               children: [
-                CircleAvatar(radius: 18, child: Text("Jh")),
+                CircleAvatar(
+                  radius: 18,
+                  child: Text(userProfile.displayName?[0] ?? ''),
+                ),
                 const SizedBox(width: 8),
-                Text("John deo", style: myTextstyle(color: Colors.black)),
+                Text(
+                  userProfile.displayName ?? '',
+                  style: myTextstyle(color: Colors.black),
+                ),
                 width30,
               ],
             ),
