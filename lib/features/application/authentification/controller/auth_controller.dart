@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/network/network_calls.dart';
@@ -10,19 +11,17 @@ import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-final authControllerProvider = StateNotifierProvider<AuthController, bool>((
-  ref,
-) {
-  final networkService = ref.watch(networkServiceProvider);
-  return AuthController(networkService, ref);
-});
+final authControllerProvider =
+    StateNotifierProvider<AuthController, UserProfileModel>((ref) {
+      final networkService = ref.watch(networkServiceProvider);
+      return AuthController(networkService, ref);
+    });
 
-class AuthController extends StateNotifier<bool> {
+class AuthController extends StateNotifier<UserProfileModel> {
   final NetworkService _networkService;
   final Ref ref;
 
-  AuthController(this._networkService, this.ref)
-    : super(_networkService.isAuthenticated);
+  AuthController(this._networkService, this.ref) : super(UserProfileModel());
 
   /// LOGIN
   Future<void> login({
@@ -39,10 +38,11 @@ class AuthController extends StateNotifier<bool> {
       if (response.user != null) {
         log('User logged in: ${response.user!}');
         await SharedPrefsHelper(prefs).setLoggedIn(true, id: response.user!.id);
-        state = true;
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Login successful!');
+        getUserDetails(context: context);
+
         context.pushReplacement(RouterConsts().dashboard.route);
       } else {
         ref
@@ -72,10 +72,10 @@ class AuthController extends StateNotifier<bool> {
 
       if (response.user != null) {
         await SharedPrefsHelper(prefs).setLoggedIn(true, id: response.user!.id);
-        state = true;
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Signup successful!');
+        getUserDetails(context: context);
         context.pushReplacement(RouterConsts().dashboard.route);
       } else {
         ref
@@ -121,6 +121,7 @@ class AuthController extends StateNotifier<bool> {
           id: userId,
           data: updatedData,
         );
+        getUserDetails(context: context);
       } else {
         // Ensure the row has correct `id`
         final dataWithId = {'id': userId, ...updatedData};
@@ -128,6 +129,7 @@ class AuthController extends StateNotifier<bool> {
           table: SupabaseTables.profiles,
           data: dataWithId,
         );
+        getUserDetails(context: context);
       }
 
       // 3️⃣ Show result
@@ -149,11 +151,53 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
+  Future<void> getUserDetails({required BuildContext context}) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? userId = prefs.getString(SharedPrefsHelper.userId);
+
+      if (userId == null || userId.isEmpty) {
+        context.go(RouterConsts().login.route);
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'User ID not found. Please login again.');
+        return;
+      }
+      final bool exists = await _networkService.rowExists(
+        table: SupabaseTables.profiles,
+        id: userId,
+      );
+
+      Map<String, dynamic>? response;
+
+      if (exists) {
+        response = await _networkService.pullById(
+          table: SupabaseTables.profiles,
+          id: userId,
+        );
+        storeToSharedPreferences(response!);
+      }
+
+      // 3️⃣ Show result
+      if (response != null) {
+        log('Profile save response: $response');
+      } else {
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to fetch profile.');
+      }
+    } catch (e) {
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to update profile: ${e.toString()}');
+      log('Profile update error: $e');
+    }
+  }
+
   /// LOGOUT
   Future<void> logout(BuildContext context) async {
     try {
       await _networkService.signOut();
-      state = false;
       ref
           .read(snackbarServiceProvider)
           .showSuccess(context, 'Logged out successfully!');
@@ -167,7 +211,11 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  void checkAuth() {
-    state = _networkService.isAuthenticated;
+  Future<void> storeToSharedPreferences(Map<String, dynamic> data) async {
+    SharedPrefsHelper prefsHelper = SharedPrefsHelper(
+      await SharedPreferences.getInstance(),
+    );
+    await prefsHelper.storeUserDetails(data: data);
+    state = UserProfileModel.fromMap(data);
   }
 }

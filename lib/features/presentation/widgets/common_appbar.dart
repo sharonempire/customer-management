@@ -31,6 +31,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
   @override
   void initState() {
     super.initState();
+    ref.read(authControllerProvider.notifier).getUserDetails(context: context);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -92,15 +93,14 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                                         designation: "Admin",
                                         phone: "9876543210",
                                         location: "Mumbai",
-                                        onSave: (
-                                          name,
-                                          picture,
-                                          designation,
-                                          phone,
-                                          location,
-                                        ) async {
-                                        
-                                        },
+                                        onSave:
+                                            (
+                                              name,
+                                              picture,
+                                              designation,
+                                              phone,
+                                              location,
+                                            ) async {},
                                       ),
                                 );
                               },
