@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -114,8 +115,12 @@ class AuthController extends StateNotifier<UserProfileModel> {
 
       Map<String, dynamic>? response;
 
-      // 2️⃣ If exists → update, otherwise → create (insert)
+      log("updatedData : $updatedData");
+      log("state.toJson() : ${state.toJson()}");
       if (exists) {
+        if (mapEquals(updatedData, state.toJson())) {
+          return;
+        }
         response = await _networkService.update(
           table: SupabaseTables.profiles,
           id: userId,
@@ -123,7 +128,6 @@ class AuthController extends StateNotifier<UserProfileModel> {
         );
         getUserDetails(context: context);
       } else {
-        // Ensure the row has correct `id`
         final dataWithId = {'id': userId, ...updatedData};
         response = await _networkService.push(
           table: SupabaseTables.profiles,

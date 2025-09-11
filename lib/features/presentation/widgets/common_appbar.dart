@@ -34,7 +34,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
     ref.read(authControllerProvider.notifier).getUserDetails(context: context);
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 150),
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
@@ -42,7 +42,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
   void _toggleOverlay() {
     if (_isOpen) {
       _controller.reverse();
-      Future.delayed(const Duration(milliseconds: 300), () {
+      Future.delayed(const Duration(milliseconds: 150), () {
         _overlayEntry?.remove();
         _overlayEntry = null;
       });
@@ -71,7 +71,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                   elevation: 4,
                   borderRadius: BorderRadius.circular(8),
                   child: SizedBox(
-                    width: MediaQuery.of(context).size.width * .14,
+                    width: MediaQuery.of(context).size.width * .25,
                     child: Consumer(
                       builder: (context, ref, _) {
                         return Column(
@@ -79,8 +79,39 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                           children: [
                             ListTile(
                               leading: CircleAvatar(
-                                radius: 16,
-                                child: Text(userProfile.displayName?[0] ?? ''),
+                                radius: 30,
+                                backgroundImage:
+                                    (userProfile.profilePicture != null &&
+                                            userProfile
+                                                .profilePicture!
+                                                .isNotEmpty)
+                                        ? NetworkImage(
+                                          userProfile.profilePicture!,
+                                        )
+                                        : null,
+                                backgroundColor: Colors.grey[300],
+
+                                child:
+                                    (userProfile.profilePicture == null ||
+                                            userProfile.profilePicture!.isEmpty)
+                                        ? (userProfile.displayName != null &&
+                                                userProfile
+                                                    .displayName!
+                                                    .isNotEmpty)
+                                            ? Text(
+                                              userProfile.displayName![0]
+                                                  .toUpperCase(),
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                            : const Icon(
+                                              Icons.person,
+                                              size: 30,
+                                              color: Colors.grey,
+                                            )
+                                        : null,
                               ),
                               title: Text(userProfile.displayName ?? ''),
                               onTap: () {
@@ -176,7 +207,31 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
               children: [
                 CircleAvatar(
                   radius: 18,
-                  child: Text(userProfile.displayName?[0] ?? ''),
+                  backgroundImage:
+                      (userProfile.profilePicture != null &&
+                              userProfile.profilePicture!.isNotEmpty)
+                          ? NetworkImage(userProfile.profilePicture!)
+                          : null,
+                  backgroundColor: Colors.grey[300],
+
+                  child:
+                      (userProfile.profilePicture == null ||
+                              userProfile.profilePicture!.isEmpty)
+                          ? (userProfile.displayName != null &&
+                                  userProfile.displayName!.isNotEmpty)
+                              ? Text(
+                                userProfile.displayName![0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : const Icon(
+                                Icons.person,
+                                size: 18,
+                                color: Colors.grey,
+                              )
+                          : null,
                 ),
                 const SizedBox(width: 8),
                 Text(

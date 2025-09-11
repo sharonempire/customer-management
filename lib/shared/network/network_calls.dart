@@ -39,16 +39,10 @@ class SnackbarService {
 class NetworkService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-    Future<bool> rowExists({
-    required String table,
-    required String id,
-  }) async {
+  Future<bool> rowExists({required String table, required String id}) async {
     try {
-      final response = await _supabase
-          .from(table)
-          .select('id')
-          .eq('id', id)
-          .maybeSingle();
+      final response =
+          await _supabase.from(table).select('id').eq('id', id).maybeSingle();
 
       return response != null; // true if row exists
     } on PostgrestException catch (e) {
@@ -58,7 +52,7 @@ class NetworkService {
       throw 'Failed to check row: ${e.toString()}';
     }
   }
-  
+
   Future<List<Map<String, dynamic>>> pull({
     required String table,
     String? filterColumn,
@@ -183,8 +177,9 @@ class NetworkService {
   Future<String> uploadFile({
     required String bucketName,
     required String filePath,
-    required Uint8List fileBytes,
+    required Uint8List? fileBytes,
   }) async {
+    if (fileBytes == null) return '';
     try {
       await _supabase.storage
           .from(bucketName)

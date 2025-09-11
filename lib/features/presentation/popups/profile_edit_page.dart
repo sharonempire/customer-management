@@ -186,20 +186,24 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
                         icon: Icons.save,
                         text: "Save",
                         onpressed: () async {
-                          if (_imageFile == null) {
+                          if (_imageFile == null &&
+                              (widget.profilePicture != null &&
+                                  widget.profilePicture!.isEmpty)) {
                             ref
                                 .read(snackbarServiceProvider)
                                 .showError(context, "Pick an image");
                           } else {
                             final String fileName =
                                 'profile_${DateTime.now().millisecondsSinceEpoch}.png';
+
                             final pictureUrl = await ref
                                 .read(networkServiceProvider)
                                 .uploadFile(
                                   bucketName: SupabaseBuckets.userImages,
                                   filePath: fileName,
-                                  fileBytes: _imageFile ?? Uint8List(0),
+                                  fileBytes: _imageFile ,
                                 );
+
                             await ref
                                 .read(authControllerProvider.notifier)
                                 .updateUserProfile(
@@ -207,7 +211,7 @@ class _ProfileEditPopupState extends ConsumerState<ProfileEditPopup> {
                                   updatedData:
                                       UserProfileModel(
                                         displayName: nameController.text,
-                                        profilePicture: pictureUrl,
+                                        profilePicture:_imageFile != null ? pictureUrl : widget.profilePicture ?? pictureUrl,
                                         designation: selectedDesignation,
                                         phone: int.parse(phoneController.text),
                                         location: locationController.text,
