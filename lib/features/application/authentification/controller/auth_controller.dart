@@ -1,29 +1,27 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
+import 'package:management_software/features/data/authentification/repositories/auth_repositories.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/network/network_calls.dart';
-import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, UserProfileModel>((ref) {
-      final networkService = ref.watch(networkServiceProvider);
-      return AuthController(networkService, ref);
-    });
+  final networkService = ref.watch(networkServiceProvider);
+  final repository = AuthRepository(networkService);
+  return AuthController(repository, ref);
+});
 
 class AuthController extends StateNotifier<UserProfileModel> {
-  final NetworkService _networkService;
+  final AuthRepository _repo;
   final Ref ref;
 
-  AuthController(this._networkService, this.ref) : super(UserProfileModel());
+  AuthController(this._repo, this.ref) : super(UserProfileModel());
 
   /// LOGIN
   Future<void> login({
@@ -32,294 +30,165 @@ class AuthController extends StateNotifier<UserProfileModel> {
     required BuildContext context,
   }) async {
     try {
-      final response = await _networkService.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      if (response.user != null) {
-        log('User logged in: ${response.user!}');
-        await SharedPrefsHelper(prefs).setLoggedIn(true, id: response.user!.id);
-        ref
-            .read(snackbarServiceProvider)
-            .showSuccess(context, 'Login successful!');
-        getUserDetails(context: context);
+      final response = await _repo.signIn(email, password);
+      if (response?.user != null) {
+        await _repo.saveLoginState(response!.user!.id);
+        ref.read(snackbarServiceProvider).showSuccess(context, 'Login successful!');
+        await getUserDetails(context: context);
         context.pushReplacement(RouterConsts().dashboard.route);
       } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Login failed. Check your credentials.');
+        ref.read(snackbarServiceProvider).showError(context, 'Login failed. Check credentials.');
       }
-    } on AuthException catch (e) {
-      ref.read(snackbarServiceProvider).showError(context, e.message);
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Login failed: ${e.toString()}');
+      ref.read(snackbarServiceProvider).showError(context, 'Login failed: $e');
     }
   }
 
+  /// SIGNUP
   Future<void> signUp({
     required String email,
     required String password,
     required BuildContext context,
   }) async {
     try {
-      final exists = await ref
-          .read(networkServiceProvider)
-          .emailExists(table: SupabaseTables.profiles, email: email);
-
-      if (exists == false) {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Email does not exists');
+      final exists = await _repo.emailExists(email);
+      if (!exists) {
+        ref.read(snackbarServiceProvider).showError(context, 'Email does not exist.');
         return;
       }
 
-      final response = await _networkService.auth.signUp(
-        email: email,
-        password: password,
-      );
-
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      if (response.user != null) {
-        await SharedPrefsHelper(prefs).setLoggedIn(true, id: response.user!.id);
-        ref
-            .read(snackbarServiceProvider)
-            .showSuccess(context, 'Signup successful!');
-        updateUserUuid(
-          context: context,
-          email: email,
-          userId: response.user!.id,
-        );
+      final response = await _repo.signUp(email, password);
+      if (response?.user != null) {
+        await _repo.saveLoginState(response!.user!.id);
+        ref.read(snackbarServiceProvider).showSuccess(context, 'Signup successful!');
+        await updateUserUuid(context: context, email: email, userId: response.user!.id);
         context.pushReplacement(RouterConsts().dashboard.route);
       } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Signup failed. Try again.');
+        ref.read(snackbarServiceProvider).showError(context, 'Signup failed. Try again.');
       }
-    } on AuthException catch (e) {
-      ref.read(snackbarServiceProvider).showError(context, e.message);
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Signup failed: ${e.toString()}');
+      ref.read(snackbarServiceProvider).showError(context, 'Signup failed: $e');
     }
   }
 
+  /// UPDATE USER PROFILE (Insert if not exists)
   Future<void> updateUserProfile({
     required BuildContext context,
     required Map<String, dynamic> updatedData,
   }) async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? userId = prefs.getString(SharedPrefsHelper.userId);
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString(SharedPrefsHelper.userId);
 
       if (userId == null || userId.isEmpty) {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'User ID not found. Please login again.');
+        ref.read(snackbarServiceProvider).showError(context, 'User ID not found. Please login again.');
         return;
       }
 
-      // 1️⃣ Check if the row exists
-      final bool exists = await _networkService.rowExists(
-        table: SupabaseTables.profiles,
-        id: userId,
-      );
-
+      final exists = await _repo.rowExists(userId);
       Map<String, dynamic>? response;
 
-      log("updatedData : $updatedData");
-      log("state.toJson() : ${state.toJson()}");
       if (exists) {
         if (mapEquals(updatedData, state.toJson())) {
-          return;
+          return; // No changes
         }
-        response = await _networkService.update(
-          table: SupabaseTables.profiles,
-          id: userId,
-          data: updatedData,
-        );
-        getUserDetails(context: context);
+        response = await _repo.updateProfileById(userId, updatedData);
       } else {
         final dataWithId = {'id': userId, ...updatedData};
-        response = await _networkService.push(
-          table: SupabaseTables.profiles,
-          data: dataWithId,
-        );
-        getUserDetails(context: context);
+        response = await _repo.addProfile(dataWithId);
       }
 
-      // 3️⃣ Show result
       if (response != null) {
-        ref
-            .read(snackbarServiceProvider)
-            .showSuccess(context, 'Profile saved successfully!');
-        log('Profile save response: $response');
+        await getUserDetails(context: context);
+        ref.read(snackbarServiceProvider).showSuccess(context, 'Profile saved successfully!');
       } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Failed to save profile.');
+        ref.read(snackbarServiceProvider).showError(context, 'Failed to save profile.');
       }
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Failed to update profile: ${e.toString()}');
-      log('Profile update error: $e');
+      ref.read(snackbarServiceProvider).showError(context, 'Failed to update profile: $e');
     }
   }
 
+  /// UPDATE USER UUID AFTER SIGNUP
   Future<void> updateUserUuid({
     required BuildContext context,
     required String email,
     required String userId,
   }) async {
     try {
-      if (userId.isEmpty) {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'User ID not found. Please login again.');
-        return;
-      }
-
-      final response = await _networkService.updateWithEmail(
-        table: SupabaseTables.profiles,
-        email: email,
-        data: {'id': userId},
-      );
-      getUserDetails(context: context);
-
-      // 3️⃣ Show result
+      final response = await _repo.updateProfileByEmail(email, {'id': userId});
+      await getUserDetails(context: context);
       if (response != null) {
-        ref
-            .read(snackbarServiceProvider)
-            .showSuccess(context, 'Profile saved successfully!');
-        log('Profile save response: $response');
+        ref.read(snackbarServiceProvider).showSuccess(context, 'Profile saved successfully!');
       } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Failed to save profile.');
+        ref.read(snackbarServiceProvider).showError(context, 'Failed to save profile.');
       }
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Failed to update profile: ${e.toString()}');
-      log('Profile update error: $e');
+      ref.read(snackbarServiceProvider).showError(context, 'Failed to update profile: $e');
     }
   }
 
-  String generateUniqueId() {
-    var uuid = Uuid();
-    return uuid.v4(); // Generates a unique UUID v4
-  }
-
+  /// ADD EMPLOYEE
   Future<void> addEmployee({
     required BuildContext context,
     required Map<String, dynamic> updatedData,
   }) async {
     try {
-      final bool exists = await _networkService.emailExists(
-        table: SupabaseTables.profiles,
-        email: updatedData['email'],
-      );
+      final exists = await _repo.emailExists(updatedData['email']);
       if (exists) {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Email already exists.');
+        ref.read(snackbarServiceProvider).showError(context, 'Email already exists.');
         return;
       }
-      Map<String, dynamic>? response;
-      log(updatedData.toString());
-
-      response = await _networkService.push(
-        table: SupabaseTables.profiles,
-        data: updatedData,
-      );
-
+      final response = await _repo.addProfile(updatedData);
       if (response != null) {
-        ref
-            .read(snackbarServiceProvider)
-            .showSuccess(context, 'User added employee!');
-        log('Profile save response: $response');
+        ref.read(snackbarServiceProvider).showSuccess(context, 'Employee added successfully!');
       } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Failed to add employee.');
+        ref.read(snackbarServiceProvider).showError(context, 'Failed to add employee.');
       }
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Failed to add employee: ${e.toString()}');
-      log('Profile update error: $e');
+      ref.read(snackbarServiceProvider).showError(context, 'Failed to add employee: $e');
     }
   }
 
+  /// GET USER DETAILS
   Future<void> getUserDetails({required BuildContext context}) async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? userId = prefs.getString(SharedPrefsHelper.userId);
-
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString(SharedPrefsHelper.userId);
       if (userId == null || userId.isEmpty) {
         context.go(RouterConsts().login.route);
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'User ID not found. Please login again.');
+        ref.read(snackbarServiceProvider).showError(context, 'User ID not found. Please login again.');
         return;
       }
-      final bool exists = await _networkService.rowExists(
-        table: SupabaseTables.profiles,
-        id: userId,
-      );
 
-      Map<String, dynamic>? response;
+      final exists = await _repo.rowExists(userId);
+      if (!exists) return;
 
-      if (exists) {
-        response = await _networkService.pullById(
-          table: SupabaseTables.profiles,
-          id: userId,
-        );
-        storeToSharedPreferences(response!);
-      }
-
+      final response = await _repo.getUserById(userId);
       if (response != null) {
-        log('Profile save response: $response');
+        await _repo.storeUserData(response);
+        state = UserProfileModel.fromMap(response);
       } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Failed to fetch profile.');
+        ref.read(snackbarServiceProvider).showError(context, 'Failed to fetch profile.');
       }
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Failed to update profile: ${e.toString()}');
-      log('Profile update error: $e');
+      ref.read(snackbarServiceProvider).showError(context, 'Failed to fetch profile: $e');
     }
   }
 
   /// LOGOUT
   Future<void> logout(BuildContext context) async {
     try {
-      await _networkService.signOut();
-      ref
-          .read(snackbarServiceProvider)
-          .showSuccess(context, 'Logged out successfully!');
+      await _repo.signOut();
+      ref.read(snackbarServiceProvider).showSuccess(context, 'Logged out successfully!');
       context.go(RouterConsts().login.route);
-    } on AuthException catch (e) {
-      ref.read(snackbarServiceProvider).showError(context, e.message);
     } catch (e) {
-      ref
-          .read(snackbarServiceProvider)
-          .showError(context, 'Logout failed: ${e.toString()}');
+      ref.read(snackbarServiceProvider).showError(context, 'Logout failed: $e');
     }
   }
 
-  Future<void> storeToSharedPreferences(Map<String, dynamic> data) async {
-    SharedPrefsHelper prefsHelper = SharedPrefsHelper(
-      await SharedPreferences.getInstance(),
-    );
-    await prefsHelper.storeUserDetails(data: data);
-    state = UserProfileModel.fromMap(data);
+  /// GENERATE UNIQUE UUID
+  String generateUniqueId() {
+    return Uuid().v4();
   }
 }
