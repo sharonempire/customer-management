@@ -26,6 +26,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final eachContainerWidth = getEachContainerWidth(screenWidth, 2);
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(50),

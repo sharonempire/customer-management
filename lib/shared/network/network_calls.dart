@@ -67,34 +67,43 @@ class NetworkService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> pull({
-    required String table,
-    String? filterColumn,
-    dynamic filterValue,
-    int? limit,
-    String? orderBy,
-    bool ascending = true,
-  }) async {
-    try {
-      final baseQuery = _supabase.from(table).select();
-      dynamic query = baseQuery;
-      if (filterColumn != null && filterValue != null) {
-        query = query.eq(filterColumn, filterValue);
-      }
-      if (orderBy != null) {
-        query = query.order(orderBy, ascending: ascending);
-      }
-      if (limit != null) {
-        query = query.limit(limit);
-      }
-      final response = await query;
-      return List<Map<String, dynamic>>.from(response);
-    } on PostgrestException catch (e) {
-      throw _parseError(e.message, 'Failed to fetch data');
-    } catch (e) {
-      throw 'Failed to fetch data: ${e.toString()}';
+ Future<List<Map<String, dynamic>>> pull({
+  required String table,
+  Map<String, dynamic>? filters, // Multiple filters as key:value pairs
+  int? limit,
+  String? orderBy,
+  bool ascending = true,
+}) async {
+  try {
+    final baseQuery = _supabase.from(table).select();
+    dynamic query = baseQuery;
+
+    // ✅ Apply multiple filters
+    if (filters != null && filters.isNotEmpty) {
+      filters.forEach((key, value) {
+        if (value != null) query = query.eq(key, value);
+      });
     }
+
+    // ✅ Apply ordering if provided
+    if (orderBy != null) {
+      query = query.order(orderBy, ascending: ascending);
+    }
+
+    // ✅ Apply limit if provided
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+
+    final response = await query;
+    return List<Map<String, dynamic>>.from(response);
+  } on PostgrestException catch (e) {
+    throw _parseError(e.message, 'Failed to fetch data');
+  } catch (e) {
+    throw 'Failed to fetch data: ${e.toString()}';
   }
+}
+
 
   Future<Map<String, dynamic>?> pullById({
     required String table,
