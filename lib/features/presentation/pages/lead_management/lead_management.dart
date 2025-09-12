@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:management_software/features/presentation/pages/attendance/widgets/attendance_table.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_details.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/search_lead_widget.dart';
@@ -229,4 +228,68 @@ class LeadListingWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget tableHeaderCell(String text) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+        fontSize: 16,
+      ),
+    ),
+  );
+}
+
+Widget tableCell(String text) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Text(
+      text,
+      style: const TextStyle(color: Colors.black87, fontSize: 14),
+      overflow: TextOverflow.ellipsis,
+    ),
+  );
+}
+
+Widget statusCell(String status) {
+  Color color;
+  switch (status) {
+    case "Present":
+      color = Colors.green;
+      break;
+    case "Checked out":
+      color = Colors.orange;
+      break;
+    case "Absent":
+      color = Colors.red;
+      break;
+    default:
+      color = Colors.grey;
+  }
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Text(
+      status,
+      style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 14),
+    ),
+  );
+}
+
+Widget actionCell(String label, {required VoidCallback onTap}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.blue,
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      child: Text(label),
+    ),
+  );
 }

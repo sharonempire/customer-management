@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/attendance/controller/attendance_controller.dart';
 import 'package:management_software/features/presentation/pages/attendance/widgets/attendance_table.dart';
 import 'package:management_software/features/presentation/pages/attendance/widgets/mark_attendance_box.dart';
 import 'package:management_software/features/presentation/pages/attendance/widgets/todays_overview.dart';
@@ -19,7 +20,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {});
+    Future.microtask(() {
+      ref
+          .read(attendanceServiceProvider.notifier)
+          .getTodayStatus(context: context);
+      ref
+          .read(attendanceServiceProvider.notifier)
+          .getAllEmployeeAttendance(context: context);
+    });
   }
 
   @override
@@ -46,12 +54,17 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  MarkAttendanceBox(eachContainerWidth: eachContainerWidth),
+                  MarkAttendanceBox(
+                    eachContainerWidth: eachContainerWidth,
+                    ref: ref,
+                  ),
                   TodaysOverview(eachContainerWidth: eachContainerWidth),
                 ],
               ),
               height20,
-              AttendanceTableWidget(),
+              AttendanceTableWidget(
+            
+              ),
             ],
           ),
         ),

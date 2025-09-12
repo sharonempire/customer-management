@@ -1,3 +1,5 @@
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
+
 class AttendanceModel {
   final String? id;
   final DateTime? createdAt;
@@ -6,6 +8,7 @@ class AttendanceModel {
   final String? attendanceStatus;
   final String? date;
   final String? employeeId;
+  final UserProfileModel? profile; // ✅ Added for employee details
 
   AttendanceModel({
     this.id,
@@ -15,6 +18,7 @@ class AttendanceModel {
     this.attendanceStatus,
     this.date,
     this.employeeId,
+    this.profile,
   });
 
   /// ✅ Convert Supabase JSON → Dart Object
@@ -30,9 +34,14 @@ class AttendanceModel {
       attendanceStatus: json['attendance_status'] as String?,
       date: json['date'] as String?,
       employeeId: json['employee_id'] as String?,
+      profile:
+          json['profiles'] != null
+              ? UserProfileModel.fromMap(json['profiles'])
+              : null, // ✅ Nested profile
     );
   }
 
+  /// ✅ Convert Dart Object → JSON for Supabase
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
 
@@ -47,6 +56,7 @@ class AttendanceModel {
     return data;
   }
 
+  /// ✅ Copy object with updated fields
   AttendanceModel copyWith({
     String? id,
     DateTime? createdAt,
@@ -55,6 +65,7 @@ class AttendanceModel {
     String? attendanceStatus,
     String? date,
     String? employeeId,
+    UserProfileModel? profile,
   }) {
     return AttendanceModel(
       id: id ?? this.id,
@@ -64,6 +75,7 @@ class AttendanceModel {
       attendanceStatus: attendanceStatus ?? this.attendanceStatus,
       date: date ?? this.date,
       employeeId: employeeId ?? this.employeeId,
+      profile: profile ?? this.profile,
     );
   }
 }

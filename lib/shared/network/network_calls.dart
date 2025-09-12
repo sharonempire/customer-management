@@ -37,73 +37,106 @@ class SnackbarService {
 }
 
 class NetworkService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient supabase = Supabase.instance.client;
 
   Future<bool> rowExists({required String table, required String id}) async {
     try {
       final response =
-          await _supabase.from(table).select('id').eq('id', id).maybeSingle();
+          await supabase.from(table).select('id').eq('id', id).maybeSingle();
 
       return response != null; // true if row exists
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') return false; // No row found
-      throw _parseError(e.message, 'Failed to check row');
+      throw parseError(e.message, 'Failed to check row');
     } catch (e) {
       throw 'Failed to check row: ${e.toString()}';
     }
   }
 
-    Future<bool> emailExists({required String table, required String email}) async {
+  Future<bool> emailExists({
+    required String table,
+    required String email,
+  }) async {
     try {
       final response =
-          await _supabase.from(table).select('id').eq('email', email).maybeSingle();
+          await supabase
+              .from(table)
+              .select('id')
+              .eq('email', email)
+              .maybeSingle();
 
       return response != null; // true if row exists
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') return false; // No row found
-      throw _parseError(e.message, 'Failed to check row');
+      throw parseError(e.message, 'Failed to check row');
     } catch (e) {
       throw 'Failed to check row: ${e.toString()}';
     }
   }
 
- Future<List<Map<String, dynamic>>> pull({
-  required String table,
-  Map<String, dynamic>? filters, // Multiple filters as key:value pairs
-  int? limit,
-  String? orderBy,
-  bool ascending = true,
-}) async {
-  try {
-    final baseQuery = _supabase.from(table).select();
-    dynamic query = baseQuery;
+  Future<bool> recordExists({
+    required String table,
+    required Map<String, dynamic> filters,
+  }) async {
+    try {
+      // Start the query
+      var query = supabase.from(table).select('id');
 
-    // ✅ Apply multiple filters
-    if (filters != null && filters.isNotEmpty) {
+      // Apply all filters dynamically
       filters.forEach((key, value) {
-        if (value != null) query = query.eq(key, value);
+        if (value != null) {
+          query = query.eq(key, value);
+        }
       });
-    }
 
-    // ✅ Apply ordering if provided
-    if (orderBy != null) {
-      query = query.order(orderBy, ascending: ascending);
-    }
+      // maybeSingle → returns null if no matching row
+      final response = await query.maybeSingle();
 
-    // ✅ Apply limit if provided
-    if (limit != null) {
-      query = query.limit(limit);
+      return response != null; // ✅ True if record exists
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST116') return false; // No row found
+      throw parseError(e.message, 'Failed to check record');
+    } catch (e) {
+      throw 'Failed to check record: ${e.toString()}';
     }
-
-    final response = await query;
-    return List<Map<String, dynamic>>.from(response);
-  } on PostgrestException catch (e) {
-    throw _parseError(e.message, 'Failed to fetch data');
-  } catch (e) {
-    throw 'Failed to fetch data: ${e.toString()}';
   }
-}
 
+  Future<dynamic> pull({
+    required String table,
+    Map<String, dynamic>? filters, // Multiple filters as key:value pairs
+    int? limit,
+    String? orderBy,
+    bool ascending = true,
+  }) async {
+    try {
+      final baseQuery = supabase.from(table).select();
+      dynamic query = baseQuery;
+
+      // ✅ Apply multiple filters
+      if (filters != null && filters.isNotEmpty) {
+        filters.forEach((key, value) {
+          if (value != null) query = query.eq(key, value);
+        });
+      }
+
+      // ✅ Apply ordering if provided
+      if (orderBy != null) {
+        query = query.order(orderBy, ascending: ascending);
+      }
+
+      // ✅ Apply limit if provided
+      if (limit != null) {
+        query = query.limit(limit);
+      }
+
+      final response = await query;
+      return List<Map<String, dynamic>>.from(response);
+    } on PostgrestException catch (e) {
+      throw parseError(e.message, 'Failed to fetch data');
+    } catch (e) {
+      throw 'Failed to fetch data: ${e.toString()}';
+    }
+  }
 
   Future<Map<String, dynamic>?> pullById({
     required String table,
@@ -111,14 +144,14 @@ class NetworkService {
   }) async {
     try {
       final response =
-          await _supabase.from(table).select().eq('id', id).single();
+          await supabase.from(table).select().eq('id', id).single();
 
       return response as Map<String, dynamic>?;
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
         return null; // No data found
       }
-      throw _parseError(e.message, 'Failed to fetch item');
+      throw parseError(e.message, 'Failed to fetch item');
     } catch (e) {
       throw 'Failed to fetch item: ${e.toString()}';
     }
@@ -130,11 +163,11 @@ class NetworkService {
   }) async {
     try {
       final response =
-          await _supabase.from(table).insert(data).select().single();
+          await supabase.from(table).insert(data).select().single();
 
       return response;
     } on PostgrestException catch (e) {
-      throw _parseError(e.message, 'Failed to create item');
+      throw parseError(e.message, 'Failed to create item');
     } catch (e) {
       throw 'Failed to create item: ${e.toString()}';
     }
@@ -148,7 +181,7 @@ class NetworkService {
     log(id.toString());
     try {
       final response =
-          await _supabase
+          await supabase
               .from(table)
               .update(data)
               .eq('id', id)
@@ -156,13 +189,13 @@ class NetworkService {
               .maybeSingle();
       return response;
     } on PostgrestException catch (e) {
-      throw _parseError(e.message, 'Failed to update item');
+      throw parseError(e.message, 'Failed to update item');
     } catch (e) {
       throw 'Failed to update item: ${e.toString()}';
     }
   }
 
-    Future<Map<String, dynamic>?> updateWithEmail({
+  Future<Map<String, dynamic>?> updateWithEmail({
     required String table,
     required String email,
     required Map<String, dynamic> data,
@@ -170,7 +203,7 @@ class NetworkService {
     log(AutofillHints.email.toString());
     try {
       final response =
-          await _supabase
+          await supabase
               .from(table)
               .update(data)
               .eq('email', email)
@@ -178,7 +211,7 @@ class NetworkService {
               .maybeSingle();
       return response;
     } on PostgrestException catch (e) {
-      throw _parseError(e.message, 'Failed to update item');
+      throw parseError(e.message, 'Failed to update item');
     } catch (e) {
       throw 'Failed to update item: ${e.toString()}';
     }
@@ -186,9 +219,9 @@ class NetworkService {
 
   Future<void> delete({required String table, required String id}) async {
     try {
-      await _supabase.from(table).delete().eq('id', id);
+      await supabase.from(table).delete().eq('id', id);
     } on PostgrestException catch (e) {
-      throw _parseError(e.message, 'Failed to delete item');
+      throw parseError(e.message, 'Failed to delete item');
     } catch (e) {
       throw 'Failed to delete item: ${e.toString()}';
     }
@@ -200,7 +233,7 @@ class NetworkService {
     dynamic filterValue,
   }) {
     try {
-      final baseStream = _supabase.from(table).stream(primaryKey: ['id']);
+      final baseStream = supabase.from(table).stream(primaryKey: ['id']);
 
       // Apply filter if provided
       if (filterColumn != null && filterValue != null) {
@@ -226,13 +259,13 @@ class NetworkService {
   }) async {
     if (fileBytes == null) return '';
     try {
-      await _supabase.storage
+      await supabase.storage
           .from(bucketName)
           .uploadBinary(filePath, fileBytes);
 
-      return _supabase.storage.from(bucketName).getPublicUrl(filePath);
+      return supabase.storage.from(bucketName).getPublicUrl(filePath);
     } on StorageException catch (e) {
-      throw _parseError(e.message, 'Failed to upload file');
+      throw parseError(e.message, 'Failed to upload file');
     } catch (e) {
       throw 'Failed to upload file: ${e.toString()}';
     }
@@ -243,15 +276,15 @@ class NetworkService {
     required String filePath,
   }) async {
     try {
-      return await _supabase.storage.from(bucketName).download(filePath);
+      return await supabase.storage.from(bucketName).download(filePath);
     } on StorageException catch (e) {
-      throw _parseError(e.message, 'Failed to download file');
+      throw parseError(e.message, 'Failed to download file');
     } catch (e) {
       throw 'Failed to download file: ${e.toString()}';
     }
   }
 
-  String _parseError(String error, String defaultMessage) {
+  String parseError(String error, String defaultMessage) {
     if (error.contains('violates foreign key constraint')) {
       return 'Related item not found';
     } else if (error.contains('duplicate key value')) {
@@ -266,7 +299,7 @@ class NetworkService {
 
   Future<bool> checkConnection() async {
     try {
-      await _supabase
+      await supabase
           .from('_dummy')
           .select()
           .limit(1)
@@ -278,20 +311,20 @@ class NetworkService {
   }
 
   String? get currentUserId {
-    return _supabase.auth.currentUser?.id;
+    return supabase.auth.currentUser?.id;
   }
 
   bool get isAuthenticated {
-    return _supabase.auth.currentUser != null;
+    return supabase.auth.currentUser != null;
   }
 
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
+    await supabase.auth.signOut();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await SharedPrefsHelper(prefs).setLoggedIn(false, id: '');
   }
 
-  GoTrueClient get auth => _supabase.auth;
+  GoTrueClient get auth => supabase.auth;
 }
 
 final todosProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((
@@ -311,15 +344,5 @@ final todosProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((
   );
 });
 
-final usersProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
-  ref,
-) {
-  final networkService = ref.watch(networkServiceProvider);
-  return networkService.pull(
-    table: 'users',
-    orderBy: 'created_at',
-    ascending: false,
-  );
-});
 
 List studentData = [];

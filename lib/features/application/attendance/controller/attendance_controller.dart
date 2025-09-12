@@ -1,22 +1,26 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/attendance/models/attendance_dto.dart';
+import 'package:management_software/features/data/attendance/model/attendance_model.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
+import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 final attendanceServiceProvider =
-    StateNotifierProvider<AttendanceService, bool>((ref) {
+    StateNotifierProvider<AttendanceService, AttendanceDTO>((ref) {
       final networkService = ref.watch(networkServiceProvider);
       return AttendanceService(networkService, ref);
     });
 
-class AttendanceService extends StateNotifier<bool> {
+class AttendanceService extends StateNotifier<AttendanceDTO> {
   final NetworkService _networkService;
   final Ref ref;
 
-  AttendanceService(this._networkService, this.ref) : super(false);
+  AttendanceService(this._networkService, this.ref) : super(AttendanceDTO());
 
   /// ✅ Check-In
   Future<void> checkIn({required BuildContext context}) async {
@@ -30,25 +34,12 @@ class AttendanceService extends StateNotifier<bool> {
             .showError(context, "User not found. Please login again.");
         return;
       }
-
-      final dateToday = DateTime.now().toString().split(' ')[0];
-
-      final existing = await _networkService.pull(
-        table: SupabaseTables.attendance,
-        filters: {'employee_id': userId, 'date': dateToday},
-      );
-
-      if (existing.isNotEmpty) {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, "Already checked in today!");
-        return;
-      }
-
-      final  data = {
+      final uuid = Uuid().v4();
+      final data = {
+        "id": uuid,
         "employee_id": userId,
-        "checkinat": DateTime.now().toIso8601String(),
-        "date": dateToday,
+        "checkinat": DateTimeHelper.formatTime(DateTime.now()),
+        "date": DateTimeHelper.formatDate(DateTime.now()),
         "attendance_status": "Present",
       };
 
@@ -56,8 +47,11 @@ class AttendanceService extends StateNotifier<bool> {
         table: SupabaseTables.attendance,
         data: data,
       );
+      log(response.toString());
 
       if (response != null) {
+        final userAttendance = AttendanceModel.fromJson(response);
+        state = state.copyWith(userAttendance: userAttendance);
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, "Checked in successfully!");
@@ -85,7 +79,7 @@ class AttendanceService extends StateNotifier<bool> {
         return;
       }
 
-      final dateToday = DateTime.now().toString().split(' ')[0];
+      final dateToday = DateTimeHelper.formatDate(DateTime.now());
 
       final existing = await _networkService.pull(
         table: SupabaseTables.attendance,
@@ -105,12 +99,15 @@ class AttendanceService extends StateNotifier<bool> {
         table: SupabaseTables.attendance,
         id: recordId,
         data: {
-          "checkoutat": DateTime.now().toIso8601String(),
-          "attendance_status": "Completed",
+          "checkoutat": DateTimeHelper.formatTime(DateTime.now()),
+          "attendance_status": "Checked out",
         },
       );
+      log(response.toString());
 
       if (response != null) {
+        final userAttendance = AttendanceModel.fromJson(response);
+        state = state.copyWith(userAttendance: userAttendance);
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, "Checked out successfully!");
@@ -125,39 +122,68 @@ class AttendanceService extends StateNotifier<bool> {
     }
   }
 
-  /// ✅ Get Today’s Status
-  Future<Map<String, dynamic>?> getTodayStatus({
-    required BuildContext context,
-  }) async {
+  Future<void> getTodayStatus({required BuildContext context}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString(SharedPrefsHelper.userId);
 
-      if (userId == null || userId.isEmpty) return null;
+      final dateToday = DateTimeHelper.formatDate(DateTime.now());
 
-      final dateToday = DateTime.now().toString().split(' ')[0];
+      final existing = await _networkService.recordExists(
+        table: SupabaseTables.attendance,
+        filters: {'employee_id': userId, 'date': dateToday},
+      );
+
+      if (existing == false) {
+        state = state.copyWith(
+          userAttendance: AttendanceModel(
+            employeeId: userId,
+            date: dateToday,
+            attendanceStatus: "Not checked in",
+          ),
+        );
+      }
 
       final response = await _networkService.pull(
         table: SupabaseTables.attendance,
         filters: {'employee_id': userId, 'date': dateToday},
       );
 
-      return response.isNotEmpty ? response[0] : null;
+      final userAttendance = AttendanceModel.fromJson(response[0]);
+      state = state.copyWith(userAttendance: userAttendance);
     } catch (e) {
       log("Get today status error: $e");
-      return null;
+    }
+  }
+
+  Future<void> getAllEmployeeAttendance({required BuildContext context}) async {
+    try {
+      final response = await _networkService.supabase
+          .from('attendance')
+          .select(
+            '*, profiles(diplay_name, designation, email)',
+          ) // join with profiles
+          .eq('date', DateTimeHelper.formatDate(DateTime.now()))
+          .order('created_at', ascending: false);
+
+      log(response.toString());
+
+      final allEmployeesAttendance =
+          response
+              .map<AttendanceModel>((e) => AttendanceModel.fromJson(e))
+              .toList();
+
+      state = state.copyWith(allEmployeesAttendance: allEmployeesAttendance);
+    } catch (e) {
+      log("Get all employee attendance error: $e");
     }
   }
 
   /// ✅ Full Attendance History
-  Future<List<Map<String, dynamic>>> getAttendanceHistory({
-    required BuildContext context,
-  }) async {
+  Future<void> getAttendanceHistory({required BuildContext context}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString(SharedPrefsHelper.userId);
-
-      if (userId == null || userId.isEmpty) return [];
 
       final response = await _networkService.pull(
         table: SupabaseTables.attendance,
@@ -165,11 +191,13 @@ class AttendanceService extends StateNotifier<bool> {
         orderBy: "date",
         ascending: false,
       );
+      final attendanceHistory =
+          response.map((e) => AttendanceModel.fromJson(e)).toList();
+      state = state.copyWith(employeeHistory: attendanceHistory);
 
       return response;
     } catch (e) {
       log("Get history error: $e");
-      return [];
     }
   }
 }
