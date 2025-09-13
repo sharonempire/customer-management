@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final infoCollectionProgression = StateProvider((ref) => 0);
+final infoCollectionProgression = StateProvider((ref) => 5);
 final leadMangementcontroller = StateNotifierProvider<LeadController, bool>((
   ref,
 ) {
@@ -18,5 +18,9 @@ class LeadController extends StateNotifier<bool> {
 
   void decreaseProgression() {
     ref.read(infoCollectionProgression.notifier).update((state) => state - 1);
+  }
+
+  void setProgression(int index) {
+    ref.read(infoCollectionProgression.notifier).update((state) => index);
   }
 }

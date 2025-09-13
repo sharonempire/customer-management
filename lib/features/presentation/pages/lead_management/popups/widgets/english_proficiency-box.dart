@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
+import 'package:management_software/features/presentation/widgets/primary_button.dart';
+import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 
 class EnglishProficiencyBox extends StatefulWidget {
   const EnglishProficiencyBox({super.key});
@@ -56,14 +59,15 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ElevatedButton.icon(
-            onPressed: addTest,
-            icon: const Icon(Icons.add),
-            label: const Text("Add English Proficiency Test"),
+          Row(
+            children: [
+              PrimaryButton(
+                onpressed: addTest,
+                text: "Add English Proficiency Test",
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-
-          // Dynamic Test Cards
+          height30,
           Column(
             children: List.generate(studentTests.length, (index) {
               final test = studentTests[index];
@@ -77,7 +81,6 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header with remove button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -118,28 +121,7 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
                         },
                       ),
                       const SizedBox(height: 15),
-
-                      // Date Picker
-                      ElevatedButton(
-                        onPressed: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              studentTests[index]["date"] = date;
-                            });
-                          }
-                        },
-                        child: Text(
-                          test["date"] == null
-                              ? "Select Date"
-                              : "Date: ${test["date"].toString().split(' ')[0]}",
-                        ),
-                      ),
+                      Row(children: [CommonDatePicker(label: "Test date")]),
                       const SizedBox(height: 15),
 
                       // Section Scores

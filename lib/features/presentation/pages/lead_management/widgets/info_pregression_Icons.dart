@@ -6,26 +6,33 @@ import 'package:management_software/shared/consts/color_consts.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
 class InfoProgressionIcons extends ConsumerWidget {
-  const InfoProgressionIcons({super.key, });
+  const InfoProgressionIcons({super.key});
 
   Widget buildStep({
     required int stepIndex,
     required IconData icon,
     required String label,
-    required WidgetRef ref
+    required WidgetRef ref,
   }) {
-    final isSelected =  ref.watch(infoCollectionProgression) >= stepIndex;
+    final isSelected = ref.watch(infoCollectionProgression) >= stepIndex;
     return Column(
       children: [
-        CircleAvatar(
-          radius: 25, // avatar size
-          backgroundColor:
-              isSelected ? ColorConsts.primaryColor : Colors.grey.shade300,
-          child: Center(
-            child: Icon(
-              icon,
-              size: 18,
-              color: isSelected ? Colors.white : Colors.black54,
+        GestureDetector(
+          onTap: () {
+            ref
+                .read(infoCollectionProgression.notifier)
+                .update((state) => stepIndex);
+          },
+          child: CircleAvatar(
+            radius: 25, // avatar size
+            backgroundColor:
+                isSelected ? ColorConsts.primaryColor : Colors.grey.shade300,
+            child: Center(
+              child: Icon(
+                icon,
+                size: 18,
+                color: isSelected ? Colors.white : Colors.black54,
+              ),
             ),
           ),
         ),
@@ -53,47 +60,42 @@ class InfoProgressionIcons extends ConsumerWidget {
             stepIndex: 0,
             icon: Icons.person, // Basic Info
             label: "Basic Info",
-            ref: ref
+            ref: ref,
           ),
           width10,
           buildStep(
             stepIndex: 1,
             icon: Icons.school, // Education
             label: "Education",
-                        ref: ref
-
+            ref: ref,
           ),
           width10,
           buildStep(
             stepIndex: 2,
             icon: Icons.work, // Work Experience
             label: "Work Experience",
-                        ref: ref
-
+            ref: ref,
           ),
           width10,
           buildStep(
             stepIndex: 3,
             icon: Icons.attach_money, // Budget Info
             label: "Budget Info",
-                        ref: ref
-
+            ref: ref,
           ),
           width10,
           buildStep(
             stepIndex: 4,
             icon: Icons.settings_applications, // Preferences
             label: "Preferences",
-                        ref: ref
-
+            ref: ref,
           ),
           width10,
           buildStep(
             stepIndex: 5,
             icon: Icons.language, // English Proficiency
             label: "English Proficiency",
-                        ref: ref
-
+            ref: ref,
           ),
           width30,
         ],
