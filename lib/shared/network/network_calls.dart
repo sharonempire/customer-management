@@ -345,4 +345,3 @@ final todosProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((
 });
 
 
-List studentData = [];

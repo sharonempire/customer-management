@@ -42,13 +42,11 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
         "date": DateTimeHelper.formatDate(DateTime.now()),
         "attendance_status": "Present",
       };
-
       final response = await _networkService.push(
         table: SupabaseTables.attendance,
         data: data,
       );
       log(response.toString());
-
       if (response != null) {
         getAllEmployeeAttendance(context: context);
         final userAttendance = AttendanceModel.fromJson(response);
@@ -79,23 +77,20 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
             .showError(context, "User not found. Please login again.");
         return;
       }
-
       final dateToday = DateTimeHelper.formatDate(DateTime.now());
-
       final existing = await _networkService.pull(
         table: SupabaseTables.attendance,
         filters: {'employee_id': userId, 'date': dateToday},
       );
-
       if (existing.isEmpty) {
         ref
             .read(snackbarServiceProvider)
             .showError(context, "No check-in record found for today!");
         return;
       }
-
+      log("Record ID: ${existing}");
       final recordId = existing[0]['id'];
-
+      log(recordId.toString());
       final response = await _networkService.update(
         table: SupabaseTables.attendance,
         id: recordId,
@@ -105,9 +100,9 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
         },
       );
       log(response.toString());
-
       if (response != null) {
         getAllEmployeeAttendance(context: context);
+
         final userAttendance = AttendanceModel.fromJson(response);
         state = state.copyWith(userAttendance: userAttendance);
         ref
@@ -128,14 +123,11 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString(SharedPrefsHelper.userId);
-
       final dateToday = DateTimeHelper.formatDate(DateTime.now());
-
       final existing = await _networkService.recordExists(
         table: SupabaseTables.attendance,
         filters: {'employee_id': userId, 'date': dateToday},
       );
-
       if (existing == false) {
         state = state.copyWith(
           userAttendance: AttendanceModel(
@@ -145,12 +137,10 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
           ),
         );
       }
-
       final response = await _networkService.pull(
         table: SupabaseTables.attendance,
         filters: {'employee_id': userId, 'date': dateToday},
       );
-
       final userAttendance = AttendanceModel.fromJson(response[0]);
       state = state.copyWith(userAttendance: userAttendance);
     } catch (e) {
@@ -162,19 +152,14 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
     try {
       final response = await _networkService.supabase
           .from(SupabaseTables.attendance)
-          .select(
-            '*, profiles(diplay_name, designation, email)',
-          ) // join with profiles
+          .select('*, profiles(diplay_name, designation, email)')
           .eq('date', DateTimeHelper.formatDate(DateTime.now()))
           .order('created_at', ascending: false);
-
       log(response.toString());
-
       final allEmployeesAttendance =
           response
               .map<AttendanceModel>((e) => AttendanceModel.fromJson(e))
               .toList();
-
       state = state.copyWith(allEmployeesAttendance: allEmployeesAttendance);
     } catch (e) {
       log("Get all employee attendance error: $e");

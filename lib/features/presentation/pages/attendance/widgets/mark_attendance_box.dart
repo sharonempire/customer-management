@@ -86,9 +86,9 @@ class MarkAttendanceBox extends StatelessWidget {
               if (attendanceProvider.userAttendance?.attendanceStatus ==
                   'Present') {
                 attendanceNotifier.checkOut(context: context);
-              }
-              if (attendanceProvider.userAttendance?.attendanceStatus ==
+              } else if (attendanceProvider.userAttendance?.attendanceStatus ==
                   'Checked out') {
+                return;
               } else {
                 attendanceNotifier.checkIn(context: context);
               }
