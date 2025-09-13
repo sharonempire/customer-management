@@ -50,6 +50,7 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
       log(response.toString());
 
       if (response != null) {
+        getAllEmployeeAttendance(context: context);
         final userAttendance = AttendanceModel.fromJson(response);
         state = state.copyWith(userAttendance: userAttendance);
         ref
@@ -106,6 +107,7 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
       log(response.toString());
 
       if (response != null) {
+        getAllEmployeeAttendance(context: context);
         final userAttendance = AttendanceModel.fromJson(response);
         state = state.copyWith(userAttendance: userAttendance);
         ref
@@ -180,13 +182,15 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
   }
 
   /// ✅ Full Attendance History
-  Future<void> getAttendanceHistory({required BuildContext context,required String userId}) async {
+  Future<void> getAttendanceHistory({
+    required BuildContext context,
+    required String userId,
+  }) async {
     try {
-
       final response = await _networkService.supabase
           .from(SupabaseTables.attendance)
           .select('*, profiles(diplay_name, designation, email)')
-          .eq('employee_id', userId )
+          .eq('employee_id', userId)
           .order('date', ascending: false);
       final attendanceHistory =
           response.map((e) => AttendanceModel.fromJson(e)).toList();
