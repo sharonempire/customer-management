@@ -113,8 +113,8 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
                           ),
                         ),
                       height10,
-                      CommonInfoBox(),
 
+                      // CommonInfoBox(),
                       height20,
                       PreviousAndNextButtons(
                         onPrevPressed: () {
@@ -266,14 +266,34 @@ class _CommonSwitchState extends State<CommonSwitch> {
   }
 }
 
-class CommonInfoBox extends StatelessWidget {
+class CommonInfoBox extends StatefulWidget {
   const CommonInfoBox({super.key});
+
+  @override
+  State<CommonInfoBox> createState() => _CommonInfoBoxState();
+}
+
+class _CommonInfoBoxState extends State<CommonInfoBox> {
+  late TextEditingController remarksController;
+
+  @override
+  void initState() {
+    super.initState();
+    remarksController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    remarksController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Container(
-        padding: EdgeInsets.all(25),
+        padding: const EdgeInsets.all(25),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: const Color.fromARGB(255, 235, 239, 246),
@@ -308,10 +328,10 @@ class CommonInfoBox extends StatelessWidget {
             Row(
               children: [
                 CommonTextField(
-                  controller: TextEditingController(),
-                  minLines: 5,
+                  controller: remarksController,
                   text:
                       "Enter any additional remarks, notes, or special considerations...",
+                  maxLines: 5,
                 ),
               ],
             ),
@@ -440,7 +460,7 @@ class CommonDropdown extends StatelessWidget {
   final List<String> items;
   final String? value;
   final void Function(String?) onChanged;
-  final bool rounded; // ✅ same as TextField
+  final bool rounded;
 
   const CommonDropdown({
     super.key,
@@ -448,7 +468,7 @@ class CommonDropdown extends StatelessWidget {
     required this.items,
     this.value,
     required this.onChanged,
-    this.rounded = true, // ✅ default same as TextField
+    this.rounded = true,
   });
 
   @override
@@ -566,7 +586,6 @@ class CommonDropdown extends StatelessWidget {
   }
 }
 
-/// Minimal SearchDelegate for picking a String from a list with filtering.
 class _StringSearchDelegate extends SearchDelegate<String?> {
   final List<String> items;
   final String label;

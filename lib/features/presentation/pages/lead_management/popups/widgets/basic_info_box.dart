@@ -21,9 +21,15 @@ class _BasicInfoCollectionState extends State<BasicInfoCollection> {
         children: [
           Row(
             children: [
-              CommonTextField(text: "First Name", controller: firstNameController),
+              CommonTextField(
+                text: "First Name",
+                controller: firstNameController,
+              ),
               width20,
-              CommonTextField(text: "Second Name",controller: secondNameController,),
+              CommonTextField(
+                text: "Second Name",
+                controller: secondNameController,
+              ),
             ],
           ),
           Row(

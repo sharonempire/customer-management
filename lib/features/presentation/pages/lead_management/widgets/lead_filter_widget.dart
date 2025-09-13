@@ -1,8 +1,6 @@
-
 import 'package:flutter/material.dart';
-import 'package:management_software/features/presentation/widgets/common_dropdowns.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
-import 'package:management_software/shared/styles/textstyles.dart';
 
 class LeadFiltersWidget extends StatelessWidget {
   const LeadFiltersWidget({super.key});
@@ -20,80 +18,45 @@ class LeadFiltersWidget extends StatelessWidget {
         child: Row(
           children: [
             width10,
-            Expanded(
-              child: _dropdownColumn(
-                "Source",
-                "Select Source",
-                '',
-                [],
-                (value) {},
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _dropdownColumn(
-                "Status",
-                "Select Status",
-                '',
-                [],
-                (value) {},
-              ),
+            CommonDropdown(
+              label: "Source",
+              items: ["Facebook", "Google Ads", "Referral"], // Example data
+              value: null,
+              onChanged: (value) {
+                // API call or state update here
+              },
             ),
             width10,
-            Expanded(
-              child: _dropdownColumn(
-                "Freelancer",
-                "Select Status",
-                '',
-                [],
-                (value) {},
-              ),
+            CommonDropdown(
+              label: "Status",
+              items: ["New", "In Progress", "Closed"],
+              value: null,
+              onChanged: (value) {},
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _dropdownColumn(
-                "Lead Type",
-                "Select Owner",
-                '',
-                [],
-                (value) {},
-              ),
+            width10,
+            CommonDropdown(
+              label: "Freelancer",
+              items: ["John", "Sarah", "Alex"],
+              value: null,
+              onChanged: (value) {},
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _dropdownColumn(
-                "Period",
-                "Select Priority",
-                '',
-                [],
-                (value) {},
-              ),
+            width10,
+            CommonDropdown(
+              label: "Lead Type",
+              items: ["Hot", "Warm", "Cold"],
+              value: null,
+              onChanged: (value) {},
+            ),
+            width10,
+            CommonDropdown(
+              label: "Period",
+              items: ["Today", "This Week", "This Month"],
+              value: null,
+              onChanged: (value) {},
             ),
           ],
         ),
       ),
     );
   }
-}
-
-Widget _dropdownColumn(
-  String label,
-  String hint,
-  String value,
-  List<String> items,
-  Function(String?) onChanged,
-) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: myTextstyle(color: Colors.grey, fontSize: 14)),
-      SizedBox(height: 5),
-      dropdownField(
-        label: hint,
-        value: value,
-        items: items,
-        onChanged: onChanged,
-      ),
-    ],
-  );
 }
