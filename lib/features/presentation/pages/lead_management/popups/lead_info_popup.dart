@@ -5,6 +5,7 @@ import 'package:management_software/features/presentation/pages/lead_management/
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/budget_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/education_info_box.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/english_proficiency-box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/preferences_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/work_experience_box.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
@@ -68,50 +69,7 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
                       else if (progressedIndex == 4)
                         PreferencesSection()
                       else if (progressedIndex == 5)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 45),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  CommonTextField(
-                                    text: "First Name",
-                                    controller: firstNameController,
-                                  ),
-                                  width20,
-                                  CommonTextField(
-                                    text: "Second Name",
-                                    controller: lastNameController,
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  CommonDropdown(
-                                    label: "Gender",
-                                    items: ["Male", "Female", "Other"],
-                                    value: "Male",
-                                    onChanged: (val) {},
-                                  ),
-                                  width20,
-                                  CommonDropdown(
-                                    label: "Marital Status",
-                                    items: ["Married", "Single"],
-                                    value: "Single",
-                                    onChanged: (val) {},
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  CommonDatePicker(label: "Date Of Birth"),
-                                  width20,
-                                  Expanded(child: SizedBox()),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                        EnglishProficiencyBox(),
                       height10,
 
                       // CommonInfoBox(),
