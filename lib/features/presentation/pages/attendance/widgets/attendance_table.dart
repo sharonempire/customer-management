@@ -2,8 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/attendance/controller/attendance_controller.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
+import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
 class AttendanceTableWidget extends ConsumerWidget {
@@ -88,8 +90,18 @@ class AttendanceTableWidget extends ConsumerWidget {
                               DataCell(statusCell(status)),
                               DataCell(
                                 TextButton(
-                                  onPressed: () {
-                                    // view history logic
+                                  onPressed: () async {
+                                    await ref
+                                        .read(
+                                          attendanceServiceProvider.notifier,
+                                        )
+                                        .getAttendanceHistory(
+                                          context: context,
+                                          userId: attendance.employeeId ?? '',
+                                        );
+                                    context.push(
+                                      '${RouterConsts().attendance.route}/${RouterConsts().attendanceHistory.route}',
+                                    );
                                   },
                                   child: const Text("View"),
                                 ),

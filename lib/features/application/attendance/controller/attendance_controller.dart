@@ -159,7 +159,7 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
   Future<void> getAllEmployeeAttendance({required BuildContext context}) async {
     try {
       final response = await _networkService.supabase
-          .from('attendance')
+          .from(SupabaseTables.attendance)
           .select(
             '*, profiles(diplay_name, designation, email)',
           ) // join with profiles
@@ -180,22 +180,17 @@ class AttendanceService extends StateNotifier<AttendanceDTO> {
   }
 
   /// ✅ Full Attendance History
-  Future<void> getAttendanceHistory({required BuildContext context}) async {
+  Future<void> getAttendanceHistory({required BuildContext context,required String userId}) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString(SharedPrefsHelper.userId);
 
-      final response = await _networkService.pull(
-        table: SupabaseTables.attendance,
-        filters: {'employee_id': userId},
-        orderBy: "date",
-        ascending: false,
-      );
+      final response = await _networkService.supabase
+          .from(SupabaseTables.attendance)
+          .select('*, profiles(diplay_name, designation, email)')
+          .eq('employee_id', userId )
+          .order('date', ascending: false);
       final attendanceHistory =
           response.map((e) => AttendanceModel.fromJson(e)).toList();
       state = state.copyWith(employeeHistory: attendanceHistory);
-
-      return response;
     } catch (e) {
       log("Get history error: $e");
     }

@@ -37,10 +37,9 @@ class AttendanceRepository {
   }
 
   /// ✅ Insert Check-In
-  Future<bool> insertCheckIn() async {
+  Future<void> insertCheckIn() async {
     try {
       final userId = await _getUserId();
-      if (userId == null || userId.isEmpty) return false;
 
       final dateToday = DateTime.now().toString().split(' ')[0];
 
@@ -58,7 +57,6 @@ class AttendanceRepository {
         data: attendance.toJson(),
       );
 
-      return response != null;
     } catch (e) {
       log("Insert check-in error: $e");
 

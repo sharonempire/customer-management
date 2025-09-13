@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/presentation/pages/attendance/attendance.dart';
+import 'package:management_software/features/presentation/pages/attendance/attendance_history.dart';
 import 'package:management_software/features/presentation/pages/auth/signup.dart';
 import 'package:management_software/features/presentation/pages/auth/login_page.dart';
 import 'package:management_software/features/presentation/pages/employee_mangement/employee_management.dart';
@@ -61,6 +62,13 @@ class RouterConsts {
     state,
   ) {
     return const LeadInfoPopup();
+  });
+
+    final RouteModel attendanceHistory = RouteModel('attendance-history', 'Attendance History', (
+    context,
+    state,
+  ) {
+    return const AttendanceHistory();
   });
 }
 

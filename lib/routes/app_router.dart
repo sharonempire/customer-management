@@ -66,6 +66,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: routeConsts.attendance.route,
             name: routeConsts.attendance.name,
             builder: routeConsts.attendance.builder,
+            routes: [
+              GoRoute(
+                path: routeConsts.attendanceHistory.route,
+                name: routeConsts.attendanceHistory.name,
+                builder: routeConsts.attendanceHistory.builder,
+            )]
           ),
           GoRoute(
             path: routeConsts.enquiries.route,
