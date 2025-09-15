@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/attendance/controller/attendance_controller.dart';
-import 'package:management_software/features/presentation/pages/lead_management/lead_management.dart';
+import 'package:management_software/features/presentation/pages/attendance/widgets/attendance_table.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 

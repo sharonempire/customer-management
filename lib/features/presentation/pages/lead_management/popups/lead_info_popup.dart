@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:management_software/features/application/lead_management/controller/lead_management.dart';
+import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/basic_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/budget_info_box.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';

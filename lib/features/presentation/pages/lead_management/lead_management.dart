@@ -140,6 +140,14 @@ class LeadListingWidget extends StatelessWidget {
         _clickableCell(context, lead, lead["Follow-up Date"]!),
         _clickableCell(context, lead, lead["Remark"]!),
         _clickableCell(context, lead, lead["Assigned Staff"]!),
+        actionCell(
+          "Edit",
+          onTap: () {
+            context.go(
+              '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
+            );
+          },
+        ),
       ],
     );
   }
@@ -201,6 +209,7 @@ class LeadListingWidget extends StatelessWidget {
           7: FlexColumnWidth(2),
           8: FlexColumnWidth(3),
           9: FlexColumnWidth(2),
+          10: FlexColumnWidth(2),
         },
         border: TableBorder(
           horizontalInside: BorderSide(color: Colors.grey.shade300, width: 1),
@@ -221,6 +230,7 @@ class LeadListingWidget extends StatelessWidget {
               tableHeaderCell("Follow-up Date"),
               tableHeaderCell("Remark"),
               tableHeaderCell("Assigned Staff"),
+              tableHeaderCell("Action"),
             ],
           ),
           for (var lead in leads) _clickableRow(context, lead),
@@ -281,15 +291,17 @@ Widget statusCell(String status) {
 }
 
 Widget actionCell(String label, {required VoidCallback onTap}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: TextButton(
-      onPressed: onTap,
-      style: TextButton.styleFrom(
-        foregroundColor: Colors.blue,
-        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  return Center(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: IconButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.blue,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        icon: Text(label),
       ),
-      child: Text(label),
     ),
   );
 }
