@@ -217,9 +217,11 @@ class NetworkService {
     }
   }
 
-  Future<void> delete({required String table, required String id}) async {
+  Future<bool> delete({required String table, required String id}) async {
     try {
-      await supabase.from(table).delete().eq('id', id);
+      final bool deleted = await supabase.from(table).delete().eq('id', id);
+
+      return deleted;
     } on PostgrestException catch (e) {
       throw parseError(e.message, 'Failed to delete item');
     } catch (e) {

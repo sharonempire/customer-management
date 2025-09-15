@@ -6,6 +6,8 @@ const String SUPABASEURL = "https://ebgzlzemrargfahwokti.supabase.co";
 class SupabaseTables {
   static const String profiles = "profiles";
   static const String attendance = "attendance";
+  static const String leadList = "leadslist";
+  static const String leadInfo = "lead-info";
 }
 
 class SupabaseBuckets {

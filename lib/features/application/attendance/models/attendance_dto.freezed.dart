@@ -210,8 +210,8 @@ return $default(_that.userAttendance,_that.allEmployeesAttendance,_that.employee
 /// @nodoc
 @JsonSerializable()
 
-class _AttendanceDTO implements AttendanceDTO {
-  const _AttendanceDTO({this.userAttendance, final  List<AttendanceModel>? allEmployeesAttendance, final  List<AttendanceModel>? employeeHistory}): _allEmployeesAttendance = allEmployeesAttendance,_employeeHistory = employeeHistory;
+class _AttendanceDTO extends AttendanceDTO {
+  const _AttendanceDTO({this.userAttendance, final  List<AttendanceModel>? allEmployeesAttendance, final  List<AttendanceModel>? employeeHistory}): _allEmployeesAttendance = allEmployeesAttendance,_employeeHistory = employeeHistory,super._();
   factory _AttendanceDTO.fromJson(Map<String, dynamic> json) => _$AttendanceDTOFromJson(json);
 
 @override final  AttendanceModel? userAttendance;

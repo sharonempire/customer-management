@@ -5,6 +5,10 @@ class DateTimeHelper {
     return DateFormat('EEEE, MMMM d, y').format(date);
   }
 
+  static String formatDateForLead(DateTime date) {
+    return DateFormat('MMMM d, y').format(date);
+  }
+
   static String formatTime(DateTime date) {
     return DateFormat('HH:mm').format(date);
   }

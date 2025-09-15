@@ -6,6 +6,9 @@ part 'attendance_dto.g.dart';
 
 @freezed
 class AttendanceDTO with _$AttendanceDTO {
+  // ✅ Private constructor for adding custom methods later
+  const AttendanceDTO._();
+
   const factory AttendanceDTO({
     AttendanceModel? userAttendance,
     List<AttendanceModel>? allEmployeesAttendance,
