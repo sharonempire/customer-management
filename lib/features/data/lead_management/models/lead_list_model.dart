@@ -2,6 +2,7 @@ import 'dart:convert';
 
 class LeadsListModel {
   final int? id;
+  final int? slNo;
   final DateTime? createdAt;
   final String? name;
   final String? email;
@@ -19,6 +20,7 @@ class LeadsListModel {
   const LeadsListModel({
     this.id,
     this.createdAt,
+    this.slNo,
     this.name,
     this.email,
     this.phone,
@@ -37,6 +39,7 @@ class LeadsListModel {
   LeadsListModel copyWith({
     int? id,
     DateTime? createdAt,
+    int? slNo,
     String? name,
     String? email,
     int? phone,
@@ -52,6 +55,7 @@ class LeadsListModel {
   }) {
     return LeadsListModel(
       id: id ?? this.id,
+      slNo: slNo ?? this.slNo,
       createdAt: createdAt ?? this.createdAt,
       name: name ?? this.name,
       email: email ?? this.email,
@@ -72,14 +76,17 @@ class LeadsListModel {
   factory LeadsListModel.fromJson(Map<String, dynamic> json) {
     return LeadsListModel(
       id: json['id'] as int?,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'])
-          : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.tryParse(json['created_at'])
+              : null,
+      slNo: json['sl_no'] as int?,
       name: json['name'] as String?,
       email: json['email'] as String?,
-      phone: json['phone'] is int
-          ? json['phone']
-          : int.tryParse(json['phone']?.toString() ?? ''),
+      phone:
+          json['phone'] is int
+              ? json['phone']
+              : int.tryParse(json['phone']?.toString() ?? ''),
       freelancerManager: json['freelancer_manager'] as String?,
       freelancer: json['freelancer'] as String?,
       source: json['source'] as String?,
@@ -97,6 +104,7 @@ class LeadsListModel {
     return {
       'id': id,
       'created_at': createdAt?.toIso8601String(),
+      "sl_no": slNo,
       'name': name,
       'email': email,
       'phone': phone,

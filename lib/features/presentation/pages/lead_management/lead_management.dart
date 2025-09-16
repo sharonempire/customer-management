@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
+import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_details.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/search_lead_widget.dart';
@@ -23,12 +25,17 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {});
+    Future.microtask(() async {
+      await ref
+          .read(leadMangementcontroller.notifier)
+          .fetchAllLeads(context: context);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final provider = ref.watch(leadMangementcontroller);
 
     return DefaultTabController(
       length: 2,
@@ -102,8 +109,16 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
                     height: MediaQuery.of(context).size.height,
                     child: TabBarView(
                       children: [
-                        Column(children: [LeadListingWidget()]),
-                        Column(children: [LeadListingWidget()]),
+                        Column(
+                          children: [
+                            LeadListingWidget(leadList: provider.leadsList),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            LeadListingWidget(leadList: provider.leadsList),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -118,28 +133,29 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
 }
 
 class LeadListingWidget extends StatelessWidget {
-  const LeadListingWidget({super.key});
+  final List<LeadsListModel> leadList;
+  const LeadListingWidget({super.key, required this.leadList});
 
-  void _showLeadDetails(BuildContext context, Map<String, String> lead) {
+  void _showLeadDetails(BuildContext context, LeadsListModel lead) {
     showDialog(
       context: context,
       builder: (context) => LeaadDetailsPopup(context: context),
     );
   }
 
-  TableRow _clickableRow(BuildContext context, Map<String, String> lead) {
+  TableRow _clickableRow(BuildContext context, LeadsListModel lead) {
     return TableRow(
       children: [
-        _clickableCell(context, lead, lead["ID"]!),
-        _clickableCell(context, lead, lead["Lead Name"]!),
-        _clickableCell(context, lead, lead["Freelancer Manager"]!),
-        _clickableCell(context, lead, lead["Freelancer"]!),
-        _clickableCell(context, lead, lead["Source"]!),
-        _clickableCell(context, lead, lead["Phone"]!),
-        _clickableCell(context, lead, lead["Status"]!),
-        _clickableCell(context, lead, lead["Follow-up Date"]!),
-        _clickableCell(context, lead, lead["Remark"]!),
-        _clickableCell(context, lead, lead["Assigned Staff"]!),
+        _clickableCell(context, lead, lead.slNo.toString()),
+        _clickableCell(context, lead, lead.name ?? ""),
+        _clickableCell(context, lead, lead.freelancerManager ?? ''),
+        _clickableCell(context, lead, lead.freelancer ?? ''),
+        _clickableCell(context, lead, lead.source ?? ''),
+        _clickableCell(context, lead, lead.phone.toString()),
+        _clickableCell(context, lead, lead.status ?? ''),
+        _clickableCell(context, lead, lead.followUp ?? ''),
+        _clickableCell(context, lead, lead.remark ?? ''),
+        _clickableCell(context, lead, lead.assignedTo ?? ''),
         actionCell(
           "Edit",
           onTap: () {
@@ -154,7 +170,7 @@ class LeadListingWidget extends StatelessWidget {
 
   Widget _clickableCell(
     BuildContext context,
-    Map<String, String> lead,
+    LeadsListModel lead,
     String text,
   ) {
     return InkWell(
@@ -168,33 +184,6 @@ class LeadListingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final leads = [
-      {
-        "ID": "1",
-        "Lead Name": "John Doe",
-        "Freelancer Manager": "Alice Smith",
-        "Freelancer": "Mike Johnson",
-        "Source": "LinkedIn",
-        "Phone": "+1 555-1234",
-        "Status": "Active",
-        "Follow-up Date": "2025-08-15",
-        "Remark": "Interested in package B",
-        "Assigned Staff": "Sarah Parker",
-      },
-      {
-        "ID": "2",
-        "Lead Name": "Jane Roe",
-        "Freelancer Manager": "Robert White",
-        "Freelancer": "Emma Brown",
-        "Source": "Referral",
-        "Phone": "+1 555-5678",
-        "Status": "Pending",
-        "Follow-up Date": "2025-08-18",
-        "Remark": "Waiting for documents",
-        "Assigned Staff": "James Lee",
-      },
-    ];
-
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Table(
@@ -233,7 +222,7 @@ class LeadListingWidget extends StatelessWidget {
               tableHeaderCell("Action"),
             ],
           ),
-          for (var lead in leads) _clickableRow(context, lead),
+          for (var lead in leadList) _clickableRow(context, lead),
         ],
       ),
     );

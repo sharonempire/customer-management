@@ -98,6 +98,7 @@ class LeadManagementRepo {
         orderBy: "created_at",
         ascending: false,
       );
+      log(response.toString());
       return response
           .map<LeadsListModel>((e) => LeadsListModel.fromJson(e))
           .toList();

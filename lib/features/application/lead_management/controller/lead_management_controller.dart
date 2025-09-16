@@ -40,11 +40,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     ref.read(infoCollectionProgression.notifier).update((_) => index);
   }
 
-  /* -------------------------
-     CRUD / Fetch operations
-     Note: all methods accept a BuildContext to show snackbars
-     ------------------------- */
-
   /// Fetch all leads and store in DTO
   Future<void> fetchAllLeads({required BuildContext context}) async {
     try {
@@ -58,7 +53,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
-  /// Fetch leads for a specific calendar date (date's string format is handled by repo)
   Future<void> fetchLeadsByDate({
     required BuildContext context,
     required String date,
@@ -157,7 +151,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
-  /// Update an existing lead by id and refresh list / selected lead if needed
   Future<bool> updateLead({
     required BuildContext context,
     required String leadId,
@@ -184,7 +177,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
-  /// Delete a lead and refresh list
   Future<bool> deleteLead({
     required BuildContext context,
     required String leadId,
@@ -210,15 +202,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
-  /* -------------------------
-     Local helpers
-     ------------------------- */
-
-  /// Locally select a lead (without fetching remote details)
   void selectLeadLocally(LeadsListModel lead) {
-    state = state.copyWith(selectedLead: null); // clear remote details
-    // You might want to convert LeadsListModel -> LeadInfoModel or fetch details
-    // For now set only selectedLead to null (or convert if you have a conversion)
-    // If you'd like to store a minimal selected lead (LeadsListModel) add a field to DTO
+    state = state.copyWith(selectedLead: null); 
   }
 }
