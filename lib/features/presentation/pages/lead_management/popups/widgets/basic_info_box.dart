@@ -56,6 +56,12 @@ class _BasicInfoCollectionState extends State<BasicInfoCollection> {
               Expanded(child: SizedBox()),
             ],
           ),
+          height20,
+          PreviousAndNextButtons(
+            onSavePressed: () {},
+            onPrevPressed: () {},
+            onNextPressed: () {},
+          ),
         ],
       ),
     );

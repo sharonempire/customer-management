@@ -148,9 +148,15 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
           ),
           Row(
             children: [
-              CommonTextField(text: "Passout Year",controller: passoutController,),
+              CommonTextField(
+                text: "Passout Year",
+                controller: passoutController,
+              ),
               width20,
-              CommonTextField(text: "Percentage",controller: percentageController,),
+              CommonTextField(
+                text: "Percentage",
+                controller: percentageController,
+              ),
             ],
           ),
           height10,
@@ -209,8 +215,14 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
           ),
           Row(
             children: [
-              CommonTextField(text: "Percentatage",controller: percentageController,),
-              CommonTextField(text: "No: of Backlogs",controller: backlogsController,),
+              CommonTextField(
+                text: "Percentatage",
+                controller: percentageController,
+              ),
+              CommonTextField(
+                text: "No: of Backlogs",
+                controller: backlogsController,
+              ),
             ],
           ),
           Row(
@@ -244,6 +256,12 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
               ),
               width10,
             ],
+          ),
+          height20,
+          PreviousAndNextButtons(
+            onSavePressed: () {},
+            onPrevPressed: () {},
+            onNextPressed: () {},
           ),
         ],
       ),

@@ -203,8 +203,8 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           // Interested Universities
           Row(
             children: [
-               CommonTextField(
-                controller: interestedUniversityController ,
+              CommonTextField(
+                controller: interestedUniversityController,
                 text: "Interested Universities",
                 minLines: 1,
               ),
@@ -227,6 +227,12 @@ class _PreferencesSectionState extends State<PreferencesSection> {
                 },
               ),
             ],
+          ),
+          height20,
+          PreviousAndNextButtons(
+            onSavePressed: () {},
+            onPrevPressed: () {},
+            onNextPressed: () {},
           ),
         ],
       ),

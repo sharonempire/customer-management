@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
@@ -163,6 +164,12 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
                 ),
               );
             }),
+          ),
+          height20,
+          PreviousAndNextButtons(
+            onSavePressed: () {},
+            onPrevPressed: () {},
+            onNextPressed: () {},
           ),
         ],
       ),

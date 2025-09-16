@@ -109,6 +109,12 @@ class _WorkExperienceInfoState extends State<WorkExperienceInfo> {
               width10,
             ],
           ),
+          height20,
+          PreviousAndNextButtons(
+            onSavePressed: () {},
+            onPrevPressed: () {},
+            onNextPressed: () {},
+          ),
         ],
       ),
     );

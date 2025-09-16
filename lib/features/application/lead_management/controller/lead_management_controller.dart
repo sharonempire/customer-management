@@ -105,7 +105,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     await fetchLeadsByRange(context: context, start: DateTimeHelper.formatDateForLead(start), end:  DateTimeHelper.formatDateForLead(now),);
   }
 
-  /// Fetch detailed lead info (lead_info table) for a given lead id
   Future<void> fetchSelectedLeadInfo({
     required BuildContext context,
     required String leadId,
@@ -125,11 +124,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
-  /* -------------------------
-     Add / Update / Delete operations
-     ------------------------- */
-
-  /// Add a new lead and refresh list
   Future<bool> addLead({
     required BuildContext context,
     required LeadsListModel lead,

@@ -72,24 +72,7 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
                         EnglishProficiencyBox(),
                       height10,
 
-                      // CommonInfoBox(),
-                      height20,
-                      PreviousAndNextButtons(
-                        onPrevPressed: () {
-                          if (progressedIndex > 0) {
-                            ref
-                                .read(leadMangementcontroller.notifier)
-                                .decreaseProgression();
-                          }
-                        },
-                        onNextPressed: () {
-                          if (progressedIndex < 5) {
-                            ref
-                                .read(leadMangementcontroller.notifier)
-                                .increaseProgression();
-                          }
-                        },
-                      ),
+                  
                       height20,
                     ],
                   ),
@@ -103,23 +86,30 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
   }
 }
 
-class PreviousAndNextButtons extends StatelessWidget {
+class PreviousAndNextButtons extends ConsumerWidget {
   final Function onPrevPressed;
   final Function onNextPressed;
+  final Function onSavePressed;
   const PreviousAndNextButtons({
     super.key,
     required this.onPrevPressed,
     required this.onNextPressed,
+    required this.onSavePressed,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    int progressedIndex = ref.watch(infoCollectionProgression);
+
     return Row(
       children: [
         width30,
         IconButton(
           onPressed: () {
-            onPrevPressed();
+            if (progressedIndex > 0) {
+              onPrevPressed.call();
+              ref.read(leadMangementcontroller.notifier).decreaseProgression();
+            }
           },
           icon: Row(
             children: [
@@ -131,13 +121,16 @@ class PreviousAndNextButtons extends StatelessWidget {
         ),
         Spacer(),
         TextButton(
-          onPressed: () {},
+          onPressed: () => onSavePressed.call(),
           child: Text("Save", style: myTextstyle(fontSize: 16)),
         ),
         width30,
         PrimaryButton(
           onpressed: () {
-            onNextPressed();
+            if (progressedIndex < 5) {
+              onNextPressed.call();
+              ref.read(leadMangementcontroller.notifier).increaseProgression();
+            }
           },
           text: "Next",
         ),
