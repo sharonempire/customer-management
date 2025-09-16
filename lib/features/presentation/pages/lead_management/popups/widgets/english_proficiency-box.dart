@@ -73,7 +73,6 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
             children: List.generate(studentTests.length, (index) {
               final test = studentTests[index];
               final selectedTest = test["testType"];
-
               return Card(
                 elevation: 3,
                 margin: const EdgeInsets.only(bottom: 20),
@@ -95,10 +94,7 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 10),
-
-                      // Dropdown to select test
                       DropdownButtonFormField<String>(
                         value: selectedTest,
                         decoration: const InputDecoration(
@@ -124,8 +120,6 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
                       const SizedBox(height: 15),
                       Row(children: [CommonDatePicker(label: "Test date")]),
                       const SizedBox(height: 15),
-
-                      // Section Scores
                       if (selectedTest != null)
                         Column(
                           children:
@@ -150,13 +144,9 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
                                   )
                                   .toList(),
                         ),
-
-                      // Optional Upload Button
                       const SizedBox(height: 10),
                       OutlinedButton(
-                        onPressed: () {
-                          // File upload later
-                        },
+                        onPressed: () {},
                         child: const Text("Upload Score Report (Optional)"),
                       ),
                     ],
