@@ -11,25 +11,30 @@ import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 
 final infoCollectionProgression = StateProvider((ref) => 0);
+final fromNewLead = StateProvider((ref) => false);
 
 final leadMangementcontroller =
     StateNotifierProvider<LeadController, LeadManagementDTO>((ref) {
-  final repository = LeadManagementRepo(ref.watch(networkServiceProvider));
-  return LeadController(ref, repository);
-});
+      final repository = LeadManagementRepo(ref.watch(networkServiceProvider));
+      return LeadController(ref, repository);
+    });
 
 class LeadController extends StateNotifier<LeadManagementDTO> {
   final LeadManagementRepo _leadManagementRepo;
   final Ref ref;
 
   LeadController(this.ref, this._leadManagementRepo)
-      : super(const LeadManagementDTO());
+    : super(const LeadManagementDTO());
 
   /* -------------------------
      Progression helpers
      ------------------------- */
   void increaseProgression() {
     ref.read(infoCollectionProgression.notifier).update((s) => s + 1);
+  }
+
+  void setFromNewLead(bool isFromNewLead) {
+    ref.read(fromNewLead.notifier).update((_) => isFromNewLead);
   }
 
   void decreaseProgression() {
@@ -49,7 +54,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       log('fetchAllLeads: loaded ${leads.length} leads');
     } catch (e) {
       log('fetchAllLeads error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to load leads: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to load leads: $e');
     }
   }
 
@@ -60,11 +67,15 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     try {
       final leads = await _leadManagementRepo.fetchLeadsByDate(date);
       state = state.copyWith(leadsList: leads);
-      ref.read(snackbarServiceProvider).showSuccess(context, 'Leads for selected date loaded');
+      ref
+          .read(snackbarServiceProvider)
+          .showSuccess(context, 'Leads for selected date loaded');
       log('fetchLeadsByDate: ${leads.length} leads for $date');
     } catch (e) {
       log('fetchLeadsByDate error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to fetch leads for date: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to fetch leads for date: $e');
     }
   }
 
@@ -75,34 +86,52 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     required String end,
   }) async {
     try {
-      final leads = await _leadManagementRepo.fetchLeadsInRange(startDate: start, endDate: end);
+      final leads = await _leadManagementRepo.fetchLeadsInRange(
+        startDate: start,
+        endDate: end,
+      );
       state = state.copyWith(leadsList: leads);
-      ref.read(snackbarServiceProvider).showSuccess(context, 'Leads loaded for selected range');
+      ref
+          .read(snackbarServiceProvider)
+          .showSuccess(context, 'Leads loaded for selected range');
       log('fetchLeadsByRange: ${leads.length} leads between $start and $end');
     } catch (e) {
       log('fetchLeadsByRange error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to fetch leads for range: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to fetch leads for range: $e');
     }
   }
 
   /// Convenience: fetch today's leads
   Future<void> fetchTodaysLeads({required BuildContext context}) async {
     final today = DateTime.now();
-    await fetchLeadsByDate(context: context, date: DateTimeHelper.formatDateForLead(today));
+    await fetchLeadsByDate(
+      context: context,
+      date: DateTimeHelper.formatDateForLead(today),
+    );
   }
 
   /// Convenience: last 7 days
   Future<void> fetchLastWeekLeads({required BuildContext context}) async {
     final now = DateTime.now();
     final start = now.subtract(const Duration(days: 7));
-    await fetchLeadsByRange(context: context, start: DateTimeHelper.formatDateForLead(start), end:  DateTimeHelper.formatDateForLead(now),);
+    await fetchLeadsByRange(
+      context: context,
+      start: DateTimeHelper.formatDateForLead(start),
+      end: DateTimeHelper.formatDateForLead(now),
+    );
   }
 
   /// Convenience: last 30 days
   Future<void> fetchLastMonthLeads({required BuildContext context}) async {
     final now = DateTime.now();
     final start = now.subtract(const Duration(days: 30));
-    await fetchLeadsByRange(context: context, start: DateTimeHelper.formatDateForLead(start), end:  DateTimeHelper.formatDateForLead(now),);
+    await fetchLeadsByRange(
+      context: context,
+      start: DateTimeHelper.formatDateForLead(start),
+      end: DateTimeHelper.formatDateForLead(now),
+    );
   }
 
   Future<void> fetchSelectedLeadInfo({
@@ -113,14 +142,20 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       final LeadInfoModel? info = await _leadManagementRepo.getLeadInfo(leadId);
       if (info != null) {
         state = state.copyWith(selectedLead: info);
-        ref.read(snackbarServiceProvider).showSuccess(context, 'Lead details loaded');
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'Lead details loaded');
         log('fetchSelectedLeadInfo: loaded info for lead $leadId');
       } else {
-        ref.read(snackbarServiceProvider).showError(context, 'No lead details found');
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'No lead details found');
       }
     } catch (e) {
       log('fetchSelectedLeadInfo error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to load lead details: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to load lead details: $e');
     }
   }
 
@@ -129,44 +164,58 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     required LeadsListModel lead,
   }) async {
     try {
-      final  ok = await _leadManagementRepo.addLead(lead);
-      if (ok!=null) {
-        ref.read(snackbarServiceProvider).showSuccess(context, 'Lead added successfully!');
+      final ok = await _leadManagementRepo.addLead(lead);
+      if (ok != null) {
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'Lead added successfully!');
         await fetchAllLeads(context: context);
         return true;
       } else {
-        ref.read(snackbarServiceProvider).showError(context, 'Failed to add lead.');
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to add lead.');
         return false;
       }
     } catch (e) {
       log('addLead error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to add lead: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to add lead: $e');
       return false;
     }
   }
 
-  Future<bool> updateLead({
+  Future<bool> updateLeadInfo({
     required BuildContext context,
     required String leadId,
     required Map<String, dynamic> updatedData,
   }) async {
     try {
-      final response = await _leadManagementRepo.updateLead(leadId, updatedData);
+      final response = await _leadManagementRepo.updateLead(
+        leadId,
+        updatedData,
+      );
       if (response != null) {
-        ref.read(snackbarServiceProvider).showSuccess(context, 'Lead updated successfully!');
-        // refresh list and selected lead (if currently selected)
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'Lead updated successfully!');
         await fetchAllLeads(context: context);
         if (state.selectedLead?.id == leadId) {
-          await fetchSelectedLeadInfo(context: context, leadId:  leadId);
+          await fetchSelectedLeadInfo(context: context, leadId: leadId);
         }
         return true;
       } else {
-        ref.read(snackbarServiceProvider).showError(context, 'Failed to update lead.');
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to update lead.');
         return false;
       }
     } catch (e) {
       log('updateLead error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to update lead: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to update lead: $e');
       return false;
     }
   }
@@ -178,7 +227,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     try {
       final bool ok = await _leadManagementRepo.deleteLead(leadId);
       if (ok) {
-        ref.read(snackbarServiceProvider).showSuccess(context, 'Lead deleted successfully!');
+        ref
+            .read(snackbarServiceProvider)
+            .showSuccess(context, 'Lead deleted successfully!');
         await fetchAllLeads(context: context);
         // if deleted lead was selected, clear selection
         if (state.selectedLead?.id == leadId) {
@@ -186,17 +237,21 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
         }
         return true;
       } else {
-        ref.read(snackbarServiceProvider).showError(context, 'Failed to delete lead.');
+        ref
+            .read(snackbarServiceProvider)
+            .showError(context, 'Failed to delete lead.');
         return false;
       }
     } catch (e) {
       log('deleteLead error: $e');
-      ref.read(snackbarServiceProvider).showError(context, 'Failed to delete lead: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to delete lead: $e');
       return false;
     }
   }
 
   void selectLeadLocally(LeadsListModel lead) {
-    state = state.copyWith(selectedLead: null); 
+    state = state.copyWith(selectedLead: null);
   }
 }

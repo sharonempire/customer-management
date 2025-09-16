@@ -16,6 +16,10 @@ class EducationInfoCollection extends StatefulWidget {
 class _EducationInfoCollectionState extends State<EducationInfoCollection> {
   String selectedDecipline = "Engineering & Technology";
   String selectedSpecialization = "";
+  String selectedBaord = "CBSE";
+  String selectedStream = "Science – PCM (Physics, Chemistry, Maths)";
+  String typeOfDegree = "Regular";
+  String durationSelected = "3 Years";
   final TextEditingController passoutController = TextEditingController();
   final TextEditingController percentageController = TextEditingController();
   final TextEditingController backlogsController = TextEditingController();
@@ -80,7 +84,11 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
                   "West Bengal Council of Higher Secondary Education (WBCHSE)",
                 ],
                 value: "CBSE",
-                onChanged: (val) {},
+                onChanged: (val) {
+                  setState(() {
+                    selectedBaord = val ?? '';
+                  });
+                },
               ),
 
               width20,
@@ -142,7 +150,9 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
                   "Cambridge A Levels – Creative & Applied",
                 ],
                 value: "Science – PCM (Physics, Chemistry, Maths)",
-                onChanged: (val) {},
+                onChanged: (val) {
+                  selectedStream = val ?? '';
+                },
               ),
             ],
           ),
@@ -230,12 +240,25 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
               CommonDropdown(
                 label: "Type",
                 items: ["Regular", "Distance"],
-                onChanged: (value) {},
+                onChanged: (value) {
+                  typeOfDegree = value ?? '';
+                  setState(() {});
+                },
               ),
               CommonDropdown(
                 label: "Duration",
-                items: ['1', '2', '3', '4', '5', '6'],
-                onChanged: (value) {},
+                items: [
+                  '1 Year',
+                  '2 Years',
+                  '3 Years',
+                  '4 Years',
+                  '5 Years',
+                  '6 Years',
+                ],
+                onChanged: (value) {
+                  durationSelected = value ?? '';
+                  setState(() {});
+                },
               ),
             ],
           ),

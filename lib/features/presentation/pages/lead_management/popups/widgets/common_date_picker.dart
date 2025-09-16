@@ -1,11 +1,15 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
 class CommonDatePicker extends StatefulWidget {
   final String label;
-  const CommonDatePicker({super.key, required this.label});
+  final ValueChanged<DateTime?>? onDateSelected; 
+
+  const CommonDatePicker({
+    super.key,
+    required this.label,
+    this.onDateSelected,
+  });
 
   @override
   State<CommonDatePicker> createState() => _CommonDatePickerState();
@@ -22,7 +26,7 @@ class _CommonDatePickerState extends State<CommonDatePicker> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: TextFormField(
           controller: _controller,
-          readOnly: true, // prevent typing
+          readOnly: true,
           decoration: InputDecoration(
             label: Text(
               widget.label,
@@ -55,6 +59,9 @@ class _CommonDatePickerState extends State<CommonDatePicker> {
                 _controller.text =
                     "${picked.day}/${picked.month}/${picked.year}";
               });
+              if (widget.onDateSelected != null) {
+                widget.onDateSelected!(picked); // <-- Return selected date
+              }
             }
           },
         ),

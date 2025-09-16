@@ -60,6 +60,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
                       const Spacer(),
                       PrimaryButton(
                         onpressed: () {
+                          ref.read(leadMangementcontroller.notifier).setFromNewLead(true);
                           context.go(
                             '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
                           );
@@ -146,7 +147,7 @@ class LeadListingWidget extends StatelessWidget {
   TableRow _clickableRow(BuildContext context, LeadsListModel lead) {
     return TableRow(
       children: [
-        _clickableCell(context, lead, lead.slNo.toString()),
+        _clickableCell(context, lead, lead.slNo.toString().padLeft(4, '0')),
         _clickableCell(context, lead, lead.name ?? ""),
         _clickableCell(context, lead, lead.freelancerManager ?? ''),
         _clickableCell(context, lead, lead.freelancer ?? ''),
@@ -209,7 +210,7 @@ class LeadListingWidget extends StatelessWidget {
           TableRow(
             decoration: BoxDecoration(color: Colors.grey.shade100),
             children: [
-              tableHeaderCell("ID"),
+              tableHeaderCell("Sl no"),
               tableHeaderCell("Lead Name"),
               tableHeaderCell("Freelancer Manager"),
               tableHeaderCell("Freelancer"),

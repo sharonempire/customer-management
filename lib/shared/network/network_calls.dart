@@ -261,9 +261,7 @@ class NetworkService {
   }) async {
     if (fileBytes == null) return '';
     try {
-      await supabase.storage
-          .from(bucketName)
-          .uploadBinary(filePath, fileBytes);
+      await supabase.storage.from(bucketName).uploadBinary(filePath, fileBytes);
 
       return supabase.storage.from(bucketName).getPublicUrl(filePath);
     } on StorageException catch (e) {
@@ -345,5 +343,3 @@ final todosProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((
     filterValue: userId,
   );
 });
-
-
