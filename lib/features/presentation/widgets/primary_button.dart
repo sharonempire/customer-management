@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 
+import 'dart:async';
+import 'package:flutter/material.dart';
+
 class PrimaryButton extends StatelessWidget {
-  final Function() onpressed;
+  final FutureOr<void> Function()? onpressed; // <-- allow sync or async
   final String text;
   final IconData? icon;
+
   const PrimaryButton({
     super.key,
     required this.onpressed,
     required this.text,
-   this.icon,
+    this.icon,
   });
 
   @override
@@ -22,10 +26,14 @@ class PrimaryButton extends StatelessWidget {
       textStyle: const TextStyle(fontSize: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ),
-    onPressed: () => onpressed.call(),
+    onPressed: () async {
+      if (onpressed != null) {
+        await onpressed!(); // safely await if it's async
+      }
+    },
     child: Row(
       children: [
-        icon != null ? Icon(icon) : SizedBox.shrink(),
+        if (icon != null) Icon(icon) else const SizedBox.shrink(),
         width5,
         Text(text),
       ],
