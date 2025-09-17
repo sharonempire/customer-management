@@ -35,6 +35,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
   void setFromNewLead(bool isFromNewLead) {
     ref.read(fromNewLead.notifier).update((_) => isFromNewLead);
+    log("${ref.read(fromNewLead).toString()}.////////////////");
   }
 
   void decreaseProgression() {
@@ -58,6 +59,14 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
           .read(snackbarServiceProvider)
           .showError(context, 'Failed to load leads: $e');
     }
+  }
+
+  void setLeadLocally(LeadsListModel lead) {
+    state = state.copyWith(selectedLeadLocally: lead);
+  }
+
+  void setLeadInfo(LeadInfoModel lead) {
+    state = state.copyWith(selectedLead: lead);
   }
 
   Future<void> fetchLeadsByDate({
@@ -134,7 +143,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     );
   }
 
-  Future<void> fetchSelectedLeadInfo({
+  Future<LeadInfoModel> fetchSelectedLeadInfo({
     required BuildContext context,
     required String leadId,
   }) async {
@@ -146,43 +155,48 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Lead details loaded');
         log('fetchSelectedLeadInfo: loaded info for lead $leadId');
+        setLeadInfo(info);
+        return info;
       } else {
         ref
             .read(snackbarServiceProvider)
             .showError(context, 'No lead details found');
+
+        return LeadInfoModel();
       }
     } catch (e) {
       log('fetchSelectedLeadInfo error: $e');
       ref
           .read(snackbarServiceProvider)
           .showError(context, 'Failed to load lead details: $e');
+      return LeadInfoModel();
     }
   }
 
-  Future<bool> addLead({
+  Future<LeadsListModel> addLead({
     required BuildContext context,
     required LeadsListModel lead,
   }) async {
     try {
-      final ok = await _leadManagementRepo.addLead(lead);
-      if (ok != null) {
+      final response = await _leadManagementRepo.addLead(lead);
+      if (response != null) {
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Lead added successfully!');
         await fetchAllLeads(context: context);
-        return true;
+        return response;
       } else {
         ref
             .read(snackbarServiceProvider)
             .showError(context, 'Failed to add lead.');
-        return false;
+        return LeadsListModel();
       }
     } catch (e) {
       log('addLead error: $e');
       ref
           .read(snackbarServiceProvider)
           .showError(context, 'Failed to add lead: $e');
-      return false;
+      return LeadsListModel();
     }
   }
 
@@ -201,8 +215,12 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Lead updated successfully!');
         await fetchAllLeads(context: context);
-        if (state.selectedLead?.id == leadId) {
-          await fetchSelectedLeadInfo(context: context, leadId: leadId);
+        if (state.selectedLeadLocally?.id == int.parse(leadId)) {
+          final leadinfo = await _leadManagementRepo.updateLeadInfo(
+            leadId,
+            updatedData,
+          );
+          setLeadInfo(leadinfo ?? LeadInfoModel());
         }
         return true;
       } else {
@@ -232,7 +250,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
             .showSuccess(context, 'Lead deleted successfully!');
         await fetchAllLeads(context: context);
         // if deleted lead was selected, clear selection
-        if (state.selectedLead?.id == leadId) {
+        if (state.selectedLeadLocally?.id == leadId) {
           state = state.copyWith(selectedLead: null);
         }
         return true;
@@ -252,6 +270,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }
 
   void selectLeadLocally(LeadsListModel lead) {
-    state = state.copyWith(selectedLead: null);
+    state = state.copyWith(selectedLeadLocally: lead);
   }
 }

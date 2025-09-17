@@ -230,9 +230,9 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           ),
           height20,
           PreviousAndNextButtons(
-            onSavePressed: () {},
-            onPrevPressed: () {},
-            onNextPressed: () {},
+            onSavePressed: () async{},
+            onPrevPressed: ()async {},
+            onNextPressed: ()async {},
           ),
         ],
       ),

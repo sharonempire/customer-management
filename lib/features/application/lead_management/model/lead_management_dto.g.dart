@@ -19,10 +19,17 @@ _LeadManagementDTO _$LeadManagementDTOFromJson(Map<String, dynamic> json) =>
               : LeadInfoModel.fromJson(
                 json['selectedLead'] as Map<String, dynamic>,
               ),
+      selectedLeadLocally:
+          json['selectedLeadLocally'] == null
+              ? null
+              : LeadsListModel.fromJson(
+                json['selectedLeadLocally'] as Map<String, dynamic>,
+              ),
     );
 
 Map<String, dynamic> _$LeadManagementDTOToJson(_LeadManagementDTO instance) =>
     <String, dynamic>{
       'leadsList': instance.leadsList,
       'selectedLead': instance.selectedLead,
+      'selectedLeadLocally': instance.selectedLeadLocally,
     };

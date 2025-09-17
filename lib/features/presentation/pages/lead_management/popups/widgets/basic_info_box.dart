@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
@@ -19,11 +22,80 @@ class BasicInfoCollection extends ConsumerStatefulWidget {
 class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController secondNameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
   String? selectedGender = "Male";
   String? maritalStatusSelected = "Single";
   String? dateOfBirth = "";
   @override
   Widget build(BuildContext context) {
+    final isFromNewLead = ref.watch(fromNewLead);
+    log("${isFromNewLead.toString()}////////////");
+    Future<void> saveBasicInfo() async {
+      final isFromNewLead = ref.watch(fromNewLead);
+      log("${isFromNewLead.toString()}////////////");
+      if (isFromNewLead) {
+        final response = await ref
+            .read(leadMangementcontroller.notifier)
+            .addLead(
+              context: context,
+              lead: LeadsListModel(
+                status: "Lead creation",
+                source: "crm",
+                name: firstNameController.text,
+                assignedTo: ref.read(authControllerProvider).id.toString(),
+                phone: int.parse(phoneController.text),
+                email: emailController.text,
+              ),
+            );
+        await ref
+            .read(leadMangementcontroller.notifier)
+            .updateLeadInfo(
+              context: context,
+              leadId: response.id.toString(),
+              updatedData:
+                  LeadInfoModel(
+                    basicInfo: BasicInfo(
+                      email: emailController.text,
+                      phone: phoneController.text,
+                      firstName: firstNameController.text,
+                      secondName: secondNameController.text,
+                      gender: selectedGender,
+                      maritalStatus: maritalStatusSelected,
+                      dateOfBirth: dateOfBirth,
+                    ),
+                  ).toJson(),
+            );
+        ref.read(leadMangementcontroller.notifier).setFromNewLead(false);
+      } else {
+        await ref
+            .read(leadMangementcontroller.notifier)
+            .updateLeadInfo(
+              context: context,
+              leadId:
+                  ref
+                      .watch(leadMangementcontroller)
+                      .selectedLeadLocally
+                      ?.id
+                      .toString() ??
+                  "",
+              updatedData:
+                  LeadInfoModel(
+                    basicInfo: BasicInfo(
+                      email: emailController.text,
+                      phone: phoneController.text,
+                      firstName: firstNameController.text,
+                      secondName: secondNameController.text,
+                      gender: selectedGender,
+                      maritalStatus: maritalStatusSelected,
+                      dateOfBirth: dateOfBirth,
+                    ),
+                  ).toJson(),
+            );
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 45),
       child: Column(
@@ -39,6 +111,13 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
                 text: "Second Name",
                 controller: secondNameController,
               ),
+            ],
+          ),
+          Row(
+            children: [
+              CommonTextField(text: "Email", controller: emailController),
+              width20,
+              CommonTextField(text: "Phone", controller: phoneController),
             ],
           ),
           Row(
@@ -83,34 +162,17 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
           ),
           height20,
           PreviousAndNextButtons(
-            onSavePressed: () {
-              final isFromNewLead = ref.watch(fromNewLead);
-              if (isFromNewLead) {
-                ref
-                    .read(leadMangementcontroller.notifier)
-                    .addLead(
-                      context: context,
-                      lead: LeadsListModel(name: firstNameController.text),
-                    );
-                ref
-                    .read(leadMangementcontroller.notifier)
-                    .updateLeadInfo(
-                      context: context,
-                      leadId: 1.toString(),
-                      updatedData:LeadInfoModel(basicInfo: BasicInfo(firstName: firstNameController.text, secondName: secondNameController.text, gender: selectedGender, maritalStatus: maritalStatusSelected, dateOfBirth: dateOfBirth)).toJson(),
-                    );
-              } else {
-                ref
-                    .read(leadMangementcontroller.notifier)
-                    .updateLeadInfo(
-                      context: context,
-                      leadId: 1.toString(),
-                      updatedData: {},
-                    );
-              }
+            onSavePressed: () async {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                saveBasicInfo();
+              });
             },
-            onPrevPressed: () {},
-            onNextPressed: () {},
+            onPrevPressed: () async{},
+            onNextPressed: () async {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                saveBasicInfo();
+              });
+            },
           ),
         ],
       ),

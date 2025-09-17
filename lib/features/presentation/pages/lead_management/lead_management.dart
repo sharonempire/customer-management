@@ -60,7 +60,9 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
                       const Spacer(),
                       PrimaryButton(
                         onpressed: () {
-                          ref.read(leadMangementcontroller.notifier).setFromNewLead(true);
+                          ref
+                              .read(leadMangementcontroller.notifier)
+                              .setFromNewLead(true);
                           context.go(
                             '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
                           );
@@ -133,7 +135,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
   }
 }
 
-class LeadListingWidget extends StatelessWidget {
+class LeadListingWidget extends ConsumerWidget {
   final List<LeadsListModel> leadList;
   const LeadListingWidget({super.key, required this.leadList});
 
@@ -144,7 +146,7 @@ class LeadListingWidget extends StatelessWidget {
     );
   }
 
-  TableRow _clickableRow(BuildContext context, LeadsListModel lead) {
+  TableRow _clickableRow(BuildContext context, LeadsListModel lead,WidgetRef ref) {
     return TableRow(
       children: [
         _clickableCell(context, lead, lead.slNo.toString().padLeft(4, '0')),
@@ -160,6 +162,7 @@ class LeadListingWidget extends StatelessWidget {
         actionCell(
           "Edit",
           onTap: () {
+          ref.read(leadMangementcontroller.notifier).setLeadLocally(lead);
             context.go(
               '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
             );
@@ -178,13 +181,13 @@ class LeadListingWidget extends StatelessWidget {
       onTap: () => _showLeadDetails(context, lead),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Text(text, style: myTextstyle(fontSize: 18)),
+        child: Text(text, style: myTextstyle(fontSize: 13)),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Table(
@@ -223,7 +226,7 @@ class LeadListingWidget extends StatelessWidget {
               tableHeaderCell("Action"),
             ],
           ),
-          for (var lead in leadList) _clickableRow(context, lead),
+          for (var lead in leadList) _clickableRow(context, lead,ref),
         ],
       ),
     );
@@ -238,7 +241,7 @@ Widget tableHeaderCell(String text) {
       style: const TextStyle(
         fontWeight: FontWeight.bold,
         color: Colors.black87,
-        fontSize: 16,
+        fontSize: 14,
       ),
     ),
   );
@@ -249,7 +252,7 @@ Widget tableCell(String text) {
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: Text(
       text,
-      style: const TextStyle(color: Colors.black87, fontSize: 14),
+      style: const TextStyle(color: Colors.black87, fontSize: 112),
       overflow: TextOverflow.ellipsis,
     ),
   );
@@ -275,7 +278,7 @@ Widget statusCell(String status) {
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: Text(
       status,
-      style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 14),
+      style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12),
     ),
   );
 }
@@ -288,7 +291,7 @@ Widget actionCell(String label, {required VoidCallback onTap}) {
         onPressed: onTap,
         style: TextButton.styleFrom(
           foregroundColor: Colors.blue,
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
         ),
         icon: Text(label),
       ),

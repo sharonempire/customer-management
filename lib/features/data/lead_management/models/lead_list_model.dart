@@ -76,17 +76,15 @@ class LeadsListModel {
   factory LeadsListModel.fromJson(Map<String, dynamic> json) {
     return LeadsListModel(
       id: json['id'] as int?,
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.tryParse(json['created_at'])
-              : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
       slNo: json['sl_no'] as int?,
       name: json['name'] as String?,
       email: json['email'] as String?,
-      phone:
-          json['phone'] is int
-              ? json['phone']
-              : int.tryParse(json['phone']?.toString() ?? ''),
+      phone: json['phone'] is int
+          ? json['phone']
+          : int.tryParse(json['phone']?.toString() ?? ''),
       freelancerManager: json['freelancer_manager'] as String?,
       freelancer: json['freelancer'] as String?,
       source: json['source'] as String?,
@@ -99,25 +97,27 @@ class LeadsListModel {
     );
   }
 
-  /// LeadsListModel → JSON
+  /// LeadsListModel → JSON (skip nulls)
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'created_at': createdAt?.toIso8601String(),
-      "sl_no": slNo,
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'freelancer_manager': freelancerManager,
-      'freelancer': freelancer,
-      'source': source,
-      'status': status,
-      'follow_up': followUp,
-      'remark': remark,
-      'assigned_to': assignedTo,
-      'draft_status': draftStatus,
-      'date': date,
-    };
+    final data = <String, dynamic>{};
+
+    if (id != null) data['id'] = id;
+    if (createdAt != null) data['created_at'] = createdAt!.toIso8601String();
+    if (slNo != null) data['sl_no'] = slNo;
+    if (name != null) data['name'] = name;
+    if (email != null) data['email'] = email;
+    if (phone != null) data['phone'] = phone;
+    if (freelancerManager != null) data['freelancer_manager'] = freelancerManager;
+    if (freelancer != null) data['freelancer'] = freelancer;
+    if (source != null) data['source'] = source;
+    if (status != null) data['status'] = status;
+    if (followUp != null) data['follow_up'] = followUp;
+    if (remark != null) data['remark'] = remark;
+    if (assignedTo != null) data['assigned_to'] = assignedTo;
+    if (draftStatus != null) data['draft_status'] = draftStatus;
+    if (date != null) data['date'] = date;
+
+    return data;
   }
 
   @override

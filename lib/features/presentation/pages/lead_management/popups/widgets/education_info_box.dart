@@ -282,9 +282,9 @@ class _EducationInfoCollectionState extends State<EducationInfoCollection> {
           ),
           height20,
           PreviousAndNextButtons(
-            onSavePressed: () {},
-            onPrevPressed: () {},
-            onNextPressed: () {},
+            onSavePressed: () async{},
+            onPrevPressed: ()async {},
+            onNextPressed: ()async {},
           ),
         ],
       ),

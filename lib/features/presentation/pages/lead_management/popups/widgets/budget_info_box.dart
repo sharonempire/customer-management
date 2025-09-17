@@ -133,9 +133,9 @@ class _BudgetInfoSectionState extends State<BudgetInfoSection> {
           ),
           height20,
           PreviousAndNextButtons(
-            onSavePressed: () {},
-            onPrevPressed: () {},
-            onNextPressed: () {},
+            onSavePressed: ()async {},
+            onPrevPressed: ()async {},
+            onNextPressed: ()async {},
           ),
         ],
       ),

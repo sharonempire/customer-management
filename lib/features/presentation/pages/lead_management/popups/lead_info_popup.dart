@@ -72,7 +72,6 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
                         EnglishProficiencyBox(),
                       height10,
 
-                  
                       height20,
                     ],
                   ),
@@ -87,9 +86,10 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
 }
 
 class PreviousAndNextButtons extends ConsumerWidget {
-  final Function onPrevPressed;
-  final Function onNextPressed;
-  final Function onSavePressed;
+  final Future<void> Function() onPrevPressed;
+  final Future<void> Function() onNextPressed;
+  final Future<void> Function() onSavePressed;
+
   const PreviousAndNextButtons({
     super.key,
     required this.onPrevPressed,

@@ -7,12 +7,13 @@ part 'lead_management_dto.g.dart';
 
 @freezed
 class LeadManagementDTO with _$LeadManagementDTO {
-  // ✅ Add private constructor
+  // Private constructor for custom getters if needed
   const LeadManagementDTO._();
 
   const factory LeadManagementDTO({
     @Default([]) List<LeadsListModel> leadsList,
     LeadInfoModel? selectedLead,
+    LeadsListModel? selectedLeadLocally,
   }) = _LeadManagementDTO;
 
   factory LeadManagementDTO.fromJson(Map<String, dynamic> json) =>
@@ -25,6 +26,10 @@ class LeadManagementDTO with _$LeadManagementDTO {
         @override
         // TODO: implement selectedLead
         LeadInfoModel? get selectedLead => throw UnimplementedError();
+      
+        @override
+        // TODO: implement selectedLeadLocally
+        LeadsListModel? get selectedLeadLocally => throw UnimplementedError();
       
         @override
         Map<String, dynamic> toJson() {

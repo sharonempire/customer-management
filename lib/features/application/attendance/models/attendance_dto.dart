@@ -35,4 +35,5 @@ class AttendanceDTO with _$AttendanceDTO {
         @override
         // TODO: implement userAttendance
         AttendanceModel? get userAttendance => throw UnimplementedError();
+     
 }

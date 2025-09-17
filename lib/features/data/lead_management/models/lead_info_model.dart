@@ -36,59 +36,89 @@ class LeadInfoModel {
       createdAt: createdAt ?? this.createdAt,
       basicInfo: basicInfo ?? this.basicInfo,
       education: education ?? this.education,
-      workExperience: workExperience ?? this.workExperience,
+      workExperience: workExperience ?? this.workWorkExperienceOrSelf(),
       budgetInfo: budgetInfo ?? this.budgetInfo,
       preferences: preferences ?? this.preferences,
       englishProficiency: englishProficiency ?? this.englishProficiency,
     );
   }
 
+  // small helper used above to avoid analyzer warnings (keeps API same)
+  List<WorkExperience>? workWorkExperienceOrSelf() => workExperience;
+
   factory LeadInfoModel.fromJson(Map<String, dynamic> json) {
-    // decode helpers
     final basicMap = _ensureMap(json['basic_info']);
     final educationList = _ensureList(json['education']);
-    final workList = _ensureList(json['work_expierience']); // keep DB spelled name
+    final workList = _ensureList(json['work_expierience']); // DB spelled field
     final budgetMap = _ensureMap(json['budget_info']);
     final prefMap = _ensureMap(json['preferences']);
     final englishMap = _ensureMap(json['english_proficiency']);
 
     return LeadInfoModel(
-      id: json['id'] is int ? json['id'] as int : (json['id'] != null ? int.tryParse(json['id'].toString()) : null),
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString())
-          : null,
+      id: _toInt(json['id']),
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.tryParse(json['created_at'].toString())
+              : null,
       basicInfo: basicMap != null ? BasicInfo.fromJson(basicMap) : null,
-      education: educationList
-          ?.map((e) => EducationInfo.fromJson(e))
-          .toList(),
-      workExperience: workList
-          ?.map((e) => WorkExperience.fromJson(e))
-          .toList(),
+      education: educationList?.map((m) => EducationInfo.fromJson(m)).toList(),
+      workExperience: workList?.map((m) => WorkExperience.fromJson(m)).toList(),
       budgetInfo: budgetMap != null ? BudgetInfo.fromJson(budgetMap) : null,
       preferences: prefMap != null ? Preferences.fromJson(prefMap) : null,
-      englishProficiency: englishMap != null
-          ? EnglishProficiency.fromJson(englishMap)
-          : null,
+      englishProficiency:
+          englishMap != null ? EnglishProficiency.fromJson(englishMap) : null,
     );
   }
 
+  /// toJson: only include non-null keys
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'created_at': createdAt?.toIso8601String(),
-      'basic_info': basicInfo?.toJson(),
-      'education': education?.map((e) => e.toJson()).toList(),
-      'work_expierience': workExperience?.map((e) => e.toJson()).toList(),
-      'budget_info': budgetInfo?.toJson(),
-      'preferences': preferences?.toJson(),
-      'english_proficiency': englishProficiency?.toJson(),
-    };
+    final map = <String, dynamic>{};
+
+    if (id != null) map['id'] = id;
+    if (createdAt != null) map['created_at'] = createdAt!.toIso8601String();
+    if (basicInfo != null) map['basic_info'] = basicInfo!.toJson();
+    if (education != null) {
+      map['education'] = education!.map((e) => e.toJson()).toList();
+    }
+    if (workExperience != null) {
+      map['work_expierience'] = workExperience!.map((e) => e.toJson()).toList();
+    }
+    if (budgetInfo != null) map['budget_info'] = budgetInfo!.toJson();
+    if (preferences != null) map['preferences'] = preferences!.toJson();
+    if (englishProficiency != null) {
+      map['english_proficiency'] = englishProficiency!.toJson();
+    }
+
+    return map;
   }
 
   @override
   String toString() => jsonEncode(toJson());
 }
 
+/// ----------------- helpers -----------------
+int? _toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  return int.tryParse(v.toString());
+}
+
+bool? _toBool(dynamic v) {
+  if (v == null) return null;
+  if (v is bool) return v;
+  final s = v.toString().toLowerCase();
+  if (s == 'true') return true;
+  if (s == 'false') return false;
+  return null;
+}
+
+double? _toDouble(dynamic v) {
+  if (v == null) return null;
+  if (v is num) return v.toDouble();
+  return double.tryParse(v.toString());
+}
+
+/// Ensure we return Map<String,dynamic>? whether input is Map or JSON string
 Map<String, dynamic>? _ensureMap(dynamic value) {
   if (value == null) return null;
   if (value is Map) {
@@ -107,10 +137,10 @@ Map<String, dynamic>? _ensureMap(dynamic value) {
   return null;
 }
 
+/// Ensure we return a List<Map<String,dynamic>>? from various input shapes
 List<Map<String, dynamic>>? _ensureList(dynamic value) {
   if (value == null) return null;
 
-  // Already a List
   if (value is List) {
     final out = <Map<String, dynamic>>[];
     for (final e in value) {
@@ -128,7 +158,6 @@ List<Map<String, dynamic>>? _ensureList(dynamic value) {
     return out.isEmpty ? null : out;
   }
 
-  // A single Map instance
   if (value is Map) {
     try {
       return [Map<String, dynamic>.from(value)];
@@ -137,16 +166,13 @@ List<Map<String, dynamic>>? _ensureList(dynamic value) {
     }
   }
 
-  // A JSON string containing a list or map
   if (value is String) {
     try {
       final decoded = jsonDecode(value);
       if (decoded is List) {
         final out = <Map<String, dynamic>>[];
         for (final e in decoded) {
-          if (e is Map) {
-            out.add(Map<String, dynamic>.from(e));
-          }
+          if (e is Map) out.add(Map<String, dynamic>.from(e));
         }
         return out.isEmpty ? null : out;
       } else if (decoded is Map) {
@@ -165,6 +191,8 @@ class BasicInfo {
   final String? gender;
   final String? maritalStatus;
   final String? dateOfBirth;
+  final String? phone;
+  final String? email;
 
   BasicInfo({
     this.firstName,
@@ -172,6 +200,8 @@ class BasicInfo {
     this.gender,
     this.maritalStatus,
     this.dateOfBirth,
+    this.email,
+    this.phone
   });
 
   factory BasicInfo.fromJson(Map<String, dynamic> json) {
@@ -181,29 +211,30 @@ class BasicInfo {
       gender: json['gender']?.toString(),
       maritalStatus: json['marital_status']?.toString(),
       dateOfBirth: json['date_of_birth']?.toString(),
+      phone: json['phone']?.toString(),
+      email: json['email']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'first_name': firstName,
-      'second_name': secondName,
-      'gender': gender,
-      'marital_status': maritalStatus,
-      'date_of_birth': dateOfBirth,
-    };
+    final map = <String, dynamic>{};
+    if (firstName != null) map['first_name'] = firstName;
+    if (secondName != null) map['second_name'] = secondName;
+    if (gender != null) map['gender'] = gender;
+    if (maritalStatus != null) map['marital_status'] = maritalStatus;
+    if (dateOfBirth != null) map['date_of_birth'] = dateOfBirth;
+    if (phone != null) map['phone'] = phone;
+    if (email != null) map['email'] = email;
+    return map;
   }
 }
 
 /// ------------------ EDUCATION INFO ------------------
 class EducationInfo {
-  // school/12th fields
   final String? board;
   final String? stream;
   final String? passoutYear;
-  final Map<String, dynamic>? subjects; // e.g. { "Physics": "85", ... }
-
-  // degree fields (if any)
+  final Map<String, dynamic>? subjects; // {subject: marks}
   final String? discipline;
   final String? specialization;
   final String? percentage;
@@ -229,13 +260,11 @@ class EducationInfo {
   });
 
   factory EducationInfo.fromJson(Map<String, dynamic> json) {
-    // subjects might be Map or JSON string
-    final subj = _ensureMap(json['subjects']);
     return EducationInfo(
       board: json['board']?.toString(),
       stream: json['stream']?.toString(),
       passoutYear: json['passout_year']?.toString(),
-      subjects: subj,
+      subjects: _ensureMap(json['subjects']),
       discipline: json['discipline']?.toString(),
       specialization: json['specialization']?.toString(),
       percentage: json['percentage']?.toString(),
@@ -248,20 +277,20 @@ class EducationInfo {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'board': board,
-      'stream': stream,
-      'passout_year': passoutYear,
-      'subjects': subjects,
-      'discipline': discipline,
-      'specialization': specialization,
-      'percentage': percentage,
-      'no_of_backlogs': noOfBacklogs,
-      'type_of_study': typeOfStudy,
-      'duration': duration,
-      'join_date': joinDate,
-      'passout_date': passoutDate,
-    };
+    final map = <String, dynamic>{};
+    if (board != null) map['board'] = board;
+    if (stream != null) map['stream'] = stream;
+    if (passoutYear != null) map['passout_year'] = passoutYear;
+    if (subjects != null) map['subjects'] = subjects;
+    if (discipline != null) map['discipline'] = discipline;
+    if (specialization != null) map['specialization'] = specialization;
+    if (percentage != null) map['percentage'] = percentage;
+    if (noOfBacklogs != null) map['no_of_backlogs'] = noOfBacklogs;
+    if (typeOfStudy != null) map['type_of_study'] = typeOfStudy;
+    if (duration != null) map['duration'] = duration;
+    if (joinDate != null) map['join_date'] = joinDate;
+    if (passoutDate != null) map['passout_date'] = passoutDate;
+    return map;
   }
 }
 
@@ -299,26 +328,23 @@ class WorkExperience {
       dateOfRelieving: json['date_of_relieving']?.toString(),
       companyAddress: json['company_address']?.toString(),
       description: json['description']?.toString(),
-      isCurrentlyWorking: json['is_currently_working'] is bool
-          ? json['is_currently_working'] as bool
-          : (json['is_currently_working'] != null
-              ? json['is_currently_working'].toString().toLowerCase() == 'true'
-              : null),
+      isCurrentlyWorking: _toBool(json['is_currently_working']),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'company_name': companyName,
-      'designation': designation,
-      'job_type': jobType,
-      'location': location,
-      'date_of_joining': dateOfJoining,
-      'date_of_relieving': dateOfRelieving,
-      'company_address': companyAddress,
-      'description': description,
-      'is_currently_working': isCurrentlyWorking,
-    };
+    final map = <String, dynamic>{};
+    if (companyName != null) map['company_name'] = companyName;
+    if (designation != null) map['designation'] = designation;
+    if (jobType != null) map['job_type'] = jobType;
+    if (location != null) map['location'] = location;
+    if (dateOfJoining != null) map['date_of_joining'] = dateOfJoining;
+    if (dateOfRelieving != null) map['date_of_relieving'] = dateOfRelieving;
+    if (companyAddress != null) map['company_address'] = companyAddress;
+    if (description != null) map['description'] = description;
+    if (isCurrentlyWorking != null)
+      map['is_currently_working'] = isCurrentlyWorking;
+    return map;
   }
 }
 
@@ -332,33 +358,21 @@ class BudgetInfo {
   BudgetInfo({this.selfFunding, this.homeLoan, this.both, this.budgetAmount});
 
   factory BudgetInfo.fromJson(Map<String, dynamic> json) {
-    bool? _bool(dynamic v) {
-      if (v == null) return null;
-      if (v is bool) return v;
-      return v.toString().toLowerCase() == 'true';
-    }
-
-    double? _toDouble(dynamic v) {
-      if (v == null) return null;
-      if (v is num) return v.toDouble();
-      return double.tryParse(v.toString());
-    }
-
     return BudgetInfo(
-      selfFunding: _bool(json['self_funding']),
-      homeLoan: _bool(json['home_loan']),
-      both: _bool(json['both']),
+      selfFunding: _toBool(json['self_funding']),
+      homeLoan: _toBool(json['home_loan']),
+      both: _toBool(json['both']),
       budgetAmount: _toDouble(json['budget_amount']),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'self_funding': selfFunding,
-      'home_loan': homeLoan,
-      'both': both,
-      'budget_amount': budgetAmount,
-    };
+    final map = <String, dynamic>{};
+    if (selfFunding != null) map['self_funding'] = selfFunding;
+    if (homeLoan != null) map['home_loan'] = homeLoan;
+    if (both != null) map['both'] = both;
+    if (budgetAmount != null) map['budget_amount'] = budgetAmount;
+    return map;
   }
 }
 
@@ -389,23 +403,25 @@ class Preferences {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'country': country,
-      'interested_industry': interestedIndustry,
-      'interested_course': interestedCourse,
-      'interested_university': interestedUniversity,
-      'preferred_state': preferredState,
-    };
+    final map = <String, dynamic>{};
+    if (country != null) map['country'] = country;
+    if (interestedIndustry != null)
+      map['interested_industry'] = interestedIndustry;
+    if (interestedCourse != null) map['interested_course'] = interestedCourse;
+    if (interestedUniversity != null)
+      map['interested_university'] = interestedUniversity;
+    if (preferredState != null) map['preferred_state'] = preferredState;
+    return map;
   }
 }
 
 /// ------------------ ENGLISH PROFICIENCY ------------------
-/// Example JSON shape:
+/// Example shape:
 /// { "IELTS": ["Listening","Reading","Writing","Speaking"], "Duolingo": ["Overall Score"] }
 class EnglishProficiency {
-  final Map<String, List<String>> tests;
+  final Map<String, List<String>>? tests;
 
-  EnglishProficiency({required this.tests});
+  EnglishProficiency({this.tests});
 
   factory EnglishProficiency.fromJson(Map<String, dynamic> json) {
     final out = <String, List<String>>{};
@@ -413,10 +429,12 @@ class EnglishProficiency {
       if (value is List) {
         out[key] = value.map((e) => e.toString()).toList();
       } else if (value is String) {
-        // maybe stored as JSON string for array
         try {
           final dec = jsonDecode(value);
-          if (dec is List) out[key] = dec.map((e) => e.toString()).toList();
+          if (dec is List)
+            out[key] = dec.map((e) => e.toString()).toList();
+          else
+            out[key] = [value];
         } catch (_) {
           out[key] = [value];
         }
@@ -424,10 +442,15 @@ class EnglishProficiency {
         out[key] = [value.toString()];
       }
     });
-    return EnglishProficiency(tests: out);
+    return EnglishProficiency(tests: out.isEmpty ? null : out);
   }
 
   Map<String, dynamic> toJson() {
-    return tests.map((k, v) => MapEntry(k, v));
+    if (tests == null) return {};
+    final map = <String, dynamic>{};
+    tests!.forEach((k, v) {
+      map[k] = v;
+    });
+    return map;
   }
 }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LeadManagementDTO {
 
- List<LeadsListModel> get leadsList; LeadInfoModel? get selectedLead;
+ List<LeadsListModel> get leadsList; LeadInfoModel? get selectedLead; LeadsListModel? get selectedLeadLocally;
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $LeadManagementDTOCopyWith<LeadManagementDTO> get copyWith => _$LeadManagementDT
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LeadManagementDTO&&const DeepCollectionEquality().equals(other.leadsList, leadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LeadManagementDTO&&const DeepCollectionEquality().equals(other.leadsList, leadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead)&&(identical(other.selectedLeadLocally, selectedLeadLocally) || other.selectedLeadLocally == selectedLeadLocally));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(leadsList),selectedLead);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(leadsList),selectedLead,selectedLeadLocally);
 
 @override
 String toString() {
-  return 'LeadManagementDTO(leadsList: $leadsList, selectedLead: $selectedLead)';
+  return 'LeadManagementDTO(leadsList: $leadsList, selectedLead: $selectedLead, selectedLeadLocally: $selectedLeadLocally)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $LeadManagementDTOCopyWith<$Res>  {
   factory $LeadManagementDTOCopyWith(LeadManagementDTO value, $Res Function(LeadManagementDTO) _then) = _$LeadManagementDTOCopyWithImpl;
 @useResult
 $Res call({
- List<LeadsListModel> leadsList, LeadInfoModel? selectedLead
+ List<LeadsListModel> leadsList, LeadInfoModel? selectedLead, LeadsListModel? selectedLeadLocally
 });
 
 
@@ -65,11 +65,12 @@ class _$LeadManagementDTOCopyWithImpl<$Res>
 
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? leadsList = null,Object? selectedLead = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? leadsList = null,Object? selectedLead = freezed,Object? selectedLeadLocally = freezed,}) {
   return _then(_self.copyWith(
 leadsList: null == leadsList ? _self.leadsList : leadsList // ignore: cast_nullable_to_non_nullable
 as List<LeadsListModel>,selectedLead: freezed == selectedLead ? _self.selectedLead : selectedLead // ignore: cast_nullable_to_non_nullable
-as LeadInfoModel?,
+as LeadInfoModel?,selectedLeadLocally: freezed == selectedLeadLocally ? _self.selectedLeadLocally : selectedLeadLocally // ignore: cast_nullable_to_non_nullable
+as LeadsListModel?,
   ));
 }
 
@@ -154,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  LeadInfoModel? selectedLead)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LeadManagementDTO() when $default != null:
-return $default(_that.leadsList,_that.selectedLead);case _:
+return $default(_that.leadsList,_that.selectedLead,_that.selectedLeadLocally);case _:
   return orElse();
 
 }
@@ -175,10 +176,10 @@ return $default(_that.leadsList,_that.selectedLead);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  LeadInfoModel? selectedLead)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally)  $default,) {final _that = this;
 switch (_that) {
 case _LeadManagementDTO():
-return $default(_that.leadsList,_that.selectedLead);case _:
+return $default(_that.leadsList,_that.selectedLead,_that.selectedLeadLocally);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +196,10 @@ return $default(_that.leadsList,_that.selectedLead);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<LeadsListModel> leadsList,  LeadInfoModel? selectedLead)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<LeadsListModel> leadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally)?  $default,) {final _that = this;
 switch (_that) {
 case _LeadManagementDTO() when $default != null:
-return $default(_that.leadsList,_that.selectedLead);case _:
+return $default(_that.leadsList,_that.selectedLead,_that.selectedLeadLocally);case _:
   return null;
 
 }
@@ -210,7 +211,7 @@ return $default(_that.leadsList,_that.selectedLead);case _:
 @JsonSerializable()
 
 class _LeadManagementDTO extends LeadManagementDTO {
-  const _LeadManagementDTO({final  List<LeadsListModel> leadsList = const [], this.selectedLead}): _leadsList = leadsList,super._();
+  const _LeadManagementDTO({final  List<LeadsListModel> leadsList = const [], this.selectedLead, this.selectedLeadLocally}): _leadsList = leadsList,super._();
   factory _LeadManagementDTO.fromJson(Map<String, dynamic> json) => _$LeadManagementDTOFromJson(json);
 
  final  List<LeadsListModel> _leadsList;
@@ -221,6 +222,7 @@ class _LeadManagementDTO extends LeadManagementDTO {
 }
 
 @override final  LeadInfoModel? selectedLead;
+@override final  LeadsListModel? selectedLeadLocally;
 
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +237,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LeadManagementDTO&&const DeepCollectionEquality().equals(other._leadsList, _leadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LeadManagementDTO&&const DeepCollectionEquality().equals(other._leadsList, _leadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead)&&(identical(other.selectedLeadLocally, selectedLeadLocally) || other.selectedLeadLocally == selectedLeadLocally));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_leadsList),selectedLead);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_leadsList),selectedLead,selectedLeadLocally);
 
 @override
 String toString() {
-  return 'LeadManagementDTO(leadsList: $leadsList, selectedLead: $selectedLead)';
+  return 'LeadManagementDTO(leadsList: $leadsList, selectedLead: $selectedLead, selectedLeadLocally: $selectedLeadLocally)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$LeadManagementDTOCopyWith<$Res> implements $LeadManagemen
   factory _$LeadManagementDTOCopyWith(_LeadManagementDTO value, $Res Function(_LeadManagementDTO) _then) = __$LeadManagementDTOCopyWithImpl;
 @override @useResult
 $Res call({
- List<LeadsListModel> leadsList, LeadInfoModel? selectedLead
+ List<LeadsListModel> leadsList, LeadInfoModel? selectedLead, LeadsListModel? selectedLeadLocally
 });
 
 
@@ -272,11 +274,12 @@ class __$LeadManagementDTOCopyWithImpl<$Res>
 
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? leadsList = null,Object? selectedLead = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? leadsList = null,Object? selectedLead = freezed,Object? selectedLeadLocally = freezed,}) {
   return _then(_LeadManagementDTO(
 leadsList: null == leadsList ? _self._leadsList : leadsList // ignore: cast_nullable_to_non_nullable
 as List<LeadsListModel>,selectedLead: freezed == selectedLead ? _self.selectedLead : selectedLead // ignore: cast_nullable_to_non_nullable
-as LeadInfoModel?,
+as LeadInfoModel?,selectedLeadLocally: freezed == selectedLeadLocally ? _self.selectedLeadLocally : selectedLeadLocally // ignore: cast_nullable_to_non_nullable
+as LeadsListModel?,
   ));
 }
 

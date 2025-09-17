@@ -157,9 +157,9 @@ class _EnglishProficiencyBoxState extends State<EnglishProficiencyBox> {
           ),
           height20,
           PreviousAndNextButtons(
-            onSavePressed: () {},
-            onPrevPressed: () {},
-            onNextPressed: () {},
+            onSavePressed: ()async {},
+            onPrevPressed: ()async {},
+            onNextPressed: () async{},
           ),
         ],
       ),
