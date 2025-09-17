@@ -210,7 +210,6 @@ class LeadManagementRepo {
         id: leadId, // foreign key to leadslist.id
         data: updatedData,
       );
-
       if (response != null) {
         return LeadInfoModel.fromJson(response);
       }

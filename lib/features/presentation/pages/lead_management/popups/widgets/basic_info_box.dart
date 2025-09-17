@@ -33,9 +33,10 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
     final isFromNewLead = ref.watch(fromNewLead);
     log("${isFromNewLead.toString()}////////////");
     Future<void> saveBasicInfo() async {
-      final isFromNewLead = ref.watch(fromNewLead);
       log("${isFromNewLead.toString()}////////////");
       if (isFromNewLead) {
+        ref.read(leadMangementcontroller.notifier).setFromNewLead(false);
+
         final response = await ref
             .read(leadMangementcontroller.notifier)
             .addLead(
@@ -67,7 +68,6 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
                     ),
                   ).toJson(),
             );
-        ref.read(leadMangementcontroller.notifier).setFromNewLead(false);
       } else {
         await ref
             .read(leadMangementcontroller.notifier)
@@ -163,15 +163,11 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
           height20,
           PreviousAndNextButtons(
             onSavePressed: () async {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                saveBasicInfo();
-              });
+              await saveBasicInfo();
             },
-            onPrevPressed: () async{},
+            onPrevPressed: () async {},
             onNextPressed: () async {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                saveBasicInfo();
-              });
+              await saveBasicInfo();
             },
           ),
         ],

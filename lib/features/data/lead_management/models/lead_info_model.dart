@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 class LeadInfoModel {
-  final int? id;
-  final DateTime? createdAt;
-  final BasicInfo? basicInfo;
-  final List<EducationInfo>? education;
-  final List<WorkExperience>? workExperience;
-  final BudgetInfo? budgetInfo;
-  final Preferences? preferences;
-  final EnglishProficiency? englishProficiency;
+   int? id;
+   DateTime? createdAt;
+   BasicInfo? basicInfo;
+   List<EducationInfo>? education;
+   List<WorkExperience>? workExperience;
+   BudgetInfo? budgetInfo;
+   Preferences? preferences;
+   EnglishProficiency? englishProficiency;
 
-  const LeadInfoModel({
+   LeadInfoModel({
     this.id,
     this.createdAt,
     this.basicInfo,
@@ -186,13 +186,13 @@ List<Map<String, dynamic>>? _ensureList(dynamic value) {
 
 /// ------------------ BASIC INFO ------------------
 class BasicInfo {
-  final String? firstName;
-  final String? secondName;
-  final String? gender;
-  final String? maritalStatus;
-  final String? dateOfBirth;
-  final String? phone;
-  final String? email;
+   String? firstName;
+   String? secondName;
+   String? gender;
+   String? maritalStatus;
+   String? dateOfBirth;
+   String? phone;
+   String? email;
 
   BasicInfo({
     this.firstName,
@@ -231,18 +231,18 @@ class BasicInfo {
 
 /// ------------------ EDUCATION INFO ------------------
 class EducationInfo {
-  final String? board;
-  final String? stream;
-  final String? passoutYear;
-  final Map<String, dynamic>? subjects; // {subject: marks}
-  final String? discipline;
-  final String? specialization;
-  final String? percentage;
-  final String? noOfBacklogs;
-  final String? typeOfStudy;
-  final String? duration;
-  final String? joinDate;
-  final String? passoutDate;
+   String? board;
+   String? stream;
+   String? passoutYear;
+   Map<String, dynamic>? subjects; // {subject: marks}
+   String? discipline;
+   String? specialization;
+   String? percentage;
+   String? noOfBacklogs;
+   String? typeOfStudy;
+   String? duration;
+   String? joinDate;
+   String? passoutDate;
 
   EducationInfo({
     this.board,
@@ -296,15 +296,15 @@ class EducationInfo {
 
 /// ------------------ WORK EXPERIENCE ------------------
 class WorkExperience {
-  final String? companyName;
-  final String? designation;
-  final String? jobType;
-  final String? location;
-  final String? dateOfJoining;
-  final String? dateOfRelieving;
-  final String? companyAddress;
-  final String? description;
-  final bool? isCurrentlyWorking;
+   String? companyName;
+   String? designation;
+   String? jobType;
+   String? location;
+   String? dateOfJoining;
+   String? dateOfRelieving;
+   String? companyAddress;
+   String? description;
+   bool? isCurrentlyWorking;
 
   WorkExperience({
     this.companyName,
@@ -378,11 +378,11 @@ class BudgetInfo {
 
 /// ------------------ PREFERENCES ------------------
 class Preferences {
-  final String? country;
-  final String? interestedIndustry;
-  final String? interestedCourse;
-  final String? interestedUniversity;
-  final String? preferredState;
+   String? country;
+   String? interestedIndustry;
+   String? interestedCourse;
+   String? interestedUniversity;
+   String? preferredState;
 
   Preferences({
     this.country,

@@ -85,7 +85,7 @@ class _LeadInfoPopupState extends ConsumerState<LeadInfoPopup> {
   }
 }
 
-class PreviousAndNextButtons extends ConsumerWidget {
+class PreviousAndNextButtons extends ConsumerStatefulWidget {
   final Future<void> Function() onPrevPressed;
   final Future<void> Function() onNextPressed;
   final Future<void> Function() onSavePressed;
@@ -98,19 +98,31 @@ class PreviousAndNextButtons extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PreviousAndNextButtons> createState() =>
+      _PreviousAndNextButtonsState();
+}
+
+class _PreviousAndNextButtonsState
+    extends ConsumerState<PreviousAndNextButtons> {
+  @override
+  Widget build(BuildContext context) {
     int progressedIndex = ref.watch(infoCollectionProgression);
 
     return Row(
       children: [
         width30,
         IconButton(
-          onPressed: () {
-            if (progressedIndex > 0) {
-              onPrevPressed.call();
-              ref.read(leadMangementcontroller.notifier).decreaseProgression();
-            }
-          },
+          onPressed:
+              progressedIndex > 0
+                  ? () async {
+                    final notifier = ref.read(leadMangementcontroller.notifier);
+                    await widget.onPrevPressed();
+                    if (mounted) {
+                      notifier.decreaseProgression();
+                    }
+                  }
+                  : null,
+
           icon: Row(
             children: [
               Icon(Icons.arrow_back_ios_new, size: 16),
@@ -121,17 +133,25 @@ class PreviousAndNextButtons extends ConsumerWidget {
         ),
         Spacer(),
         TextButton(
-          onPressed: () => onSavePressed.call(),
+          onPressed: () async {
+            await widget.onSavePressed();
+          },
           child: Text("Save", style: myTextstyle(fontSize: 16)),
         ),
         width30,
         PrimaryButton(
-          onpressed: () {
-            if (progressedIndex < 5) {
-              onNextPressed.call();
-              ref.read(leadMangementcontroller.notifier).increaseProgression();
-            }
-          },
+          onpressed:
+              progressedIndex < 5
+                  ? () async {
+                    final notifier = ref.read(
+                      leadMangementcontroller.notifier,
+                    ); // capture early
+                    await widget.onNextPressed();
+                    if (mounted) {
+                      notifier.increaseProgression();
+                    }
+                  }
+                  : null,
           text: "Next",
         ),
         width20,

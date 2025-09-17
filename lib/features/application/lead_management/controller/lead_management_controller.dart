@@ -180,10 +180,15 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     try {
       final response = await _leadManagementRepo.addLead(lead);
       if (response != null) {
+        await _leadManagementRepo.createLeadInfo(
+          LeadInfoModel(id: response.id),
+        );
+
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Lead added successfully!');
         await fetchAllLeads(context: context);
+        state = state.copyWith(selectedLeadLocally: response);
         return response;
       } else {
         ref
@@ -206,29 +211,26 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     required Map<String, dynamic> updatedData,
   }) async {
     try {
-      final response = await _leadManagementRepo.updateLead(
-        leadId,
-        updatedData,
-      );
-      if (response != null) {
-        ref
-            .read(snackbarServiceProvider)
-            .showSuccess(context, 'Lead updated successfully!');
-        await fetchAllLeads(context: context);
-        if (state.selectedLeadLocally?.id == int.parse(leadId)) {
-          final leadinfo = await _leadManagementRepo.updateLeadInfo(
-            leadId,
-            updatedData,
-          );
-          setLeadInfo(leadinfo ?? LeadInfoModel());
+      if (state.selectedLeadLocally?.id == int.parse(leadId)) {
+        final leadinfo = await _leadManagementRepo.updateLeadInfo(
+          leadId,
+          updatedData,
+        );
+        setLeadInfo(leadinfo ?? LeadInfoModel());
+
+        if (leadinfo != null) {
+          ref
+              .read(snackbarServiceProvider)
+              .showSuccess(context, 'Lead updated successfully!');
+          await fetchAllLeads(context: context);
+        } else {
+          ref
+              .read(snackbarServiceProvider)
+              .showError(context, 'Failed to update lead.');
+          return false;
         }
-        return true;
-      } else {
-        ref
-            .read(snackbarServiceProvider)
-            .showError(context, 'Failed to update lead.');
-        return false;
       }
+      return true;
     } catch (e) {
       log('updateLead error: $e');
       ref
