@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 class LeadInfoModel {
-   int? id;
-   DateTime? createdAt;
-   BasicInfo? basicInfo;
-EducationData? education;
-   List<WorkExperience>? workExperience;
-   BudgetInfo? budgetInfo;
-   Preferences? preferences;
-   EnglishProficiency? englishProficiency;
+  int? id;
+  DateTime? createdAt;
+  BasicInfo? basicInfo;
+  EducationData? education;
+  List<WorkExperience>? workExperience;
+  BudgetInfo? budgetInfo;
+  Preferences? preferences;
+  EnglishProficiency? englishProficiency;
 
-   LeadInfoModel({
+  LeadInfoModel({
     this.id,
     this.createdAt,
     this.basicInfo,
@@ -61,7 +61,8 @@ EducationData? education;
               ? DateTime.tryParse(json['created_at'].toString())
               : null,
       basicInfo: basicMap != null ? BasicInfo.fromJson(basicMap) : null,
-      education: educationData != null ? EducationData.fromJson(educationData) : null,
+      education:
+          educationData != null ? EducationData.fromJson(educationData) : null,
       workExperience: workList?.map((m) => WorkExperience.fromJson(m)).toList(),
       budgetInfo: budgetMap != null ? BudgetInfo.fromJson(budgetMap) : null,
       preferences: prefMap != null ? Preferences.fromJson(prefMap) : null,
@@ -186,13 +187,13 @@ List<Map<String, dynamic>>? _ensureList(dynamic value) {
 
 /// ------------------ BASIC INFO ------------------
 class BasicInfo {
-   String? firstName;
-   String? secondName;
-   String? gender;
-   String? maritalStatus;
-   String? dateOfBirth;
-   String? phone;
-   String? email;
+  String? firstName;
+  String? secondName;
+  String? gender;
+  String? maritalStatus;
+  String? dateOfBirth;
+  String? phone;
+  String? email;
 
   BasicInfo({
     this.firstName,
@@ -201,7 +202,7 @@ class BasicInfo {
     this.maritalStatus,
     this.dateOfBirth,
     this.email,
-    this.phone
+    this.phone,
   });
 
   factory BasicInfo.fromJson(Map<String, dynamic> json) {
@@ -239,11 +240,16 @@ class EducationData {
 
   factory EducationData.fromJson(Map<String, dynamic> json) {
     return EducationData(
-      tenth: json['tenth'] != null ? EducationLevel.fromJson(json['tenth']) : null,
-      plusTwo: json['plus_two'] != null ? EducationLevel.fromJson(json['plus_two']) : null,
-      degrees: (json['degrees'] as List<dynamic>?)
-          ?.map((e) => DegreeInfo.fromJson(e))
-          .toList(),
+      tenth:
+          json['tenth'] != null ? EducationLevel.fromJson(json['tenth']) : null,
+      plusTwo:
+          json['plus_two'] != null
+              ? EducationLevel.fromJson(json['plus_two'])
+              : null,
+      degrees:
+          (json['degrees'] as List<dynamic>?)
+              ?.map((e) => DegreeInfo.fromJson(e))
+              .toList(),
     );
   }
 
@@ -344,15 +350,15 @@ class DegreeInfo {
 
 /// ------------------ WORK EXPERIENCE ------------------
 class WorkExperience {
-   String? companyName;
-   String? designation;
-   String? jobType;
-   String? location;
-   String? dateOfJoining;
-   String? dateOfRelieving;
-   String? companyAddress;
-   String? description;
-   bool? isCurrentlyWorking;
+  String? companyName;
+  String? designation;
+  String? jobType;
+  String? location;
+  String? dateOfJoining;
+  String? dateOfRelieving;
+  String? companyAddress;
+  String? description;
+  bool? isCurrentlyWorking;
 
   WorkExperience({
     this.companyName,
@@ -426,11 +432,11 @@ class BudgetInfo {
 
 /// ------------------ PREFERENCES ------------------
 class Preferences {
-   String? country;
-   String? interestedIndustry;
-   String? interestedCourse;
-   String? interestedUniversity;
-   String? preferredState;
+  String? country;
+  String? interestedIndustry;
+  String? interestedCourse;
+  String? interestedUniversity;
+  String? preferredState;
 
   Preferences({
     this.country,
