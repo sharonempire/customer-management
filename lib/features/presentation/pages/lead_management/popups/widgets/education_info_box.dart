@@ -22,24 +22,39 @@ class EducationInfoCollection extends ConsumerStatefulWidget {
 
 class _EducationInfoCollectionState
     extends ConsumerState<EducationInfoCollection> {
-  List<EducationInfo> educationList = [];
+  List<DegreeInfo> degreeList = [];
+  EducationLevel tenthInfo = EducationLevel();
+  EducationLevel plusTwoInfo = EducationLevel();
 
   @override
   void initState() {
     super.initState();
-    // start with one entry
-    educationList.add(EducationInfo());
+    // Start with one degree card
+    degreeList.add(DegreeInfo());
   }
 
   Future<void> _saveOrNext(BuildContext context) async {
     final leadId =
-        ref.watch(leadMangementcontroller).selectedLeadLocally?.id?.toString() ??
-            "";
+        ref
+            .watch(leadMangementcontroller)
+            .selectedLeadLocally
+            ?.id
+            ?.toString() ??
+        "";
 
-    await ref.read(leadMangementcontroller.notifier).updateLeadInfo(
+    await ref
+        .read(leadMangementcontroller.notifier)
+        .updateLeadInfo(
           context: context,
           leadId: leadId,
-          updatedData: LeadInfoModel(education: educationList).toJson(),
+          updatedData:
+              LeadInfoModel(
+                education: EducationData(
+                  tenth: tenthInfo,
+                  plusTwo: plusTwoInfo,
+                  degrees: degreeList,
+                ),
+              ).toJson(),
         );
   }
 
@@ -50,15 +65,32 @@ class _EducationInfoCollectionState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Education Details",
-              style: myTextstyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(
+            "Education Details",
+            style: myTextstyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           height20,
+
+          // 10th Details
+          _buildSchoolCard("10th Details", tenthInfo, showStream: false),
+          height20,
+
+          // +2 Details
+          _buildSchoolCard("+2 Details", plusTwoInfo, showStream: true),
+          height20,
+
+          // Degree Details
+          Text(
+            "Degree Details",
+            style: myTextstyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          height10,
           ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            itemCount: educationList.length,
+            itemCount: degreeList.length,
             itemBuilder: (context, index) {
-              return _buildEducationCard(index);
+              return _buildDegreeCard(index);
             },
           ),
           Row(
@@ -66,21 +98,22 @@ class _EducationInfoCollectionState
             children: [
               TextButton.icon(
                 onPressed: () {
-                  setState(() {
-                    educationList.add(EducationInfo());
-                  });
+                  setState(() => degreeList.add(DegreeInfo()));
                 },
-                label: Text("Add Another Education",
-                    style: myTextstyle(color: ColorConsts.primaryColor)),
+                label: Text(
+                  "Add Another Degree",
+                  style: myTextstyle(color: ColorConsts.primaryColor),
+                ),
                 icon: Icon(Icons.add, color: ColorConsts.primaryColor),
               ),
             ],
           ),
           height20,
+
+          // Save & Next Buttons
           PreviousAndNextButtons(
             onSavePressed: () async => _saveOrNext(context),
-            onPrevPressed: () async {
-            },
+            onPrevPressed: () async {},
             onNextPressed: () async => _saveOrNext(context),
           ),
         ],
@@ -88,8 +121,12 @@ class _EducationInfoCollectionState
     );
   }
 
-  Widget _buildEducationCard(int index) {
-    final edu = educationList[index];
+  // ------------------ SCHOOL CARD (10th & +2) ------------------
+  Widget _buildSchoolCard(
+    String title,
+    EducationLevel info, {
+    bool showStream = false,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
       child: Padding(
@@ -97,52 +134,72 @@ class _EducationInfoCollectionState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SubHeading(text: "High School(+2)"),
+            SubHeading(text: title),
             Row(
               children: [
                 Expanded(
                   child: CommonDropdown(
                     label: "Board",
                     items: boardsList,
-                    value: edu.board ?? "CBSE",
-                    onChanged: (val) => setState(() => edu.board = val ?? ""),
+                    value: info.board ?? "CBSE",
+                    onChanged: (val) => setState(() => info.board = val ?? ""),
                   ),
                 ),
-                width20,
-                Expanded(
-                  child: CommonDropdown(
-                    label: "Stream",
-                    items: streamsList,
-                    value: edu.stream ??
-                        "Science – PCM (Physics, Chemistry, Maths)",
-                    onChanged: (val) => setState(() => edu.stream = val ?? ""),
+                if (showStream) ...[
+                  width20,
+                  Expanded(
+                    child: CommonDropdown(
+                      label: "Stream",
+                      items: streamsList,
+                      value: info.stream ?? streamsList.first,
+                      onChanged:
+                          (val) => setState(() => info.stream = val ?? ""),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
+            height10,
             Row(
               children: [
                 Expanded(
                   child: CommonTextField(
                     text: "Passout Year",
-                    controller:
-                        TextEditingController(text: edu.passoutYear ?? ""),
-                    onChanged: (val) => edu.passoutYear = val,
+                    controller: TextEditingController(
+                      text: info.passoutYear ?? "",
+                    ),
+                    onChanged: (val) => info.passoutYear = val,
                   ),
                 ),
                 width20,
                 Expanded(
                   child: CommonTextField(
                     text: "Percentage",
-                    controller:
-                        TextEditingController(text: edu.percentage ?? ""),
-                    onChanged: (val) => edu.percentage = val,
+                    controller: TextEditingController(
+                      text: info.percentage ?? "",
+                    ),
+                    onChanged: (val) => info.percentage = val,
                   ),
                 ),
               ],
             ),
-            height10,
-            SubHeading(text: "Degree Details"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------ DEGREE CARD ------------------
+  Widget _buildDegreeCard(int index) {
+    final edu = degreeList[index];
+    return Card(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SubHeading(text: "Degree ${index + 1}"),
             Row(
               children: [
                 Expanded(
@@ -153,7 +210,10 @@ class _EducationInfoCollectionState
                     onChanged: (val) {
                       edu.discipline = val ?? '';
                       edu.specialization =
-                          disciplines.where((e) => e.name == edu.discipline).first.specializations.first;
+                          disciplines
+                              .firstWhere((e) => e.name == edu.discipline)
+                              .specializations
+                              .first;
                       setState(() {});
                     },
                   ),
@@ -162,17 +222,26 @@ class _EducationInfoCollectionState
                 Expanded(
                   child: CommonDropdown(
                     label: "Specialization",
-                    items: disciplines
-                        .where((e) => e.name == (edu.discipline ?? disciplines.first.name))
-                        .first
-                        .specializations,
-                    value: edu.specialization ??
+                    items:
                         disciplines
-                            .where((e) => e.name == (edu.discipline ?? disciplines.first.name))
-                            .first
+                            .firstWhere(
+                              (e) =>
+                                  e.name ==
+                                  (edu.discipline ?? disciplines.first.name),
+                            )
+                            .specializations,
+                    value:
+                        edu.specialization ??
+                        disciplines
+                            .firstWhere(
+                              (e) =>
+                                  e.name ==
+                                  (edu.discipline ?? disciplines.first.name),
+                            )
                             .specializations
                             .first,
-                    onChanged: (val) => setState(() => edu.specialization = val ?? ""),
+                    onChanged:
+                        (val) => setState(() => edu.specialization = val ?? ""),
                   ),
                 ),
               ],
@@ -184,16 +253,25 @@ class _EducationInfoCollectionState
                     label: "Type",
                     items: ["Regular", "Distance"],
                     value: edu.typeOfStudy ?? "Regular",
-                    onChanged: (val) => setState(() => edu.typeOfStudy = val ?? ""),
+                    onChanged:
+                        (val) => setState(() => edu.typeOfStudy = val ?? ""),
                   ),
                 ),
                 width20,
                 Expanded(
                   child: CommonDropdown(
                     label: "Duration",
-                    items: ["1 Year", "2 Years", "3 Years", "4 Years", "5 Years", "6 Years"],
+                    items: [
+                      "1 Year",
+                      "2 Years",
+                      "3 Years",
+                      "4 Years",
+                      "5 Years",
+                      "6 Years",
+                    ],
                     value: edu.duration ?? "3 Years",
-                    onChanged: (val) => setState(() => edu.duration = val ?? ""),
+                    onChanged:
+                        (val) => setState(() => edu.duration = val ?? ""),
                   ),
                 ),
               ],
@@ -203,16 +281,22 @@ class _EducationInfoCollectionState
                 Expanded(
                   child: CommonDatePicker(
                     label: "Join Date",
-                    onDateSelected: (date) => edu.joinDate =
-                        DateTimeHelper.formatDateForLead(date ?? DateTime.now()),
+                    onDateSelected:
+                        (date) =>
+                            edu.joinDate = DateTimeHelper.formatDateForLead(
+                              date ?? DateTime.now(),
+                            ),
                   ),
                 ),
                 width20,
                 Expanded(
                   child: CommonDatePicker(
                     label: "Passout Date",
-                    onDateSelected: (date) => edu.passoutDate =
-                        DateTimeHelper.formatDateForLead(date ?? DateTime.now()),
+                    onDateSelected:
+                        (date) =>
+                            edu.passoutDate = DateTimeHelper.formatDateForLead(
+                              date ?? DateTime.now(),
+                            ),
                   ),
                 ),
               ],
@@ -222,9 +306,7 @@ class _EducationInfoCollectionState
               child: IconButton(
                 icon: Icon(Icons.delete, color: Colors.red),
                 onPressed: () {
-                  setState(() {
-                    educationList.removeAt(index);
-                  });
+                  setState(() => degreeList.removeAt(index));
                 },
               ),
             ),

@@ -4,7 +4,7 @@ class LeadInfoModel {
    int? id;
    DateTime? createdAt;
    BasicInfo? basicInfo;
-   List<EducationInfo>? education;
+EducationData? education;
    List<WorkExperience>? workExperience;
    BudgetInfo? budgetInfo;
    Preferences? preferences;
@@ -25,7 +25,7 @@ class LeadInfoModel {
     int? id,
     DateTime? createdAt,
     BasicInfo? basicInfo,
-    List<EducationInfo>? education,
+    EducationData? education,
     List<WorkExperience>? workExperience,
     BudgetInfo? budgetInfo,
     Preferences? preferences,
@@ -48,7 +48,7 @@ class LeadInfoModel {
 
   factory LeadInfoModel.fromJson(Map<String, dynamic> json) {
     final basicMap = _ensureMap(json['basic_info']);
-    final educationList = _ensureList(json['education']);
+    final educationData = _ensureMap(json['education']);
     final workList = _ensureList(json['work_expierience']); // DB spelled field
     final budgetMap = _ensureMap(json['budget_info']);
     final prefMap = _ensureMap(json['preferences']);
@@ -61,7 +61,7 @@ class LeadInfoModel {
               ? DateTime.tryParse(json['created_at'].toString())
               : null,
       basicInfo: basicMap != null ? BasicInfo.fromJson(basicMap) : null,
-      education: educationList?.map((m) => EducationInfo.fromJson(m)).toList(),
+      education: educationData != null ? EducationData.fromJson(educationData) : null,
       workExperience: workList?.map((m) => WorkExperience.fromJson(m)).toList(),
       budgetInfo: budgetMap != null ? BudgetInfo.fromJson(budgetMap) : null,
       preferences: prefMap != null ? Preferences.fromJson(prefMap) : null,
@@ -78,7 +78,7 @@ class LeadInfoModel {
     if (createdAt != null) map['created_at'] = createdAt!.toIso8601String();
     if (basicInfo != null) map['basic_info'] = basicInfo!.toJson();
     if (education != null) {
-      map['education'] = education!.map((e) => e.toJson()).toList();
+      map['education'] = education!.toJson();
     }
     if (workExperience != null) {
       map['work_expierience'] = workExperience!.map((e) => e.toJson()).toList();
@@ -229,50 +229,57 @@ class BasicInfo {
   }
 }
 
-/// ------------------ EDUCATION INFO ------------------
-class EducationInfo {
-   String? board;
-   String? stream;
-   String? passoutYear;
-   Map<String, dynamic>? subjects; // {subject: marks}
-   String? discipline;
-   String? specialization;
-   String? percentage;
-   String? noOfBacklogs;
-   String? typeOfStudy;
-   String? duration;
-   String? joinDate;
-   String? passoutDate;
+/// ------------------ EDUCATION DATA ------------------
+class EducationData {
+  EducationLevel? tenth;
+  EducationLevel? plusTwo;
+  List<DegreeInfo>? degrees;
 
-  EducationInfo({
+  EducationData({this.tenth, this.plusTwo, this.degrees});
+
+  factory EducationData.fromJson(Map<String, dynamic> json) {
+    return EducationData(
+      tenth: json['tenth'] != null ? EducationLevel.fromJson(json['tenth']) : null,
+      plusTwo: json['plus_two'] != null ? EducationLevel.fromJson(json['plus_two']) : null,
+      degrees: (json['degrees'] as List<dynamic>?)
+          ?.map((e) => DegreeInfo.fromJson(e))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (tenth != null) map['tenth'] = tenth!.toJson();
+    if (plusTwo != null) map['plus_two'] = plusTwo!.toJson();
+    if (degrees != null) {
+      map['degrees'] = degrees!.map((e) => e.toJson()).toList();
+    }
+    return map;
+  }
+}
+
+class EducationLevel {
+  String? board;
+  String? stream; // only for +2
+  String? passoutYear;
+  String? percentage;
+  Map<String, dynamic>? subjects; // {subject: marks}
+
+  EducationLevel({
     this.board,
     this.stream,
     this.passoutYear,
-    this.subjects,
-    this.discipline,
-    this.specialization,
     this.percentage,
-    this.noOfBacklogs,
-    this.typeOfStudy,
-    this.duration,
-    this.joinDate,
-    this.passoutDate,
+    this.subjects,
   });
 
-  factory EducationInfo.fromJson(Map<String, dynamic> json) {
-    return EducationInfo(
+  factory EducationLevel.fromJson(Map<String, dynamic> json) {
+    return EducationLevel(
       board: json['board']?.toString(),
       stream: json['stream']?.toString(),
       passoutYear: json['passout_year']?.toString(),
-      subjects: _ensureMap(json['subjects']),
-      discipline: json['discipline']?.toString(),
-      specialization: json['specialization']?.toString(),
       percentage: json['percentage']?.toString(),
-      noOfBacklogs: json['no_of_backlogs']?.toString(),
-      typeOfStudy: json['type_of_study']?.toString(),
-      duration: json['duration']?.toString(),
-      joinDate: json['join_date']?.toString(),
-      passoutDate: json['passout_date']?.toString(),
+      subjects: _ensureMap(json['subjects']),
     );
   }
 
@@ -281,15 +288,56 @@ class EducationInfo {
     if (board != null) map['board'] = board;
     if (stream != null) map['stream'] = stream;
     if (passoutYear != null) map['passout_year'] = passoutYear;
+    if (percentage != null) map['percentage'] = percentage;
     if (subjects != null) map['subjects'] = subjects;
+    return map;
+  }
+}
+
+class DegreeInfo {
+  String? discipline;
+  String? specialization;
+  String? typeOfStudy;
+  String? duration;
+  String? joinDate;
+  String? passoutDate;
+  String? percentage;
+  String? noOfBacklogs;
+
+  DegreeInfo({
+    this.discipline,
+    this.specialization,
+    this.typeOfStudy,
+    this.duration,
+    this.joinDate,
+    this.passoutDate,
+    this.percentage,
+    this.noOfBacklogs,
+  });
+
+  factory DegreeInfo.fromJson(Map<String, dynamic> json) {
+    return DegreeInfo(
+      discipline: json['discipline']?.toString(),
+      specialization: json['specialization']?.toString(),
+      typeOfStudy: json['type_of_study']?.toString(),
+      duration: json['duration']?.toString(),
+      joinDate: json['join_date']?.toString(),
+      passoutDate: json['passout_date']?.toString(),
+      percentage: json['percentage']?.toString(),
+      noOfBacklogs: json['no_of_backlogs']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
     if (discipline != null) map['discipline'] = discipline;
     if (specialization != null) map['specialization'] = specialization;
-    if (percentage != null) map['percentage'] = percentage;
-    if (noOfBacklogs != null) map['no_of_backlogs'] = noOfBacklogs;
     if (typeOfStudy != null) map['type_of_study'] = typeOfStudy;
     if (duration != null) map['duration'] = duration;
     if (joinDate != null) map['join_date'] = joinDate;
     if (passoutDate != null) map['passout_date'] = passoutDate;
+    if (percentage != null) map['percentage'] = percentage;
+    if (noOfBacklogs != null) map['no_of_backlogs'] = noOfBacklogs;
     return map;
   }
 }
