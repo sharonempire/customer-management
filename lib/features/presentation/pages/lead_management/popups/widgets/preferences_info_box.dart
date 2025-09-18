@@ -1,120 +1,68 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
+import 'package:management_software/features/data/dropdown_datas/countries_list.dart';
+import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
-class PreferencesSection extends StatefulWidget {
+class PreferencesSection extends ConsumerStatefulWidget {
   const PreferencesSection({super.key});
 
   @override
-  State<PreferencesSection> createState() => _PreferencesSectionState();
+  ConsumerState<PreferencesSection> createState() => _PreferencesSectionState();
 }
 
-class _PreferencesSectionState extends State<PreferencesSection> {
+class _PreferencesSectionState extends ConsumerState<PreferencesSection> {
   final interestedUniversityController = TextEditingController();
-  // Multi-select countries
+
+  // State variables
   List<String> selectedCountries = [];
-
-  // Industry selection
-  final List<String> industries = [
-    "IT & Software",
-    "Business",
-    "Engineering",
-    "Healthcare",
-    "Arts & Design",
-    "Finance",
-    "Education",
-    "Hospitality",
-  ];
   List<String> selectedIndustries = [];
-
-  // Dropdown + textfields
   String? selectedCourse;
   String? selectedState;
+  String? selectedCountry;
 
-  // Mock data
-  final List<String> countriesList = [
-    // 🌍 Popular outside Europe
-    "United States",
-    "Canada",
-    "Australia",
-    "New Zealand",
-    "United Kingdom",
-    "Singapore",
-    "Japan",
-    "South Korea",
-    "United Arab Emirates",
+  // Mock data (replace with real data sources if needed)
+  final List<String> countriesList = countriesLisData;
 
-    // 🇪🇺 Europe (complete list)
-    "Albania",
-    "Andorra",
-    "Armenia",
-    "Austria",
-    "Azerbaijan",
-    "Belarus",
-    "Belgium",
-    "Bosnia and Herzegovina",
-    "Bulgaria",
-    "Croatia",
-    "Cyprus",
-    "Czech Republic",
-    "Denmark",
-    "Estonia",
-    "Finland",
-    "France",
-    "Georgia",
-    "Germany",
-    "Greece",
-    "Hungary",
-    "Iceland",
-    "Ireland",
-    "Italy",
-    "Kazakhstan (European part)",
-    "Kosovo",
-    "Latvia",
-    "Liechtenstein",
-    "Lithuania",
-    "Luxembourg",
-    "Malta",
-    "Moldova",
-    "Monaco",
-    "Montenegro",
-    "Netherlands",
-    "North Macedonia",
-    "Norway",
-    "Poland",
-    "Portugal",
-    "Romania",
-    "Russia (European part)",
-    "San Marino",
-    "Serbia",
-    "Slovakia",
-    "Slovenia",
-    "Spain",
-    "Sweden",
-    "Switzerland",
-    "Turkey (European part)",
-    "Ukraine",
-    "Vatican City",
-  ];
-  final List<String> coursesList = [
-    "Computer Science",
-    "Business Administration",
-    "Engineering",
-    "Medicine",
-    "Design",
-    "Finance",
-    "Education",
-  ];
+  /// Build the Preferences object for API update
+  Preferences _getPreferences() {
+    return Preferences(
+      country: selectedCountry,
+      interestedIndustry:
+          selectedIndustries.isNotEmpty ? selectedIndustries.join(", ") : null,
+      interestedCourse: selectedCourse,
+      interestedUniversity:
+          interestedUniversityController.text.isNotEmpty
+              ? interestedUniversityController.text
+              : null,
+      preferredState: selectedState,
+    );
+  }
 
-  final List<String> statesList = [
-    "California",
-    "Ontario",
-    "Bavaria",
-    "Queensland",
-    "London",
-  ]; // 🚨 this should come from DB
+  /// Save or Next button logic
+  Future<void> _saveOrNext(BuildContext context) async {
+    final leadId =
+        ref
+            .watch(leadMangementcontroller)
+            .selectedLeadLocally
+            ?.id
+            ?.toString() ??
+        "";
+
+    await ref
+        .read(leadMangementcontroller.notifier)
+        .updateLeadInfo(
+          context: context,
+          leadId: leadId,
+          updatedData: LeadInfoModel(preferences: _getPreferences()).toJson(),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,17 +71,26 @@ class _PreferencesSectionState extends State<PreferencesSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Country Dropdown
           Row(
             children: [
-              CommonDropdown(
-                label: "Country",
-                items: countriesList,
-                onChanged: (value) {},
+              Expanded(
+                child: CommonDropdown(
+                  label: "Country",
+                  items: countriesList,
+                  value: selectedCountry,
+                  onChanged: (value) {
+                    log("Selected country: $value");
+                    selectedCountry = value;
+                    setState(() {});
+                  },
+                ),
               ),
             ],
           ),
           const SizedBox(height: 25),
 
+          // Interested Industry Chips
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
@@ -145,37 +102,41 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           Row(
             children: [
               width20,
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children:
-                    industries.map((industry) {
-                      final isSelected = selectedIndustries.contains(industry);
-                      return FilterChip(
-                        label: Text(industry),
-                        selected: isSelected,
-                        selectedColor: ColorConsts.primaryColor.withOpacity(
-                          0.2,
-                        ),
-                        checkmarkColor: ColorConsts.primaryColor,
-                        labelStyle: myTextstyle(
-                          fontSize: 14,
-                          color:
-                              isSelected
-                                  ? ColorConsts.primaryColor
-                                  : Colors.black,
-                        ),
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              selectedIndustries.add(industry);
-                            } else {
-                              selectedIndustries.remove(industry);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      industries.map((industry) {
+                        final isSelected = selectedIndustries.contains(
+                          industry,
+                        );
+                        return FilterChip(
+                          label: Text(industry),
+                          selected: isSelected,
+                          selectedColor: ColorConsts.primaryColor.withOpacity(
+                            0.2,
+                          ),
+                          checkmarkColor: ColorConsts.primaryColor,
+                          labelStyle: myTextstyle(
+                            fontSize: 14,
+                            color:
+                                isSelected
+                                    ? ColorConsts.primaryColor
+                                    : Colors.black,
+                          ),
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                selectedIndustries.add(industry);
+                              } else {
+                                selectedIndustries.remove(industry);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                ),
               ),
             ],
           ),
@@ -185,15 +146,17 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           // Interested Course
           Row(
             children: [
-              CommonDropdown(
-                label: "Interested Course",
-                items: coursesList,
-                value: selectedCourse,
-                onChanged: (val) {
-                  setState(() {
-                    selectedCourse = val;
-                  });
-                },
+              Expanded(
+                child: CommonDropdown(
+                  label: "Interested Course",
+                  items: coursesList,
+                  value: selectedCourse,
+                  onChanged: (val) {
+                    setState(() {
+                      selectedCourse = val;
+                    });
+                  },
+                ),
               ),
             ],
           ),
@@ -203,10 +166,12 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           // Interested Universities
           Row(
             children: [
-              CommonTextField(
-                controller: interestedUniversityController,
-                text: "Interested Universities",
-                minLines: 1,
+              Expanded(
+                child: CommonTextField(
+                  controller: interestedUniversityController,
+                  text: "Interested Universities",
+                  minLines: 1,
+                ),
               ),
             ],
           ),
@@ -216,23 +181,27 @@ class _PreferencesSectionState extends State<PreferencesSection> {
           // Preferred State / Province
           Row(
             children: [
-              CommonDropdown(
-                label: "Preferred State/Province",
-                items: statesList,
-                value: selectedState,
-                onChanged: (val) {
-                  setState(() {
-                    selectedState = val;
-                  });
-                },
+              Expanded(
+                child: CommonDropdown(
+                  label: "Preferred State/Province",
+                  items: statesList,
+                  value: selectedState,
+                  onChanged: (val) {
+                    setState(() {
+                      selectedState = val;
+                    });
+                  },
+                ),
               ),
             ],
           ),
           height20,
+
+          // Save / Prev / Next Buttons
           PreviousAndNextButtons(
-            onSavePressed: () async{},
-            onPrevPressed: ()async {},
-            onNextPressed: ()async {},
+            onSavePressed: () async => await _saveOrNext(context),
+            onPrevPressed: () async {},
+            onNextPressed: () async => await _saveOrNext(context),
           ),
         ],
       ),
