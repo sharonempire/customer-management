@@ -137,24 +137,19 @@ class _EducationInfoCollectionState
             SubHeading(text: title),
             Row(
               children: [
-                Expanded(
-                  child: CommonDropdown(
-                    label: "Board",
-                    items: boardsList,
-                    value: info.board ?? "CBSE",
-                    onChanged: (val) => setState(() => info.board = val ?? ""),
-                  ),
+                CommonDropdown(
+                  label: "Board",
+                  items: boardsList,
+                  value: info.board ?? "CBSE",
+                  onChanged: (val) => setState(() => info.board = val ?? ""),
                 ),
                 if (showStream) ...[
                   width20,
-                  Expanded(
-                    child: CommonDropdown(
-                      label: "Stream",
-                      items: streamsList,
-                      value: info.stream ?? streamsList.first,
-                      onChanged:
-                          (val) => setState(() => info.stream = val ?? ""),
-                    ),
+                  CommonDropdown(
+                    label: "Stream",
+                    items: streamsList,
+                    value: info.stream ?? streamsList.first,
+                    onChanged: (val) => setState(() => info.stream = val ?? ""),
                   ),
                 ],
               ],
@@ -162,24 +157,20 @@ class _EducationInfoCollectionState
             height10,
             Row(
               children: [
-                Expanded(
-                  child: CommonTextField(
-                    text: "Passout Year",
-                    controller: TextEditingController(
-                      text: info.passoutYear ?? "",
-                    ),
-                    onChanged: (val) => info.passoutYear = val,
+                CommonTextField(
+                  text: "Passout Year",
+                  controller: TextEditingController(
+                    text: info.passoutYear ?? "",
                   ),
+                  onChanged: (val) => info.passoutYear = val,
                 ),
                 width20,
-                Expanded(
-                  child: CommonTextField(
-                    text: "Percentage",
-                    controller: TextEditingController(
-                      text: info.percentage ?? "",
-                    ),
-                    onChanged: (val) => info.percentage = val,
+                CommonTextField(
+                  text: "Percentage",
+                  controller: TextEditingController(
+                    text: info.percentage ?? "",
                   ),
+                  onChanged: (val) => info.percentage = val,
                 ),
               ],
             ),
@@ -202,102 +193,89 @@ class _EducationInfoCollectionState
             SubHeading(text: "Degree ${index + 1}"),
             Row(
               children: [
-                Expanded(
-                  child: CommonDropdown(
-                    label: "Discipline",
-                    items: disciplines.map((e) => e.name).toList(),
-                    value: edu.discipline ?? disciplines.first.name,
-                    onChanged: (val) {
-                      edu.discipline = val ?? '';
-                      edu.specialization =
-                          disciplines
-                              .firstWhere((e) => e.name == edu.discipline)
-                              .specializations
-                              .first;
-                      setState(() {});
-                    },
-                  ),
-                ),
-                width20,
-                Expanded(
-                  child: CommonDropdown(
-                    label: "Specialization",
-                    items:
+                CommonDropdown(
+                  label: "Discipline",
+                  items: disciplines.map((e) => e.name).toList(),
+                  value: edu.discipline ?? disciplines.first.name,
+                  onChanged: (val) {
+                    edu.discipline = val ?? '';
+                    edu.specialization =
                         disciplines
-                            .firstWhere(
-                              (e) =>
-                                  e.name ==
-                                  (edu.discipline ?? disciplines.first.name),
-                            )
-                            .specializations,
-                    value:
-                        edu.specialization ??
-                        disciplines
-                            .firstWhere(
-                              (e) =>
-                                  e.name ==
-                                  (edu.discipline ?? disciplines.first.name),
-                            )
+                            .firstWhere((e) => e.name == edu.discipline)
                             .specializations
-                            .first,
-                    onChanged:
-                        (val) => setState(() => edu.specialization = val ?? ""),
-                  ),
+                            .first;
+                    setState(() {});
+                  },
+                ),
+                width20,
+                CommonDropdown(
+                  label: "Specialization",
+                  items:
+                      disciplines
+                          .firstWhere(
+                            (e) =>
+                                e.name ==
+                                (edu.discipline ?? disciplines.first.name),
+                          )
+                          .specializations,
+                  value:
+                      edu.specialization ??
+                      disciplines
+                          .firstWhere(
+                            (e) =>
+                                e.name ==
+                                (edu.discipline ?? disciplines.first.name),
+                          )
+                          .specializations
+                          .first,
+                  onChanged:
+                      (val) => setState(() => edu.specialization = val ?? ""),
                 ),
               ],
             ),
             Row(
               children: [
-                Expanded(
-                  child: CommonDropdown(
-                    label: "Type",
-                    items: ["Regular", "Distance"],
-                    value: edu.typeOfStudy ?? "Regular",
-                    onChanged:
-                        (val) => setState(() => edu.typeOfStudy = val ?? ""),
-                  ),
+                CommonDropdown(
+                  label: "Type",
+                  items: ["Regular", "Distance"],
+                  value: edu.typeOfStudy ?? "Regular",
+                  onChanged:
+                      (val) => setState(() => edu.typeOfStudy = val ?? ""),
                 ),
                 width20,
-                Expanded(
-                  child: CommonDropdown(
-                    label: "Duration",
-                    items: [
-                      "1 Year",
-                      "2 Years",
-                      "3 Years",
-                      "4 Years",
-                      "5 Years",
-                      "6 Years",
-                    ],
-                    value: edu.duration ?? "3 Years",
-                    onChanged:
-                        (val) => setState(() => edu.duration = val ?? ""),
-                  ),
+                CommonDropdown(
+                  label: "Duration",
+                  items: [
+                    "1 Year",
+                    "2 Years",
+                    "3 Years",
+                    "4 Years",
+                    "5 Years",
+                    "6 Years",
+                  ],
+                  value: edu.duration ?? "3 Years",
+                  onChanged: (val) => setState(() => edu.duration = val ?? ""),
                 ),
               ],
             ),
             Row(
               children: [
-                Expanded(
-                  child: CommonDatePicker(
-                    label: "Join Date",
-                    onDateSelected:
-                        (date) =>
-                            edu.joinDate = DateTimeHelper.formatDateForLead(
-                              date ?? DateTime.now(),
-                            ),
-                  ),
+                CommonDatePicker(
+                  label: "Join Date",
+                  onDateSelected:
+                      (date) =>
+                          edu.joinDate = DateTimeHelper.formatDateForLead(
+                            date ?? DateTime.now(),
+                          ),
                 ),
                 width20,
-                Expanded(
-                  child: CommonDatePicker(
-                    label: "Passout Date",
-                    onDateSelected:
-                        (date) =>
-                            edu.passoutDate = DateTimeHelper.formatDateForLead(
-                              date ?? DateTime.now(),
-                            ),
-                  ),
+                CommonDatePicker(
+                  label: "Passout Date",
+                  onDateSelected:
+                      (date) =>
+                          edu.passoutDate = DateTimeHelper.formatDateForLead(
+                            date ?? DateTime.now(),
+                          ),
                 ),
               ],
             ),

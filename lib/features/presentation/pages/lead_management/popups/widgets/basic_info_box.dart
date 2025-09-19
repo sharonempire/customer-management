@@ -28,6 +28,31 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
   String? selectedGender = "Male";
   String? maritalStatusSelected = "Single";
   String? dateOfBirth = "";
+
+  @override
+  void initState() {
+    Future.microtask(() async {
+      final leadInfo = ref.watch(leadMangementcontroller).selectedLead;
+      log("leadInfo: ${leadInfo.toString()}");
+      if (leadInfo != null) {
+        firstNameController.text = leadInfo.basicInfo?.firstName ?? "";
+        secondNameController.text = leadInfo.basicInfo?.secondName ?? "";
+        phoneController.text = leadInfo.basicInfo?.phone ?? "";
+        emailController.text = leadInfo.basicInfo?.email ?? "";
+        selectedGender = leadInfo.basicInfo?.gender ?? "Male";
+        maritalStatusSelected = leadInfo.basicInfo?.maritalStatus ?? "Single";
+        dateOfBirth = leadInfo.basicInfo?.dateOfBirth ?? "";
+
+        log(
+          "leadInfo.basicInfo?.dateOfBirth: ${leadInfo.basicInfo?.dateOfBirth}",
+        );
+        setState(() {});
+      }
+    });
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isFromNewLead = ref.watch(fromNewLead);
@@ -125,7 +150,7 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
               CommonDropdown(
                 label: "Gender",
                 items: ["Male", "Female", "Other", "Rather not say"],
-                value: "Male",
+                value: selectedGender,
                 onChanged: (val) {
                   setState(() {
                     selectedGender = val;
@@ -136,7 +161,7 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
               CommonDropdown(
                 label: "Marital Status",
                 items: ["Single", "Married"],
-                value: "Single",
+                value: maritalStatusSelected,
                 onChanged: (val) {
                   setState(() {
                     maritalStatusSelected = val;
@@ -148,6 +173,7 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
           Row(
             children: [
               CommonDatePicker(
+                initialDate: dateOfBirth,
                 label: "Date Of Birth",
                 onDateSelected: (value) {
                   dateOfBirth = DateTimeHelper.formatDateForLead(

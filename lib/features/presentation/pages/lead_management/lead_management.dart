@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -146,7 +148,11 @@ class LeadListingWidget extends ConsumerWidget {
     );
   }
 
-  TableRow _clickableRow(BuildContext context, LeadsListModel lead,WidgetRef ref) {
+  TableRow _clickableRow(
+    BuildContext context,
+    LeadsListModel lead,
+    WidgetRef ref,
+  ) {
     return TableRow(
       children: [
         _clickableCell(context, lead, lead.slNo.toString().padLeft(4, '0')),
@@ -161,9 +167,13 @@ class LeadListingWidget extends ConsumerWidget {
         _clickableCell(context, lead, lead.assignedTo ?? ''),
         actionCell(
           "Edit",
-          onTap: ()async {
-         await ref.read(leadMangementcontroller.notifier).setLeadLocally(lead, context);
-          
+          onTap: () async {
+            await ref
+                .read(leadMangementcontroller.notifier)
+                .setLeadLocally(lead, context);
+            log(
+              'lead info logging from ui before the navigation : ${ref.read(leadMangementcontroller).selectedLead?.toJson()}',
+            );
             context.go(
               '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
             );
@@ -188,7 +198,7 @@ class LeadListingWidget extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context,WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Table(
@@ -227,7 +237,7 @@ class LeadListingWidget extends ConsumerWidget {
               tableHeaderCell("Action"),
             ],
           ),
-          for (var lead in leadList) _clickableRow(context, lead,ref),
+          for (var lead in leadList) _clickableRow(context, lead, ref),
         ],
       ),
     );

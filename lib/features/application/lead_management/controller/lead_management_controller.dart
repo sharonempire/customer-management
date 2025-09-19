@@ -51,8 +51,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     try {
       final leads = await _leadManagementRepo.fetchAllLeads();
       state = state.copyWith(leadsList: leads);
+
       ref.read(snackbarServiceProvider).showSuccess(context, 'Leads loaded');
-      log('fetchAllLeads: loaded ${leads.length} leads');
+      log('fetchAllLeads: loaded ${state.leadsList.length} leads');
     } catch (e) {
       log('fetchAllLeads error: $e');
       ref
@@ -63,7 +64,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
   Future<void> setLeadLocally(LeadsListModel lead, BuildContext context) async {
     state = state.copyWith(selectedLeadLocally: lead);
-    fetchSelectedLeadInfo(context: context, leadId: lead.id.toString());
+    await fetchSelectedLeadInfo(context: context, leadId: lead.id.toString());
   }
 
   void setLeadInfo(LeadInfoModel lead) {
@@ -152,6 +153,8 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       final LeadInfoModel? info = await _leadManagementRepo.getLeadInfo(leadId);
       if (info != null) {
         state = state.copyWith(selectedLead: info);
+        log('lead info fetched and stored : ${state.selectedLead?.toJson()}');
+
         ref
             .read(snackbarServiceProvider)
             .showSuccess(context, 'Lead details loaded');

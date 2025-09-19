@@ -186,7 +186,6 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
                 controller: budgetController,
                 text: "Enter your budget amount",
                 minLines: 1,
-                onChanged: (_) {}, // keep stable reference
               ),
             ],
           ),
