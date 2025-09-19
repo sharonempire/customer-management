@@ -23,12 +23,17 @@ class LeadManagement extends ConsumerStatefulWidget {
   ConsumerState<LeadManagement> createState() => _LeadManagementState();
 }
 
-class _LeadManagementState extends ConsumerState<LeadManagement> {
+class _LeadManagementState extends ConsumerState<LeadManagement>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await ref
+    _tabController = TabController(length: 2, vsync: this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
           .read(leadMangementcontroller.notifier)
           .fetchAllLeads(context: context);
     });
@@ -39,105 +44,85 @@ class _LeadManagementState extends ConsumerState<LeadManagement> {
     final screenWidth = MediaQuery.of(context).size.width;
     final provider = ref.watch(leadMangementcontroller);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: const PreferredSize(
-          preferredSize: Size.fromHeight(50),
-          child: CommonAppbar(title: "Lead Management"),
-        ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // 🔹 Header Section
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(50),
+        child: CommonAppbar(title: "Lead Management"),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          // ✅ Whole page scrolls
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🔹 Header
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          "Track and manage student enquiries and follow-ups",
-                          style: myTextstyle(),
-                        ),
-                        const Spacer(),
-                        PrimaryButton(
-                          onpressed: () {
-                            ref
-                                .read(leadMangementcontroller.notifier)
-                                .setFromNewLead(true);
-                            context.go(
-                              '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
-                            );
-                          },
-                          icon: Icons.add,
-                          text: "New Lead",
-                        ),
-                      ],
+                    Text(
+                      "Track and manage student enquiries and follow-ups",
+                      style: myTextstyle(),
                     ),
-                    height30,
-                    const SearchLeadsWidget(),
-                    height20,
-                    const LeadFiltersWidget(),
-                    height20,
-                    Center(
-                      child: Container(
-                        height: 50,
-                        width: screenWidth / 2.5,
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: ColorConsts.backgroundColorScaffold,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TabBar(
-                          tabs: const [
-                            Tab(text: "Current Follow ups"),
-                            Tab(text: "New Enquiries"),
-                          ],
-                          indicator: BoxDecoration(
-                            color: ColorConsts.primaryColor,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          labelColor: Colors.white,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          unselectedLabelStyle: const TextStyle(
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
+                    const Spacer(),
+                    PrimaryButton(
+                      onpressed: () {
+                        ref
+                            .read(leadMangementcontroller.notifier)
+                            .setFromNewLead(true);
+                        context.go(
+                          '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
+                        );
+                      },
+                      icon: Icons.add,
+                      text: "New Lead",
                     ),
                   ],
                 ),
-              ),
+                height30,
+                const SearchLeadsWidget(),
+                height20,
+                const LeadFiltersWidget(),
+                height20,
 
-              // 🔹 TabBarView gets full remaining height
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    // Each tab has its own scrollable area
-                    SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          LeadListingWidget(leadList: provider.leadsList),
-                        ],
+                // 🔹 Tabs
+                Center(
+                  child: Container(
+                    height: 50,
+                    width: screenWidth / 2.5,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: ColorConsts.backgroundColorScaffold,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: "Current Follow ups"),
+                        Tab(text: "New Enquiries"),
+                      ],
+                      indicator: BoxDecoration(
+                        color: ColorConsts.primaryColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
-                    SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          LeadListingWidget(leadList: provider.leadsList),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                height20,
+
+                if (_tabController.index == 0)
+                  LeadListingWidget(leadList: provider.leadsList)
+                else
+                  LeadListingWidget(leadList: provider.leadsList),
+              ],
+            ),
           ),
         ),
       ),
