@@ -24,7 +24,7 @@ class InfoProgressionIcons extends ConsumerWidget {
                 .update((state) => stepIndex);
           },
           child: CircleAvatar(
-            radius: 25, // avatar size
+            radius: 25, 
             backgroundColor:
                 isSelected ? ColorConsts.primaryColor : Colors.grey.shade300,
             child: Center(

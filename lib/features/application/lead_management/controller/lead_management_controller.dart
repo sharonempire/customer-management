@@ -26,9 +26,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   LeadController(this.ref, this._leadManagementRepo)
     : super(const LeadManagementDTO());
 
-  /* -------------------------
-     Progression helpers
-     ------------------------- */
+
   void increaseProgression() {
     ref.read(infoCollectionProgression.notifier).update((s) => s + 1);
   }

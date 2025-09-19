@@ -11,7 +11,6 @@ part of 'attendance_dto.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$AttendanceDTO {
 
@@ -22,8 +21,6 @@ mixin _$AttendanceDTO {
 @pragma('vm:prefer-inline')
 $AttendanceDTOCopyWith<AttendanceDTO> get copyWith => _$AttendanceDTOCopyWithImpl<AttendanceDTO>(this as AttendanceDTO, _$identity);
 
-  /// Serializes this AttendanceDTO to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +28,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is AttendanceDTO&&(identical(other.userAttendance, userAttendance) || other.userAttendance == userAttendance)&&const DeepCollectionEquality().equals(other.allEmployeesAttendance, allEmployeesAttendance)&&const DeepCollectionEquality().equals(other.employeeHistory, employeeHistory));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,userAttendance,const DeepCollectionEquality().hash(allEmployeesAttendance),const DeepCollectionEquality().hash(employeeHistory));
 
@@ -208,11 +205,11 @@ return $default(_that.userAttendance,_that.allEmployeesAttendance,_that.employee
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _AttendanceDTO extends AttendanceDTO {
   const _AttendanceDTO({this.userAttendance, final  List<AttendanceModel>? allEmployeesAttendance, final  List<AttendanceModel>? employeeHistory}): _allEmployeesAttendance = allEmployeesAttendance,_employeeHistory = employeeHistory,super._();
-  factory _AttendanceDTO.fromJson(Map<String, dynamic> json) => _$AttendanceDTOFromJson(json);
+  
 
 @override final  AttendanceModel? userAttendance;
  final  List<AttendanceModel>? _allEmployeesAttendance;
@@ -240,17 +237,14 @@ class _AttendanceDTO extends AttendanceDTO {
 @pragma('vm:prefer-inline')
 _$AttendanceDTOCopyWith<_AttendanceDTO> get copyWith => __$AttendanceDTOCopyWithImpl<_AttendanceDTO>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$AttendanceDTOToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttendanceDTO&&(identical(other.userAttendance, userAttendance) || other.userAttendance == userAttendance)&&const DeepCollectionEquality().equals(other._allEmployeesAttendance, _allEmployeesAttendance)&&const DeepCollectionEquality().equals(other._employeeHistory, _employeeHistory));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,userAttendance,const DeepCollectionEquality().hash(_allEmployeesAttendance),const DeepCollectionEquality().hash(_employeeHistory));
 
