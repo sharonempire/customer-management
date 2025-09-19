@@ -26,7 +26,6 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   LeadController(this.ref, this._leadManagementRepo)
     : super(const LeadManagementDTO());
 
-
   void increaseProgression() {
     ref.read(infoCollectionProgression.notifier).update((s) => s + 1);
   }
@@ -218,7 +217,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
           leadId,
           updatedData.toJson(),
         );
-        setLeadLocally(leadinfo??LeadsListModel(), context);
+        setLeadLocally(leadinfo ?? LeadsListModel(), context);
 
         if (leadinfo != null) {
           ref
@@ -306,6 +305,69 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
           .showError(context, 'Failed to delete lead: $e');
       return false;
     }
+  }
+
+  void changeStatus(String status) {
+    state = state.copyWith(filterStatus: status);
+    applyFilters();
+  }
+  
+  void changeSource(String source) {
+    state = state.copyWith(filterSource: source);
+    applyFilters();
+  }
+
+  void changeFreelancer(String freelancer) {
+    state = state.copyWith(filterFreelancer: freelancer);
+    applyFilters();
+  }
+
+  void changeLeadType(String leadType) {
+    state = state.copyWith(filterLeadType: leadType);
+    applyFilters();
+  }
+
+  void changeSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query);
+    applyFilters();
+  }
+
+  void applyFilters() {
+    List<LeadsListModel> leads = state.leadsList;
+
+    if (state.searchQuery.isNotEmpty) {
+      leads =
+          leads.where((lead) {
+            final q = state.searchQuery.toLowerCase();
+            return (lead.name?.toLowerCase().contains(q) ?? false) ||
+                (lead.email?.toLowerCase().contains(q) ?? false) ||
+                (lead.phone?.toString().contains(q) ?? false);
+          }).toList();
+    }
+
+    if (state.filterSource.isNotEmpty) {
+      leads = leads.where((lead) => lead.source == state.filterSource).toList();
+    }
+
+    if (state.filterStatus.isNotEmpty) {
+      leads = leads.where((lead) => lead.status == state.filterStatus).toList();
+    }
+
+    if (state.filterFreelancer.isNotEmpty) {
+      leads =
+          leads
+              .where((lead) => lead.freelancer == state.filterFreelancer)
+              .toList();
+    }
+
+    if (state.filterLeadType.isNotEmpty) {
+      leads =
+          leads
+              .where((lead) => lead.draftStatus == state.filterLeadType)
+              .toList();
+    }
+
+    state = state.copyWith(filteredLeadsList: leads);
   }
 
   void selectLeadLocally(LeadsListModel lead) {

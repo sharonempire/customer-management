@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
+import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,10 +36,23 @@ class LeadManagementRepo {
     required String endDate,
   }) async {
     try {
+      final start = DateTime.parse(
+        DateTimeHelper.toIsoDate(startDate, isStart: true),
+      );
+      final end = DateTime.parse(
+        DateTimeHelper.toIsoDate(endDate, isStart: false),
+      );
+
+      // Log final ISO dates for debugging
+      log("Converted startDate: $start, endDate: $end");
+
       final response = await _networkService.pull(
         table: SupabaseTables.leadList,
         filters: {
-          'created_at': {'gte': startDate, 'lte': endDate},
+          'created_at': {
+            'gte': '2025-09-19 10:55:01.09745+00',
+            'lte': '2025-09-15 06:58:56.161101+00',
+          },
         },
         orderBy: "created_at",
         ascending: false,
