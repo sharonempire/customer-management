@@ -161,8 +161,9 @@ class LeadListingWidget extends ConsumerWidget {
         _clickableCell(context, lead, lead.assignedTo ?? ''),
         actionCell(
           "Edit",
-          onTap: () {
-          ref.read(leadMangementcontroller.notifier).setLeadLocally(lead);
+          onTap: ()async {
+         await ref.read(leadMangementcontroller.notifier).setLeadLocally(lead, context);
+          
             context.go(
               '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
             );

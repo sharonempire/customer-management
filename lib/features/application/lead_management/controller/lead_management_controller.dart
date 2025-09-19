@@ -61,8 +61,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
-  void setLeadLocally(LeadsListModel lead) {
+  Future<void> setLeadLocally(LeadsListModel lead, BuildContext context) async {
     state = state.copyWith(selectedLeadLocally: lead);
+    fetchSelectedLeadInfo(context: context, leadId: lead.id.toString());
   }
 
   void setLeadInfo(LeadInfoModel lead) {
