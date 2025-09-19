@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
@@ -46,6 +47,41 @@ class _EnglishProficiencyBoxState extends ConsumerState<EnglishProficiencyBox> {
   // Each test entry: {testType, date, scores}
   List<Map<String, dynamic>> studentTests = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _prefillData();
+  }
+
+  /// Prefill existing data from lead info
+  void _prefillData() {
+    final lead = ref.read(leadMangementcontroller).selectedLead;
+    if (lead?.englishProficiency?.tests != null) {
+      final testsData = lead!.englishProficiency!.tests!;
+      for (var entry in testsData.entries) {
+        final testType = entry.key;
+        final scoreList = entry.value; // List<String> like ["Reading: 7", ...]
+        final scoresMap = <String, String>{};
+        String? testDate;
+
+        for (var s in scoreList) {
+          if (s.contains(":")) {
+            final parts = s.split(":");
+            if (parts.length == 2) {
+              scoresMap[parts[0].trim()] = parts[1].trim();
+            }
+          }
+        }
+
+        studentTests.add({
+          "testType": testType,
+          "date": testDate, // if you store date separately, assign it here
+          "scores": scoresMap,
+        });
+      }
+    }
+  }
+
   void addTest() {
     setState(() {
       studentTests.add({"testType": null, "date": null, "scores": {}});
@@ -58,6 +94,7 @@ class _EnglishProficiencyBoxState extends ConsumerState<EnglishProficiencyBox> {
     });
   }
 
+  /// Convert to model and send to API
   Future<void> _saveOrNext(BuildContext context) async {
     final leadId =
         ref
@@ -67,7 +104,7 @@ class _EnglishProficiencyBoxState extends ConsumerState<EnglishProficiencyBox> {
             ?.toString() ??
         "";
 
-    // Convert studentTests into Map<String, List<String>> for model
+    // Convert tests for API
     final Map<String, List<String>> testsMap = {};
     for (var test in studentTests) {
       final testName = test["testType"];
@@ -160,45 +197,45 @@ class _EnglishProficiencyBoxState extends ConsumerState<EnglishProficiencyBox> {
                         },
                       ),
                       const SizedBox(height: 15),
-                      Row(
-                        children: [
-                          CommonDatePicker(
-                            label: "Test date",
-                            onDateSelected: (date) {
-                              setState(() {
-                                studentTests[index]["date"] =
-                                    DateTimeHelper.formatDateForLead(
-                                      date ?? DateTime.now(),
-                                    );
-                              });
-                            },
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   children: [
+                      //     CommonDatePicker(
+                      //       label:
+                      //           test["date"] != null
+                      //               ? test["date"]
+                      //               : "Test Date",
+                      //       onDateSelected: (date) {
+                      //         setState(() {
+                      //           studentTests[index]["date"] =
+                      //               DateTimeHelper.formatDateForLead(
+                      //                 date ?? DateTime.now(),
+                      //               );
+                      //         });
+                      //       },
+                      //     ),
+                      //   ],
+                      // ),
                       const SizedBox(height: 15),
                       if (selectedTest != null)
                         Column(
                           children:
-                              testSections[selectedTest]!
-                                  .map(
-                                    (section) => Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 10,
-                                      ),
-                                      child: TextFormField(
-                                        decoration: InputDecoration(
-                                          labelText: "$section Score",
-                                          border: const OutlineInputBorder(),
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (val) {
-                                          studentTests[index]["scores"][section] =
-                                              val;
-                                        },
-                                      ),
+                              testSections[selectedTest]!.map((section) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: TextFormField(
+                                    initialValue: test["scores"][section] ?? "",
+                                    decoration: InputDecoration(
+                                      labelText: "$section Score",
+                                      border: const OutlineInputBorder(),
                                     ),
-                                  )
-                                  .toList(),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (val) {
+                                      studentTests[index]["scores"][section] =
+                                          val;
+                                    },
+                                  ),
+                                );
+                              }).toList(),
                         ),
                       const SizedBox(height: 10),
                       OutlinedButton(
@@ -214,9 +251,7 @@ class _EnglishProficiencyBoxState extends ConsumerState<EnglishProficiencyBox> {
           height20,
           PreviousAndNextButtons(
             onSavePressed: () async => _saveOrNext(context),
-            onPrevPressed: () async {
-              // handle previous navigation if needed
-            },
+            onPrevPressed: () async {},
             onNextPressed: () async => _saveOrNext(context),
           ),
         ],

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
@@ -20,17 +18,39 @@ class PreferencesSection extends ConsumerStatefulWidget {
 class _PreferencesSectionState extends ConsumerState<PreferencesSection> {
   final interestedUniversityController = TextEditingController();
 
-  // State variables
   List<String> selectedCountries = [];
   List<String> selectedIndustries = [];
   String? selectedCourse;
   String? selectedState;
   String? selectedCountry;
 
-  // Mock data (replace with real data sources if needed)
   final List<String> countriesList = countriesLisData;
 
-  /// Build the Preferences object for API update
+  @override
+  void initState() {
+    super.initState();
+    _prefillData();
+  }
+
+  /// Prefill data from the selected lead
+  void _prefillData() {
+    final lead = ref.read(leadMangementcontroller).selectedLead;
+    if (lead?.preferences != null) {
+      final prefs = lead!.preferences!;
+      selectedCountry = prefs.country;
+      selectedCourse = prefs.interestedCourse;
+      selectedState = prefs.preferredState;
+      interestedUniversityController.text = prefs.interestedUniversity ?? "";
+
+      if (prefs.interestedIndustry != null) {
+        selectedIndustries = prefs.interestedIndustry!.split(", ");
+      }
+
+      setState(() {}); // ✅ Only called after data assignment
+    }
+  }
+
+  /// Build Preferences object for API update
   Preferences _getPreferences() {
     return Preferences(
       country: selectedCountry,
@@ -45,7 +65,7 @@ class _PreferencesSectionState extends ConsumerState<PreferencesSection> {
     );
   }
 
-  /// Save or Next button logic
+  /// Save / Next button logic
   Future<void> _saveOrNext(BuildContext context) async {
     final leadId =
         ref
@@ -74,17 +94,14 @@ class _PreferencesSectionState extends ConsumerState<PreferencesSection> {
           // Country Dropdown
           Row(
             children: [
-              Expanded(
-                child: CommonDropdown(
-                  label: "Country",
-                  items: countriesList,
-                  value: selectedCountry,
-                  onChanged: (value) {
-                    log("Selected country: $value");
-                    selectedCountry = value;
-                    setState(() {});
-                  },
-                ),
+              CommonDropdown(
+                label: "Country",
+                items: countriesList,
+                value: selectedCountry,
+                onChanged: (value) {
+                  selectedCountry = value;
+                  setState(() {});
+                },
               ),
             ],
           ),
@@ -99,99 +116,75 @@ class _PreferencesSectionState extends ConsumerState<PreferencesSection> {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              width20,
-              Expanded(
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children:
-                      industries.map((industry) {
-                        final isSelected = selectedIndustries.contains(
-                          industry,
-                        );
-                        return FilterChip(
-                          label: Text(industry),
-                          selected: isSelected,
-                          selectedColor: ColorConsts.primaryColor.withOpacity(
-                            0.2,
-                          ),
-                          checkmarkColor: ColorConsts.primaryColor,
-                          labelStyle: myTextstyle(
-                            fontSize: 14,
-                            color:
-                                isSelected
-                                    ? ColorConsts.primaryColor
-                                    : Colors.black,
-                          ),
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                selectedIndustries.add(industry);
-                              } else {
-                                selectedIndustries.remove(industry);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                ),
-              ),
-            ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children:
+                industries.map((industry) {
+                  final isSelected = selectedIndustries.contains(industry);
+                  return FilterChip(
+                    label: Text(industry),
+                    selected: isSelected,
+                    selectedColor: ColorConsts.primaryColor.withOpacity(0.2),
+                    checkmarkColor: ColorConsts.primaryColor,
+                    labelStyle: myTextstyle(
+                      fontSize: 14,
+                      color:
+                          isSelected ? ColorConsts.primaryColor : Colors.black,
+                    ),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          selectedIndustries.add(industry);
+                        } else {
+                          selectedIndustries.remove(industry);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
           ),
-
           const SizedBox(height: 25),
 
           // Interested Course
           Row(
             children: [
-              Expanded(
-                child: CommonDropdown(
-                  label: "Interested Course",
-                  items: coursesList,
-                  value: selectedCourse,
-                  onChanged: (val) {
-                    setState(() {
-                      selectedCourse = val;
-                    });
-                  },
-                ),
+              CommonDropdown(
+                label: "Interested Course",
+                items: coursesList,
+                value: selectedCourse,
+                onChanged: (val) {
+                  selectedCourse = val;
+                  setState(() {});
+                },
               ),
             ],
           ),
-
           const SizedBox(height: 25),
 
           // Interested Universities
           Row(
             children: [
-              Expanded(
-                child: CommonTextField(
-                  controller: interestedUniversityController,
-                  text: "Interested Universities",
-                  minLines: 1,
-                ),
+              CommonTextField(
+                controller: interestedUniversityController,
+                text: "Interested Universities",
+                minLines: 1,
               ),
             ],
           ),
-
           const SizedBox(height: 25),
 
-          // Preferred State / Province
+          // Preferred State
           Row(
             children: [
-              Expanded(
-                child: CommonDropdown(
-                  label: "Preferred State/Province",
-                  items: statesList,
-                  value: selectedState,
-                  onChanged: (val) {
-                    setState(() {
-                      selectedState = val;
-                    });
-                  },
-                ),
+              CommonDropdown(
+                label: "Preferred State/Province",
+                items: statesList,
+                value: selectedState,
+                onChanged: (val) {
+                  selectedState = val;
+                  setState(() {});
+                },
               ),
             ],
           ),

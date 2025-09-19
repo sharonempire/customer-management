@@ -29,8 +29,23 @@ class _EducationInfoCollectionState
   @override
   void initState() {
     super.initState();
-    // Start with one degree card
-    degreeList.add(DegreeInfo());
+
+    Future.microtask(() {
+      final leadInfo = ref.watch(leadMangementcontroller).selectedLead;
+
+      if (leadInfo?.education != null) {
+        tenthInfo = leadInfo!.education?.tenth ?? EducationLevel();
+        plusTwoInfo = leadInfo.education?.plusTwo ?? EducationLevel();
+
+        degreeList =
+            (leadInfo.education?.degrees?.isNotEmpty ?? false)
+                ? List.from(leadInfo.education!.degrees!)
+                : [DegreeInfo()];
+      } else {
+        degreeList.add(DegreeInfo());
+      }
+      setState(() {});
+    });
   }
 
   Future<void> _saveOrNext(BuildContext context) async {
@@ -261,6 +276,7 @@ class _EducationInfoCollectionState
             Row(
               children: [
                 CommonDatePicker(
+                  initialDate: edu.joinDate,
                   label: "Join Date",
                   onDateSelected:
                       (date) =>
@@ -270,6 +286,7 @@ class _EducationInfoCollectionState
                 ),
                 width20,
                 CommonDatePicker(
+                  initialDate: edu.passoutDate,
                   label: "Passout Date",
                   onDateSelected:
                       (date) =>

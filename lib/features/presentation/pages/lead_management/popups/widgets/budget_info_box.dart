@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
@@ -19,7 +18,35 @@ class BudgetInfoSection extends ConsumerStatefulWidget {
 
 class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
   final TextEditingController budgetController = TextEditingController();
-  String _selectedOption = "self";
+  String _selectedOption = "self"; // default if no data comes from backend
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillData(); // prefill from backend model if available
+  }
+
+  void _prefillData() {
+    final lead = ref.read(leadMangementcontroller).selectedLead;
+
+    if (lead?.budgetInfo != null) {
+      final budget = lead!.budgetInfo!;
+
+      // Set funding option based on model
+      if (budget.selfFunding == true) {
+        _selectedOption = "self";
+      } else if (budget.homeLoan == true) {
+        _selectedOption = "loan";
+      } else if (budget.both == true) {
+        _selectedOption = "both";
+      }
+
+      // Pre-fill budget amount if available
+      if (budget.budgetAmount != null && budget.budgetAmount! > 0) {
+        budgetController.text = budget.budgetAmount!.toString();
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -32,13 +59,12 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
       selfFunding: _selectedOption == "self",
       homeLoan: _selectedOption == "loan",
       both: _selectedOption == "both",
-      budgetAmount: double.tryParse(budgetController.text.trim()),
+      budgetAmount: double.tryParse(budgetController.text.trim()) ?? 0,
     );
   }
 
   Future<void> _saveOrNext(BuildContext context) async {
     try {
-      // Read values synchronously so we don't use ref after async awaits
       final leadId =
           ref
               .read(leadMangementcontroller)
@@ -46,9 +72,12 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
               ?.id
               ?.toString() ??
           "";
+      if (leadId.isEmpty) {
+        ref.read(snackbarServiceProvider).showError(context, 'Lead ID missing');
+        return;
+      }
 
       final payload = LeadInfoModel(budgetInfo: _toBudgetModel()).toJson();
-
       final notifier = ref.read(leadMangementcontroller.notifier);
 
       final result = await notifier.updateLeadInfo(
@@ -58,7 +87,9 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
       );
 
       if (!mounted) return;
-      ref.read(snackbarServiceProvider).showSuccess(context, 'Budget saved');
+      ref
+          .read(snackbarServiceProvider)
+          .showSuccess(context, 'Budget saved successfully');
       log('Budget saved: $result');
     } catch (e, st) {
       log('Budget save error: $e\n$st');
@@ -77,15 +108,11 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
   }) {
     final isSelected = _selectedOption == value;
 
-    // Wrap tappable content with Material to avoid mouse-tracker hover issues
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          if (!mounted) return;
-          setState(() => _selectedOption = value);
-        },
+        onTap: () => setState(() => _selectedOption = value),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.all(16),
@@ -142,10 +169,10 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
                 value: value,
                 groupValue: _selectedOption,
                 activeColor: ColorConsts.primaryColor,
-                onChanged: (val) {
-                  if (!mounted) return;
-                  setState(() => _selectedOption = val ?? _selectedOption);
-                },
+                onChanged:
+                    (val) => setState(
+                      () => _selectedOption = val ?? _selectedOption,
+                    ),
               ),
             ],
           ),
@@ -186,6 +213,7 @@ class _BudgetInfoSectionState extends ConsumerState<BudgetInfoSection> {
                 controller: budgetController,
                 text: "Enter your budget amount",
                 minLines: 1,
+                keyboardType: TextInputType.number,
               ),
             ],
           ),

@@ -18,20 +18,38 @@ class WorkExperienceInfo extends ConsumerStatefulWidget {
 
 class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
   bool haveWorkExperience = false;
-
-  // List to hold all work experiences
   List<WorkExperience> workExperiences = [];
-
-  // Controllers for each experience field
   final List<Map<String, TextEditingController>> controllersList = [];
 
   @override
   void initState() {
     super.initState();
-    _addNewExperience();
+
+    Future.microtask(() {
+      final leadInfo = ref.watch(leadMangementcontroller).selectedLead;
+
+      if (leadInfo?.workExperience != null &&
+          leadInfo!.workExperience!.isNotEmpty) {
+        haveWorkExperience = true;
+        workExperiences = List.from(leadInfo.workExperience!);
+        for (var exp in workExperiences) {
+          controllersList.add({
+            "companyName": TextEditingController(text: exp.companyName ?? ""),
+            "designation": TextEditingController(text: exp.designation ?? ""),
+            "companyAddress": TextEditingController(
+              text: exp.companyAddress ?? "",
+            ),
+            "description": TextEditingController(text: exp.description ?? ""),
+          });
+        }
+      } else {
+        _addNewExperience(); // No data → one blank row
+      }
+
+      setState(() {});
+    });
   }
 
-  // Add a new experience with controllers
   void _addNewExperience() {
     workExperiences.add(WorkExperience());
     controllersList.add({
@@ -43,7 +61,6 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
     setState(() {});
   }
 
-  // Save or Next handler
   Future<void> _saveOrNext(BuildContext context) async {
     final leadId =
         ref
@@ -53,7 +70,7 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
             ?.toString() ??
         "";
 
-    // update model from controllers before sending
+    // Update data from controllers
     for (int i = 0; i < workExperiences.length; i++) {
       workExperiences[i].companyName = controllersList[i]["companyName"]!.text;
       workExperiences[i].designation = controllersList[i]["designation"]!.text;
@@ -78,18 +95,20 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CommonSwitch(
-                text: "Work experience",
-                onChanged: (val) {
-                  setState(() {
-                    haveWorkExperience = val;
-                  });
-                },
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     CommonSwitch(
+          //       text: "Work experience",
+          //       initialValue: haveWorkExperience,
+          //       onChanged: (val) {
+          //         setState(() {
+          //           haveWorkExperience = val;
+          //           if (val && workExperiences.isEmpty) _addNewExperience();
+          //         });
+          //       },
+          //     ),
+          //   ],
+          // ),
           if (haveWorkExperience) ...[
             height20,
             Text(
@@ -121,9 +140,7 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
             height20,
             PreviousAndNextButtons(
               onSavePressed: () async => _saveOrNext(context),
-              onPrevPressed: () async {
-                // handle prev if needed
-              },
+              onPrevPressed: () async {},
               onNextPressed: () async => _saveOrNext(context),
             ),
           ],
@@ -163,14 +180,14 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
                 CommonDropdown(
                   label: "Job Type",
                   items: ["Full Time", "Part Time", "Internship"],
-                  value: exp.jobType,
+                  value: exp.jobType ?? "Full Time",
                   onChanged: (val) => setState(() => exp.jobType = val),
                 ),
                 width10,
                 CommonDropdown(
                   label: "Location",
                   items: ["Remote", "Onsite", "Hybrid"],
-                  value: exp.location,
+                  value: exp.location ?? "Remote",
                   onChanged: (val) => setState(() => exp.location = val),
                 ),
               ],
@@ -179,21 +196,22 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
               children: [
                 CommonDatePicker(
                   label: "Date of Joining",
-                  onDateSelected:
-                      (date) =>
-                          exp.dateOfJoining = DateTimeHelper.formatDateForLead(
-                            date ?? DateTime.now(),
-                          ),
+                  initialDate: exp.dateOfJoining,
+                  onDateSelected: (date) {
+                    exp.dateOfJoining = DateTimeHelper.formatDateForLead(
+                      date ?? DateTime.now(),
+                    );
+                  },
                 ),
                 width10,
                 CommonDatePicker(
                   label: "Date of Leaving",
-                  onDateSelected:
-                      (date) =>
-                          exp.dateOfRelieving =
-                              DateTimeHelper.formatDateForLead(
-                                date ?? DateTime.now(),
-                              ),
+                  initialDate: exp.dateOfRelieving,
+                  onDateSelected: (date) {
+                    exp.dateOfRelieving = DateTimeHelper.formatDateForLead(
+                      date ?? DateTime.now(),
+                    );
+                  },
                 ),
               ],
             ),
