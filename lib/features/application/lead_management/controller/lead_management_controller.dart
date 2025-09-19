@@ -47,7 +47,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   Future<void> fetchAllLeads({required BuildContext context}) async {
     try {
       final leads = await _leadManagementRepo.fetchAllLeads();
-      state = state.copyWith(leadsList: leads);
+      state = state.copyWith(leadsList: leads, filteredLeadsList: leads);
 
       ref.read(snackbarServiceProvider).showSuccess(context, 'Leads loaded');
       log('fetchAllLeads: loaded ${state.leadsList.length} leads');
@@ -311,7 +311,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     state = state.copyWith(filterStatus: status);
     applyFilters();
   }
-  
+
   void changeSource(String source) {
     state = state.copyWith(filterSource: source);
     applyFilters();

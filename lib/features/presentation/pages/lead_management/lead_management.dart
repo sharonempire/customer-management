@@ -83,9 +83,18 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                 const SearchLeadsWidget(),
                 height20,
                 const LeadFiltersWidget(),
+                height10,
+                Row(
+                  children: [
+                    Spacer(),
+                    ElevatedButton.icon(
+                      onPressed: () {},
+                      label: Text("Clear filters"),
+                      icon: Icon(Icons.clear),
+                    ),
+                  ],
+                ),
                 height20,
-
-                // 🔹 Tabs
                 Center(
                   child: Container(
                     height: 50,
@@ -118,9 +127,9 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                 height20,
 
                 if (_tabController.index == 0)
-                  LeadListingWidget(leadList: provider.leadsList)
+                  LeadListingWidget(leadList: provider.filteredLeadsList)
                 else
-                  LeadListingWidget(leadList: provider.leadsList),
+                  LeadListingWidget(leadList: provider.filteredLeadsList),
               ],
             ),
           ),
