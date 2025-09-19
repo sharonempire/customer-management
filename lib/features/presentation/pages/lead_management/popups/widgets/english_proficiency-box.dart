@@ -1,13 +1,10 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
-import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
-import 'package:management_software/shared/date_time_helper.dart';
 
 class EnglishProficiencyBox extends ConsumerStatefulWidget {
   const EnglishProficiencyBox({super.key});

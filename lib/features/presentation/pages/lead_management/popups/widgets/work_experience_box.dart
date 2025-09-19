@@ -109,41 +109,39 @@ class _WorkExperienceInfoState extends ConsumerState<WorkExperienceInfo> {
           //     ),
           //   ],
           // ),
-          if (haveWorkExperience) ...[
-            height20,
-            Text(
-              "Work Experience Details",
-              style: myTextstyle(fontWeight: FontWeight.bold),
-            ),
-            height20,
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: workExperiences.length,
-              itemBuilder: (context, index) {
-                return _buildWorkExperienceCard(index);
-              },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: _addNewExperience,
-                  label: Text(
-                    "Add Another Experience",
-                    style: myTextstyle(color: ColorConsts.primaryColor),
-                  ),
-                  icon: Icon(Icons.add, color: ColorConsts.primaryColor),
+          height20,
+          Text(
+            "Work Experience Details",
+            style: myTextstyle(fontWeight: FontWeight.bold),
+          ),
+          height20,
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: workExperiences.length,
+            itemBuilder: (context, index) {
+              return _buildWorkExperienceCard(index);
+            },
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: _addNewExperience,
+                label: Text(
+                  "Add Another Experience",
+                  style: myTextstyle(color: ColorConsts.primaryColor),
                 ),
-              ],
-            ),
-            height20,
-            PreviousAndNextButtons(
-              onSavePressed: () async => _saveOrNext(context),
-              onPrevPressed: () async {},
-              onNextPressed: () async => _saveOrNext(context),
-            ),
-          ],
+                icon: Icon(Icons.add, color: ColorConsts.primaryColor),
+              ),
+            ],
+          ),
+          height20,
+          PreviousAndNextButtons(
+            onSavePressed: () async => _saveOrNext(context),
+            onPrevPressed: () async {},
+            onNextPressed: () async => _saveOrNext(context),
+          ),
         ],
       ),
     );

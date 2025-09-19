@@ -209,6 +209,41 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
+  Future<bool> updateListDetails({
+    required BuildContext context,
+    required String leadId,
+    required LeadsListModel updatedData,
+  }) async {
+    try {
+      if (state.selectedLeadLocally?.id == int.parse(leadId)) {
+        final leadinfo = await _leadManagementRepo.updateLead(
+          leadId,
+          updatedData.toJson(),
+        );
+        setLeadLocally(leadinfo??LeadsListModel(), context);
+
+        if (leadinfo != null) {
+          ref
+              .read(snackbarServiceProvider)
+              .showSuccess(context, 'Lead info updated');
+          await fetchAllLeads(context: context);
+        } else {
+          ref
+              .read(snackbarServiceProvider)
+              .showError(context, 'Failed to update lead.');
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      log('updateLead error: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to update lead: $e');
+      return false;
+    }
+  }
+
   Future<bool> updateLeadInfo({
     required BuildContext context,
     required String leadId,
