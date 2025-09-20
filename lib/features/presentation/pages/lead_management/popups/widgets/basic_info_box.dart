@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
@@ -70,7 +69,7 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
                 status: "Lead creation",
                 source: "crm",
                 name: firstNameController.text,
-                assignedTo: ref.read(authControllerProvider).id.toString(),
+                assignedTo: null,
                 phone: int.parse(phoneController.text),
                 email: emailController.text,
               ),
