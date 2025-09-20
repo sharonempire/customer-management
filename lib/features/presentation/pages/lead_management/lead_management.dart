@@ -84,16 +84,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                 height20,
                 const LeadFiltersWidget(),
                 height10,
-                Row(
-                  children: [
-                    Spacer(),
-                    ElevatedButton.icon(
-                      onPressed: () {},
-                      label: Text("Clear filters"),
-                      icon: Icon(Icons.clear),
-                    ),
-                  ],
-                ),
+           
                 height20,
                 Center(
                   child: Container(

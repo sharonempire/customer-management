@@ -74,7 +74,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }) async {
     try {
       final leads = await _leadManagementRepo.fetchLeadsByDate(date);
-      state = state.copyWith(leadsList: leads);
+      state = state.copyWith(filteredLeadsList: leads);
       ref
           .read(snackbarServiceProvider)
           .showSuccess(context, 'Leads for selected date loaded');
@@ -85,6 +85,16 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
           .read(snackbarServiceProvider)
           .showError(context, 'Failed to fetch leads for date: $e');
     }
+  }
+
+  void clearFilters() {
+    state = state.copyWith(
+      filteredLeadsList: state.leadsList,
+      filterSource: '',
+      filterStatus: '',
+      filterLeadType: '',
+      filterFreelancer: '',
+    );
   }
 
   /// Fetch leads between two dates (inclusive)
@@ -98,7 +108,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
         startDate: start,
         endDate: end,
       );
-      state = state.copyWith(leadsList: leads);
+      state = state.copyWith(filteredLeadsList: leads);
       ref
           .read(snackbarServiceProvider)
           .showSuccess(context, 'Leads loaded for selected range');
@@ -121,13 +131,25 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }
 
   /// Convenience: last 7 days
-  Future<void> fetchLastWeekLeads({required BuildContext context}) async {
+  Future<void> fetchThisWeekLeads({required BuildContext context}) async {
     final now = DateTime.now();
     final start = now.subtract(const Duration(days: 7));
     await fetchLeadsByRange(
       context: context,
       start: DateTimeHelper.formatDateForLead(start),
       end: DateTimeHelper.formatDateForLead(now),
+    );
+  }
+
+  Future<void> fetchLastWeekLeads({required BuildContext context}) async {
+    final now = DateTime.now();
+    final start = now.subtract(const Duration(days: 7));
+    await fetchLeadsByRange(
+      context: context,
+      start: DateTimeHelper.formatDateForLead(
+        now.subtract(const Duration(days: 14)),
+      ),
+      end: DateTimeHelper.formatDateForLead(start),
     );
   }
 

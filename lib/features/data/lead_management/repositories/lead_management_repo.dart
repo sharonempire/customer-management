@@ -36,27 +36,30 @@ class LeadManagementRepo {
     required String endDate,
   }) async {
     try {
-      final start = DateTime.parse(
-        DateTimeHelper.toIsoDate(startDate, isStart: true),
-      );
-      final end = DateTime.parse(
-        DateTimeHelper.toIsoDate(endDate, isStart: false),
-      );
+      final start =
+          DateTime.parse(
+            DateTimeHelper.toIsoDate(startDate, isStart: true),
+          ).toUtc();
+      final end =
+          DateTime.parse(
+            DateTimeHelper.toIsoDate(endDate, isStart: false),
+          ).toUtc();
 
-      // Log final ISO dates for debugging
       log("Converted startDate: $start, endDate: $end");
 
       final response = await _networkService.pull(
         table: SupabaseTables.leadList,
         filters: {
           'created_at': {
-            'gte': '2025-09-19 10:55:01.09745+00',
-            'lte': '2025-09-15 06:58:56.161101+00',
+            'gte': start.toIso8601String(),
+            'lte': end.toIso8601String(),
           },
         },
         orderBy: "created_at",
         ascending: false,
       );
+
+      log("Leads fetched: ${response.length}");
 
       return response
           .map<LeadsListModel>((e) => LeadsListModel.fromJson(e))
@@ -124,12 +127,31 @@ class LeadManagementRepo {
 
   Future<List<LeadsListModel>> fetchLeadsByDate(String date) async {
     try {
+      // Convert date to start and end of the day in UTC
+      final start =
+          DateTime.parse(DateTimeHelper.toIsoDate(date, isStart: true)).toUtc();
+
+      final end =
+          DateTime.parse(
+            DateTimeHelper.toIsoDate(date, isStart: false),
+          ).toUtc();
+
+      log("Fetching leads for date: $date, start: $start, end: $end");
+
       final response = await _networkService.pull(
         table: SupabaseTables.leadList,
-        filters: {'date': date},
+        filters: {
+          'created_at': {
+            'gte': start.toIso8601String(),
+            'lte': end.toIso8601String(),
+          },
+        },
         orderBy: "created_at",
         ascending: false,
       );
+
+      log("Leads fetched for $date: ${response.length}");
+
       return response
           .map<LeadsListModel>((e) => LeadsListModel.fromJson(e))
           .toList();

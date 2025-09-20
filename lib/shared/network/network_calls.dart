@@ -103,19 +103,57 @@ class NetworkService {
 
   Future<dynamic> pull({
     required String table,
-    Map<String, dynamic>? filters, // Multiple filters as key:value pairs
+    Map<String, dynamic>?
+    filters, // Supports operators like gte, lte, eq, neq, like, etc.
     int? limit,
     String? orderBy,
     bool ascending = true,
   }) async {
     try {
-      final baseQuery = supabase.from(table).select();
-      dynamic query = baseQuery;
+      dynamic query = supabase.from(table).select(); // ⬅ Fix here
 
-      // ✅ Apply multiple filters
+      // ✅ Apply multiple filters with support for operators
       if (filters != null && filters.isNotEmpty) {
         filters.forEach((key, value) {
-          if (value != null) query = query.eq(key, value);
+          if (value == null) return;
+
+          // If value is a Map → supports operators like gte, lte, neq
+          if (value is Map<String, dynamic>) {
+            value.forEach((operator, val) {
+              if (val == null) return;
+
+              switch (operator) {
+                case 'eq':
+                  query = query.eq(key, val);
+                  break;
+                case 'neq':
+                  query = query.neq(key, val);
+                  break;
+                case 'gte':
+                  query = query.gte(key, val);
+                  break;
+                case 'lte':
+                  query = query.lte(key, val);
+                  break;
+                case 'gt':
+                  query = query.gt(key, val);
+                  break;
+                case 'lt':
+                  query = query.lt(key, val);
+                  break;
+                case 'like':
+                  query = query.like(key, val);
+                  break;
+                case 'ilike':
+                  query = query.ilike(key, val);
+                  break;
+                default:
+                  throw 'Unsupported operator: $operator';
+              }
+            });
+          } else {
+            query = query.eq(key, value);
+          }
         });
       }
 
