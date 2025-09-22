@@ -108,9 +108,10 @@ class NetworkService {
     int? limit,
     String? orderBy,
     bool ascending = true,
+    String? columns,
   }) async {
     try {
-      dynamic query = supabase.from(table).select(); // ⬅ Fix here
+      dynamic query = supabase.from(table).select(columns ?? '*');
 
       // ✅ Apply multiple filters with support for operators
       if (filters != null && filters.isNotEmpty) {

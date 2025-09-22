@@ -146,6 +146,11 @@ class LeadListingWidget extends ConsumerWidget {
     LeadsListModel lead,
     WidgetRef ref,
   ) {
+    final assignedStaff =
+        (lead.assignedProfile?.displayName?.isNotEmpty ?? false)
+            ? lead.assignedProfile!.displayName!
+            : lead.assignedProfile?.email ?? lead.assignedTo ?? '';
+
     return TableRow(
       children: [
         _clickableCell(context, lead, lead.slNo.toString().padLeft(4, '0')),
@@ -157,7 +162,7 @@ class LeadListingWidget extends ConsumerWidget {
         _clickableCell(context, lead, lead.status ?? ''),
         _clickableCell(context, lead, lead.followUp ?? ''),
         _clickableCell(context, lead, lead.remark ?? ''),
-        _clickableCell(context, lead, lead.assignedTo ?? ''),
+        _clickableCell(context, lead, assignedStaff),
         actionCell(
           "Edit",
           onTap: () async {
