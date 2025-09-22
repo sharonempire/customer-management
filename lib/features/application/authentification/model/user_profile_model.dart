@@ -9,6 +9,7 @@ class UserProfileModel {
   final String? freelancerStatus;
   final String? location;
   final String? email; // ✅ New field
+  final String? attendanceStatus;
 
   UserProfileModel({
     this.id,
@@ -21,6 +22,7 @@ class UserProfileModel {
     this.freelancerStatus,
     this.location,
     this.email, // ✅ Added to constructor
+    this.attendanceStatus,
   });
 
   factory UserProfileModel.fromMap(Map<String, dynamic> map) {
@@ -39,6 +41,7 @@ class UserProfileModel {
       freelancerStatus: map['freelancer_status'] as String?,
       location: map['location'] as String?,
       email: map['email'] as String?, // ✅ Added here
+      attendanceStatus: map['attendance_status'] as String?,
     );
   }
 
@@ -54,6 +57,8 @@ class UserProfileModel {
     if (location != null) data['location'] = location;
     if (email != null) data['email'] = email; // ✅ Added here
 
+    // Intentionally skipping attendanceStatus since it's derived from attendance table
+
     return data;
   }
 
@@ -66,6 +71,7 @@ class UserProfileModel {
     String? freelancerStatus,
     String? location,
     String? email, // ✅ Added here
+    String? attendanceStatus,
   }) {
     return UserProfileModel(
       id: id,
@@ -78,6 +84,7 @@ class UserProfileModel {
       freelancerStatus: freelancerStatus ?? this.freelancerStatus,
       location: location ?? this.location,
       email: email ?? this.email, // ✅ Added here
+      attendanceStatus: attendanceStatus ?? this.attendanceStatus,
     );
   }
 }
