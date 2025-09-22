@@ -5,8 +5,8 @@ import 'package:management_software/features/application/lead_management/control
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
-import 'package:management_software/features/presentation/widgets/primary_button.dart'
-    show PrimaryButton;
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/lead_counsellor_section.dart';
+import 'package:management_software/features/presentation/widgets/primary_button.dart' show PrimaryButton;
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 import 'package:management_software/shared/date_time_helper.dart';
@@ -26,21 +26,19 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
   String? selectedStatus;
   DateTime? selectedFollowUpDate;
 
-  final List<String> statusOptions = [
-    "Lead creation",
-    "Lead Converted",
-    "Course sent",
+  final List<String> statusOptions = const [
+    'Lead creation',
+    'Lead Converted',
+    'Course sent',
   ];
 
   DateTime? parseCustomDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return null;
 
     try {
-      // Format for "September 19, 2025"
-      final dateFormat = DateFormat("MMMM d, yyyy");
+      final dateFormat = DateFormat('MMMM d, yyyy');
       return dateFormat.parse(dateString);
-    } catch (e) {
-      print("Date parsing error: $e");
+    } catch (_) {
       return null;
     }
   }
@@ -50,16 +48,36 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
     super.initState();
     remarksController = TextEditingController();
 
-    Future.microtask(() async {
-      final leadListDetails =
-          ref.watch(leadMangementcontroller).selectedLeadLocally;
-      if (leadListDetails != null) {
-        selectedStatus = leadListDetails.status;
-        selectedFollowUpDate = parseCustomDate(leadListDetails.followUp);
-        remarksController.text = leadListDetails.remark ?? "";
-      }
-      setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _hydrateLeadDetails();
+      ref
+          .read(leadMangementcontroller.notifier)
+          .loadCounsellors(context: context);
     });
+  }
+
+  void _hydrateLeadDetails() {
+    final leadState = ref.read(leadMangementcontroller);
+    final leadListDetails = leadState.selectedLeadLocally;
+
+    final initialStatus = leadListDetails?.status;
+    final initialFollowUp = parseCustomDate(leadListDetails?.followUp);
+    final initialRemarks = leadListDetails?.remark ?? '';
+
+    remarksController.text = initialRemarks;
+
+    setState(() {
+      selectedStatus = initialStatus;
+      selectedFollowUpDate = initialFollowUp;
+    });
+
+    if (leadState.selectedCounsellorId == null &&
+        leadListDetails?.assignedTo != null) {
+      ref
+          .read(leadMangementcontroller.notifier)
+          .selectCounsellor(leadListDetails?.assignedTo);
+    }
   }
 
   @override
@@ -68,23 +86,22 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
     super.dispose();
   }
 
-  Future<void> _saveDetails(BuildContext context, WidgetRef ref) async {
+  Future<void> _saveDetails(BuildContext context) async {
     try {
       final leadId = widget.leadId;
       if (leadId.isEmpty) return;
+
+      final leadState = ref.read(leadMangementcontroller);
       final updatedData = LeadsListModel(
         status: selectedStatus,
         remark:
-            remarksController.text.trim().isNotEmpty
-                ? remarksController.text.trim()
-                : null,
-        followUp:
-            selectedFollowUpDate != null
-                ? DateTimeHelper.formatDateForLead(selectedFollowUpDate!)
-                : null,
+            remarksController.text.trim().isNotEmpty ? remarksController.text.trim() : null,
+        assignedTo: leadState.selectedCounsellorId,
+        followUp: selectedFollowUpDate != null
+            ? DateTimeHelper.formatDateForLead(selectedFollowUpDate!)
+            : null,
       );
 
-      // Call update API
       await ref
           .read(leadMangementcontroller.notifier)
           .updateListDetails(
@@ -95,21 +112,24 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Lead details updated successfully")),
+          const SnackBar(content: Text('Lead details updated successfully')),
         );
       }
     } catch (e, st) {
-      debugPrint("Error updating lead details: $e\n$st");
+      debugPrint('Error updating lead details: $e\n$st');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to update: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e')),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final leadState = ref.watch(leadMangementcontroller);
+    final controller = ref.read(leadMangementcontroller.notifier);
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Container(
@@ -121,7 +141,6 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status + FollowUp Row
             Row(
               children: [
                 CommonDropdown(
@@ -134,13 +153,10 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
                 ),
                 width20,
                 CommonDatePicker(
-                  label: "Follow Up Date",
-                  initialDate:
-                      selectedFollowUpDate != null
-                          ? DateTimeHelper.formatDateForLead(
-                            selectedFollowUpDate!,
-                          )
-                          : null,
+                  label: 'Follow Up Date',
+                  initialDate: selectedFollowUpDate != null
+                      ? DateTimeHelper.formatDateForLead(selectedFollowUpDate!)
+                      : null,
                   onDateSelected: (date) {
                     setState(() => selectedFollowUpDate = date);
                   },
@@ -148,25 +164,25 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
               ],
             ),
             height10,
-            Row(
-              children: [
-                CommonDropdown(
-                  label: 'Status',
-                  items: statusOptions,
-                  value: selectedStatus,
-                  onChanged: (val) {
-                    setState(() => selectedStatus = val);
-                  },
-                ),
-              ],
+            LeadCounsellorSection(
+              isLoading: leadState.isLoadingCounsellors,
+              errorText: leadState.counsellorError,
+              counsellors: leadState.counsellors,
+              selectedId: leadState.selectedCounsellorId,
+              onChanged: controller.selectCounsellor,
+              onRefresh: () {
+                controller.loadCounsellors(
+                  context: context,
+                  forceRefresh: true,
+                );
+              },
             ),
             height20,
-            // Remarks Title
             Row(
               children: [
                 width20,
                 Text(
-                  "Counsellor Remarks",
+                  'Counsellor Remarks',
                   style: myTextstyle(
                     fontSize: 18,
                     color: ColorConsts.textColor,
@@ -174,26 +190,21 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
                 ),
               ],
             ),
-            // Remarks Field + Save Button
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CommonTextField(
                   controller: remarksController,
                   text:
-                      "Enter any additional remarks, notes, or special considerations...",
+                      'Enter any additional remarks, notes, or special considerations...',
                   maxLines: 5,
                 ),
                 const Spacer(),
-                Consumer(
-                  builder: (context, ref, _) {
-                    return PrimaryButton(
-                      onpressed: () async {
-                        await _saveDetails(context, ref);
-                      },
-                      text: "Save",
-                    );
+                PrimaryButton(
+                  onpressed: () async {
+                    await _saveDetails(context);
                   },
+                  text: 'Save',
                 ),
               ],
             ),

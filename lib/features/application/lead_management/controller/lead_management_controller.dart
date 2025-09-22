@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/application/lead_management/model/lead_management_dto.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
@@ -59,8 +60,62 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
   }
 
+  Future<void> loadCounsellors({
+    required BuildContext context,
+    bool forceRefresh = false,
+  }) async {
+    final hasCachedCounsellors = state.counsellors.isNotEmpty;
+
+    if (hasCachedCounsellors && !forceRefresh) {
+      final merged = _mergeCounsellorsWithAssigned(state.counsellors);
+      final selectedId = _deriveSelectedCounsellorId(merged);
+      state = state.copyWith(
+        counsellors: merged,
+        selectedCounsellorId: selectedId,
+        counsellorError: null,
+        isLoadingCounsellors: false,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      isLoadingCounsellors: true,
+      counsellorError: null,
+    );
+
+    try {
+      final fetched = await _leadManagementRepo.fetchCounsellors();
+      final merged = _mergeCounsellorsWithAssigned(fetched);
+      final selectedId = _deriveSelectedCounsellorId(merged);
+
+      state = state.copyWith(
+        counsellors: merged,
+        selectedCounsellorId: selectedId,
+        isLoadingCounsellors: false,
+        counsellorError: null,
+      );
+    } catch (e, stackTrace) {
+      log('loadCounsellors error: $e');
+      log(stackTrace.toString());
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to load counsellors: $e');
+      state = state.copyWith(
+        isLoadingCounsellors: false,
+        counsellorError: 'Failed to load counsellors',
+      );
+    }
+  }
+
+  void selectCounsellor(String? counsellorId) {
+    state = state.copyWith(selectedCounsellorId: _normaliseId(counsellorId));
+  }
+
   Future<void> setLeadLocally(LeadsListModel lead, BuildContext context) async {
-    state = state.copyWith(selectedLeadLocally: lead);
+    state = state.copyWith(
+      selectedLeadLocally: lead,
+      selectedCounsellorId: _normaliseId(lead.assignedTo),
+    );
     await fetchSelectedLeadInfo(context: context, leadId: lead.id.toString());
   }
 
@@ -393,6 +448,81 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }
 
   void selectLeadLocally(LeadsListModel lead) {
-    state = state.copyWith(selectedLeadLocally: lead);
+    state = state.copyWith(
+      selectedLeadLocally: lead,
+      selectedCounsellorId: _normaliseId(lead.assignedTo),
+    );
+  }
+
+  List<UserProfileModel> _mergeCounsellorsWithAssigned(
+    List<UserProfileModel> fetched,
+  ) {
+    final uniqueProfiles = <String, UserProfileModel>{};
+
+    for (final profile in fetched) {
+      final normalisedId = _normaliseId(profile.id);
+      if (normalisedId == null) continue;
+      uniqueProfiles[normalisedId] = profile;
+    }
+
+    final assignedProfile = state.selectedLeadLocally?.assignedProfile;
+    final assignedId = _normaliseId(
+      assignedProfile?.id ?? state.selectedLeadLocally?.assignedTo,
+    );
+
+    if (assignedProfile != null && assignedId != null) {
+      uniqueProfiles.putIfAbsent(assignedId, () => assignedProfile);
+    }
+
+    final merged = uniqueProfiles.values.toList()
+      ..sort(
+        (a, b) => _displayNameForProfile(a)
+            .toLowerCase()
+            .compareTo(_displayNameForProfile(b).toLowerCase()),
+      );
+
+    return merged;
+  }
+
+  String? _deriveSelectedCounsellorId(List<UserProfileModel> counsellors) {
+    final currentSelection = _normaliseId(state.selectedCounsellorId);
+    if (currentSelection != null &&
+        counsellors.any((profile) => _normaliseId(profile.id) == currentSelection)) {
+      return currentSelection;
+    }
+
+    final assignedId = _normaliseId(
+      state.selectedLeadLocally?.assignedTo ??
+          state.selectedLeadLocally?.assignedProfile?.id,
+    );
+
+    if (assignedId != null &&
+        counsellors.any((profile) => _normaliseId(profile.id) == assignedId)) {
+      return assignedId;
+    }
+
+    return currentSelection ?? assignedId;
+  }
+
+  String? _normaliseId(String? id) {
+    final trimmed = id?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
+
+  String _displayNameForProfile(UserProfileModel profile) {
+    final displayName = profile.displayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+
+    final email = profile.email?.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+
+    return profile.id?.trim() ?? '';
   }
 }
