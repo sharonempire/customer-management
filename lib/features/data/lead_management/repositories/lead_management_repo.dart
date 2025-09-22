@@ -165,14 +165,33 @@ class LeadManagementRepo {
         log('Attendance lookup failed: $attendanceError\n$stackTrace');
       }
 
-      return profiles
+      final enriched = profiles
           .map(
-            (profile) => profile.copyWith(
-              attendanceStatus:
-                  attendanceByEmployee[profile.id?.trim() ?? ''],
-            ),
+            (profile) {
+              final normalisedId = profile.id?.trim() ?? '';
+              final rawAttendance = attendanceByEmployee[normalisedId];
+              final formattedAttendance = _formatAttendanceStatus(rawAttendance);
+
+              return profile.copyWith(attendanceStatus: formattedAttendance);
+            },
           )
-          .toList();
+          .toList()
+        ..sort(
+          (a, b) {
+            final statusComparison = _attendanceSortWeight(a.attendanceStatus)
+                .compareTo(_attendanceSortWeight(b.attendanceStatus));
+
+            if (statusComparison != 0) {
+              return statusComparison;
+            }
+
+            return _profileDisplayName(a)
+                .toLowerCase()
+                .compareTo(_profileDisplayName(b).toLowerCase());
+          },
+        );
+
+      return enriched;
     } catch (e) {
       log('Fetch Counsellors Error: $e');
       return [];
@@ -352,4 +371,84 @@ class LeadManagementRepo {
       return false;
     }
   }
+}
+
+String? _formatAttendanceStatus(String? rawStatus) {
+  final trimmed = rawStatus?.trim();
+  if (trimmed == null || trimmed.isEmpty) {
+    return null;
+  }
+
+  final lower = trimmed.toLowerCase();
+
+  if (lower.contains('present')) {
+    return 'Present';
+  }
+
+  if (lower.contains('absent')) {
+    return 'Absent';
+  }
+
+  if (lower.contains('leave')) {
+    return 'On Leave';
+  }
+
+  if (lower.contains('wfh')) {
+    return 'WFH';
+  }
+
+  if (lower.contains('remote')) {
+    return 'Remote';
+  }
+
+  if (lower.contains('not checked')) {
+    return 'Not Checked In';
+  }
+
+  if (lower.contains('not marked')) {
+    return 'Not Marked';
+  }
+
+  if (lower.contains('half')) {
+    return 'Half Day';
+  }
+
+  return trimmed
+      .split(RegExp(r'\s+'))
+      .map(
+        (word) => word.isEmpty
+            ? word
+            : word[0].toUpperCase() + word.substring(1).toLowerCase(),
+      )
+      .join(' ');
+}
+
+int _attendanceSortWeight(String? status) {
+  final lower = status?.toLowerCase() ?? '';
+
+  if (lower.contains('present')) return 0;
+  if (lower.contains('wfh')) return 1;
+  if (lower.contains('remote')) return 2;
+  if (lower.contains('leave')) return 3;
+  if (lower.contains('half')) return 4;
+  if (lower.contains('absent')) return 5;
+  if (lower.contains('not checked') || lower.contains('not marked')) return 6;
+
+  if (lower.isEmpty) return 7;
+
+  return 7;
+}
+
+String _profileDisplayName(UserProfileModel profile) {
+  final displayName = profile.displayName?.trim();
+  if (displayName != null && displayName.isNotEmpty) {
+    return displayName;
+  }
+
+  final email = profile.email?.trim();
+  if (email != null && email.isNotEmpty) {
+    return email;
+  }
+
+  return profile.id?.trim() ?? '';
 }

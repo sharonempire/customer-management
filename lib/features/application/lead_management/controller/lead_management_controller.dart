@@ -116,7 +116,19 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       selectedLeadLocally: lead,
       selectedCounsellorId: _normaliseId(lead.assignedTo),
     );
-    await fetchSelectedLeadInfo(context: context, leadId: lead.id.toString());
+
+    if (state.counsellors.isNotEmpty) {
+      final merged = _mergeCounsellorsWithAssigned(state.counsellors);
+      state = state.copyWith(
+        counsellors: merged,
+        selectedCounsellorId: _deriveSelectedCounsellorId(merged),
+      );
+    }
+
+    final leadId = lead.id?.toString();
+    if (leadId != null) {
+      await fetchSelectedLeadInfo(context: context, leadId: leadId);
+    }
   }
 
   void setLeadInfo(LeadInfoModel lead) {
@@ -452,6 +464,14 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       selectedLeadLocally: lead,
       selectedCounsellorId: _normaliseId(lead.assignedTo),
     );
+
+    if (state.counsellors.isNotEmpty) {
+      final merged = _mergeCounsellorsWithAssigned(state.counsellors);
+      state = state.copyWith(
+        counsellors: merged,
+        selectedCounsellorId: _deriveSelectedCounsellorId(merged),
+      );
+    }
   }
 
   List<UserProfileModel> _mergeCounsellorsWithAssigned(
@@ -476,9 +496,18 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
     final merged = uniqueProfiles.values.toList()
       ..sort(
-        (a, b) => _displayNameForProfile(a)
-            .toLowerCase()
-            .compareTo(_displayNameForProfile(b).toLowerCase()),
+        (a, b) {
+          final statusComparison = _attendanceSortWeight(a.attendanceStatus)
+              .compareTo(_attendanceSortWeight(b.attendanceStatus));
+
+          if (statusComparison != 0) {
+            return statusComparison;
+          }
+
+          return _displayNameForProfile(a)
+              .toLowerCase()
+              .compareTo(_displayNameForProfile(b).toLowerCase());
+        },
       );
 
     return merged;
@@ -524,5 +553,23 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     }
 
     return profile.id?.trim() ?? '';
+  }
+
+  int _attendanceSortWeight(String? status) {
+    final lower = status?.toLowerCase() ?? '';
+
+    if (lower.contains('present')) return 0;
+    if (lower.contains('wfh')) return 1;
+    if (lower.contains('remote')) return 2;
+    if (lower.contains('leave')) return 3;
+    if (lower.contains('half')) return 4;
+    if (lower.contains('absent')) return 5;
+    if (lower.contains('not checked') || lower.contains('not marked')) {
+      return 6;
+    }
+
+    if (lower.isEmpty) return 7;
+
+    return 7;
   }
 }

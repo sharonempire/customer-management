@@ -101,23 +101,27 @@ class LeadCounsellorDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unassignedMeta = _attendanceMetaFor(null);
     final dropdownItems = <DropdownMenuItem<String?>>[
-      const DropdownMenuItem<String?>(
+      DropdownMenuItem<String?>(
         value: null,
-        child: _CounsellorMenuTile(
+        child: _LeadCounsellorOption(
           title: 'Unassigned',
           subtitle: 'No counsellor assigned',
+          attendance: unassignedMeta,
         ),
       ),
-      ...counsellors.map(
-        (profile) => DropdownMenuItem<String?>(
+      ...counsellors.map((profile) {
+        final meta = _attendanceMetaFor(profile.attendanceStatus);
+        return DropdownMenuItem<String?>(
           value: _normaliseCounsellorId(profile.id),
-          child: _CounsellorMenuTile(
+          child: _LeadCounsellorOption(
             title: _counsellorTitle(profile),
             subtitle: _counsellorSubtitle(profile),
+            attendance: meta,
           ),
-        ),
-      ),
+        );
+      }),
     ];
 
     return Padding(
@@ -145,84 +149,99 @@ class LeadCounsellorDropdown extends StatelessWidget {
             borderSide: const BorderSide(color: Colors.grey, width: 1),
           ),
         ),
-        selectedItemBuilder: (context) => [
-          const _SelectedCounsellorLabel(
-            title: 'Unassigned',
-            subtitle: 'No counsellor assigned',
-          ),
-          ...counsellors.map(
-            (profile) => _SelectedCounsellorLabel(
-              title: _counsellorTitle(profile),
-              subtitle: _counsellorSubtitle(profile),
+        selectedItemBuilder: (context) {
+          final items = <Widget>[
+            SizedBox(
+              width: double.infinity,
+              child: _LeadCounsellorOption(
+                title: 'Unassigned',
+                subtitle: 'No counsellor assigned',
+                attendance: unassignedMeta,
+                dense: true,
+              ),
             ),
-          ),
-        ],
+          ];
+
+          for (final profile in counsellors) {
+            final meta = _attendanceMetaFor(profile.attendanceStatus);
+            items.add(
+              SizedBox(
+                width: double.infinity,
+                child: _LeadCounsellorOption(
+                  title: _counsellorTitle(profile),
+                  subtitle: _counsellorSubtitle(profile),
+                  attendance: meta,
+                  dense: true,
+                ),
+              ),
+            );
+          }
+
+          return items;
+        },
       ),
     );
   }
 }
 
-class _CounsellorMenuTile extends StatelessWidget {
+class _LeadCounsellorOption extends StatelessWidget {
   final String title;
   final String subtitle;
+  final _AttendanceMeta attendance;
+  final bool dense;
 
-  const _CounsellorMenuTile({
+  const _LeadCounsellorOption({
     required this.title,
     required this.subtitle,
+    required this.attendance,
+    this.dense = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+    final titleStyle = myTextstyle(
+      fontSize: 16,
+      color: Colors.black,
+      fontWeight: FontWeight.w600,
+    );
+
+    final subtitleStyle = myTextstyle(
+      fontSize: dense ? 13 : 14,
+      color: Colors.grey.shade600,
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          title,
-          style: myTextstyle(fontSize: 16, color: Colors.black),
-          overflow: TextOverflow.ellipsis,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: titleStyle,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (subtitle.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    subtitle,
+                    style: subtitleStyle,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
         ),
-        if (subtitle.isNotEmpty)
-          Text(
-            subtitle,
-            style: myTextstyle(fontSize: 14, color: Colors.grey.shade600),
-            overflow: TextOverflow.ellipsis,
-          ),
+        width10,
+        _AttendanceBadge(
+          meta: attendance,
+          dense: dense,
+        ),
       ],
-    );
-  }
-}
-
-class _SelectedCounsellorLabel extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _SelectedCounsellorLabel({
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            style: myTextstyle(fontSize: 16, color: Colors.black),
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (subtitle.isNotEmpty)
-            Text(
-              subtitle,
-              style: myTextstyle(fontSize: 13, color: Colors.grey.shade600),
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
-      ),
     );
   }
 }
@@ -326,21 +345,154 @@ String _counsellorSubtitle(UserProfileModel profile) {
     metadata.add(designation);
   }
 
-  final attendance = profile.attendanceStatus?.trim();
-  if (attendance != null && attendance.isNotEmpty) {
-    metadata.add('Attendance: $attendance');
-  } else {
-    metadata.add('Attendance: Not marked');
-  }
-
-  if (metadata.isNotEmpty) {
-    return metadata.join(' • ');
-  }
-
   final email = profile.email?.trim();
   if (email != null && email.isNotEmpty) {
-    return email;
+    metadata.add(email);
   }
 
-  return '';
+  return metadata.join(' • ');
+}
+
+class _AttendanceMeta {
+  final String label;
+  final Color textColor;
+  final Color backgroundColor;
+
+  const _AttendanceMeta({
+    required this.label,
+    required this.textColor,
+    required this.backgroundColor,
+  });
+}
+
+class _AttendanceBadge extends StatelessWidget {
+  final _AttendanceMeta meta;
+  final bool dense;
+
+  const _AttendanceBadge({
+    required this.meta,
+    this.dense = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final horizontalPadding = dense ? 8.0 : 10.0;
+    final verticalPadding = dense ? 4.0 : 6.0;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
+      decoration: BoxDecoration(
+        color: meta.backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: dense ? 6 : 8,
+            height: dense ? 6 : 8,
+            decoration: BoxDecoration(
+              color: meta.textColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          width5,
+          Text(
+            meta.label,
+            style: myTextstyle(
+              color: meta.textColor,
+              fontSize: dense ? 12 : 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+_AttendanceMeta _attendanceMetaFor(String? status) {
+  final trimmed = status?.trim();
+  if (trimmed == null || trimmed.isEmpty) {
+    return _AttendanceMeta(
+      label: 'Not Marked',
+      textColor: Colors.grey.shade700,
+      backgroundColor: Colors.grey.shade200,
+    );
+  }
+
+  final lower = trimmed.toLowerCase();
+
+  if (lower.contains('present')) {
+    return _AttendanceMeta(
+      label: 'Present',
+      textColor: Colors.green.shade700,
+      backgroundColor: Colors.green.shade50,
+    );
+  }
+
+  if (lower.contains('wfh')) {
+    return _AttendanceMeta(
+      label: 'WFH',
+      textColor: Colors.indigo.shade600,
+      backgroundColor: Colors.indigo.shade50,
+    );
+  }
+
+  if (lower.contains('remote')) {
+    return _AttendanceMeta(
+      label: 'Remote',
+      textColor: Colors.blue.shade700,
+      backgroundColor: Colors.blue.shade50,
+    );
+  }
+
+  if (lower.contains('leave')) {
+    return _AttendanceMeta(
+      label: 'On Leave',
+      textColor: Colors.orange.shade700,
+      backgroundColor: Colors.orange.shade50,
+    );
+  }
+
+  if (lower.contains('half')) {
+    return _AttendanceMeta(
+      label: 'Half Day',
+      textColor: Colors.amber.shade800,
+      backgroundColor: Colors.amber.shade100,
+    );
+  }
+
+  if (lower.contains('absent')) {
+    return _AttendanceMeta(
+      label: 'Absent',
+      textColor: Colors.red.shade700,
+      backgroundColor: Colors.red.shade50,
+    );
+  }
+
+  if (lower.contains('not checked')) {
+    return _AttendanceMeta(
+      label: 'Not Checked In',
+      textColor: Colors.grey.shade700,
+      backgroundColor: Colors.grey.shade200,
+    );
+  }
+
+  if (lower.contains('not marked')) {
+    return _AttendanceMeta(
+      label: 'Not Marked',
+      textColor: Colors.grey.shade700,
+      backgroundColor: Colors.grey.shade200,
+    );
+  }
+
+  return _AttendanceMeta(
+    label: trimmed,
+    textColor: Colors.grey.shade700,
+    backgroundColor: Colors.grey.shade200,
+  );
 }
