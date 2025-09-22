@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
+
 class LeadsListModel {
   final int? id;
   final int? slNo;
@@ -16,6 +18,7 @@ class LeadsListModel {
   final String? assignedTo; // UUID as String
   final String? draftStatus;
   final String? date;
+  final UserProfileModel? assignedProfile;
 
   const LeadsListModel({
     this.id,
@@ -33,6 +36,7 @@ class LeadsListModel {
     this.assignedTo,
     this.draftStatus,
     this.date,
+    this.assignedProfile,
   });
 
   /// CopyWith for immutability
@@ -52,6 +56,7 @@ class LeadsListModel {
     String? assignedTo,
     String? draftStatus,
     String? date,
+    UserProfileModel? assignedProfile,
   }) {
     return LeadsListModel(
       id: id ?? this.id,
@@ -69,11 +74,30 @@ class LeadsListModel {
       assignedTo: assignedTo ?? this.assignedTo,
       draftStatus: draftStatus ?? this.draftStatus,
       date: date ?? this.date,
+      assignedProfile: assignedProfile ?? this.assignedProfile,
     );
   }
 
   /// JSON → LeadsListModel
   factory LeadsListModel.fromJson(Map<String, dynamic> json) {
+    UserProfileModel? parseAssignedProfile(dynamic rawProfile) {
+      if (rawProfile is Map<String, dynamic>) {
+        return UserProfileModel.fromMap(rawProfile);
+      }
+
+      if (rawProfile is List && rawProfile.isNotEmpty) {
+        final first = rawProfile.first;
+        if (first is Map<String, dynamic>) {
+          return UserProfileModel.fromMap(first);
+        }
+      }
+
+      return null;
+    }
+
+    final dynamic assignedProfileJson =
+        json['assigned_profile'] ?? json['profiles'];
+
     return LeadsListModel(
       id: json['id'] as int?,
       createdAt: json['created_at'] != null
@@ -94,6 +118,7 @@ class LeadsListModel {
       assignedTo: json['assigned_to']?.toString(),
       draftStatus: json['draft_status'] as String?,
       date: json['date'] as String?,
+      assignedProfile: parseAssignedProfile(assignedProfileJson),
     );
   }
 

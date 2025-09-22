@@ -10,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LeadManagementRepo {
   final NetworkService _networkService;
 
+  static const String _leadWithAssignedProfileSelect =
+      '*, assigned_profile:${SupabaseTables.profiles}!${SupabaseTables.leadList}_assigned_to_fkey(*)';
+
   LeadManagementRepo(this._networkService);
 
   Future<bool> studentExists(String phone) async {
@@ -57,6 +60,7 @@ class LeadManagementRepo {
         },
         orderBy: "created_at",
         ascending: false,
+        columns: _leadWithAssignedProfileSelect,
       );
 
       log("Leads fetched: ${response.length}");
@@ -114,6 +118,7 @@ class LeadManagementRepo {
         table: SupabaseTables.leadList,
         orderBy: "created_at",
         ascending: false,
+        columns: _leadWithAssignedProfileSelect,
       );
       log(response.toString());
       return response
@@ -148,6 +153,7 @@ class LeadManagementRepo {
         },
         orderBy: "created_at",
         ascending: false,
+        columns: _leadWithAssignedProfileSelect,
       );
 
       log("Leads fetched for $date: ${response.length}");
@@ -181,6 +187,7 @@ class LeadManagementRepo {
         },
         orderBy: "created_at",
         ascending: false,
+        columns: _leadWithAssignedProfileSelect,
       );
 
       return response
@@ -206,6 +213,7 @@ class LeadManagementRepo {
         },
         orderBy: "created_at",
         ascending: false,
+        columns: _leadWithAssignedProfileSelect,
       );
 
       return response
