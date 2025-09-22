@@ -58,5 +58,9 @@ class LeadManagementDTO with _$LeadManagementDTO {
   @override
   // TODO: implement selectedLeadLocally
   LeadsListModel? get selectedLeadLocally => throw UnimplementedError();
+  
+  @override
+  // TODO: implement counsellors
+  List<UserProfileModel> get counsellors => throw UnimplementedError();
 
 }
