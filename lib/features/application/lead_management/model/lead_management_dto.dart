@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 
@@ -10,15 +11,16 @@ class LeadManagementDTO with _$LeadManagementDTO {
   const LeadManagementDTO._();
 
   const factory LeadManagementDTO({
-   @Default([]) List<LeadsListModel> leadsList,
-  @Default([]) List<LeadsListModel> filteredLeadsList,
-  LeadInfoModel? selectedLead,
-  LeadsListModel? selectedLeadLocally,
-  @Default('') String searchQuery,
-  @Default('') String filterSource,
-  @Default('') String filterStatus,
-  @Default('') String filterFreelancer,
-  @Default('') String filterLeadType,
+    @Default([]) List<LeadsListModel> leadsList,
+    @Default([]) List<LeadsListModel> filteredLeadsList,
+    LeadInfoModel? selectedLead,
+    LeadsListModel? selectedLeadLocally,
+    @Default('') String searchQuery,
+    @Default('') String filterSource,
+    @Default('') String filterStatus,
+    @Default('') String filterFreelancer,
+    @Default('') String filterLeadType,
+    @Default([]) List<UserProfileModel> counsellors,
   }) = _LeadManagementDTO;
   
   @override

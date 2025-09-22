@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
@@ -126,6 +127,54 @@ class LeadManagementRepo {
           .toList();
     } catch (e) {
       log("Fetch Leads Error: $e");
+      return [];
+    }
+  }
+
+  Future<List<UserProfileModel>> fetchCounsellors() async {
+    try {
+      final profilesResponse = await _networkService.pull(
+        table: SupabaseTables.profiles,
+        orderBy: 'diplay_name',
+      );
+
+      final profiles = profilesResponse
+          .map<UserProfileModel>((profile) => UserProfileModel.fromMap(profile))
+          .toList();
+
+      final attendanceByEmployee = <String, String>{};
+      try {
+        final today = DateTimeHelper.formatDate(DateTime.now());
+        final attendanceResponse = await _networkService.pull(
+          table: SupabaseTables.attendance,
+          filters: {'date': today},
+          orderBy: 'created_at',
+          ascending: false,
+        );
+
+        for (final record in attendanceResponse) {
+          final employeeId = (record['employee_id'] as String?)?.trim();
+          if (employeeId == null || employeeId.isEmpty) continue;
+
+          attendanceByEmployee.putIfAbsent(
+            employeeId,
+            () => (record['attendance_status'] as String?)?.trim() ?? '',
+          );
+        }
+      } catch (attendanceError, stackTrace) {
+        log('Attendance lookup failed: $attendanceError\n$stackTrace');
+      }
+
+      return profiles
+          .map(
+            (profile) => profile.copyWith(
+              attendanceStatus:
+                  attendanceByEmployee[profile.id?.trim() ?? ''],
+            ),
+          )
+          .toList();
+    } catch (e) {
+      log('Fetch Counsellors Error: $e');
       return [];
     }
   }

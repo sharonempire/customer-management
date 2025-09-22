@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/application/lead_management/model/lead_management_dto.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
@@ -56,6 +57,27 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       ref
           .read(snackbarServiceProvider)
           .showError(context, 'Failed to load leads: $e');
+    }
+  }
+
+  Future<List<UserProfileModel>> fetchCounsellors({
+    required BuildContext context,
+    bool forceRefresh = false,
+  }) async {
+    if (state.counsellors.isNotEmpty && !forceRefresh) {
+      return state.counsellors;
+    }
+
+    try {
+      final counsellors = await _leadManagementRepo.fetchCounsellors();
+      state = state.copyWith(counsellors: counsellors);
+      return counsellors;
+    } catch (e) {
+      log('fetchCounsellors error: $e');
+      ref
+          .read(snackbarServiceProvider)
+          .showError(context, 'Failed to load counsellors: $e');
+      return [];
     }
   }
 
