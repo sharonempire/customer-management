@@ -1,12 +1,10 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
-import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
-import 'package:management_software/features/presentation/pages/lead_management/popups/lead_details.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
+import 'package:management_software/features/presentation/pages/lead_management/widgets/current_follow_ups_view.dart';
+import 'package:management_software/features/presentation/pages/lead_management/widgets/new_enquiries_view.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/search_lead_widget.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart'
     show CommonAppbar;
@@ -31,6 +29,11 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
+      final tab = LeadTab.values[_tabController.index];
+      ref.read(leadTabProvider.notifier).state = tab;
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
@@ -40,9 +43,24 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final provider = ref.watch(leadMangementcontroller);
+    final selectedTab = ref.watch(leadTabProvider);
+    final targetIndex = LeadTab.values.indexOf(selectedTab);
+
+    if (_tabController.index != targetIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _tabController.index != targetIndex) {
+          _tabController.animateTo(targetIndex);
+        }
+      });
+    }
 
     return Scaffold(
       appBar: const PreferredSize(
@@ -97,6 +115,9 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                     ),
                     child: TabBar(
                       controller: _tabController,
+                      onTap: (index) => ref
+                          .read(leadTabProvider.notifier)
+                          .state = LeadTab.values[index],
                       tabs: const [
                         Tab(text: "Current Follow ups"),
                         Tab(text: "New Enquiries"),
@@ -116,11 +137,16 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                   ),
                 ),
                 height20,
-
-                if (_tabController.index == 0)
-                  LeadListingWidget(leadList: provider.filteredLeadsList)
-                else
-                  LeadListingWidget(leadList: provider.filteredLeadsList),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: selectedTab == LeadTab.currentFollowUps
+                      ? const CurrentFollowUpsView(
+                          key: ValueKey('current-follow-ups'),
+                        )
+                      : const NewEnquiriesView(
+                          key: ValueKey('new-enquiries'),
+                        ),
+                ),
               ],
             ),
           ),
@@ -128,182 +154,4 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
       ),
     );
   }
-}
-
-class LeadListingWidget extends ConsumerWidget {
-  final List<LeadsListModel> leadList;
-  const LeadListingWidget({super.key, required this.leadList});
-
-  void _showLeadDetails(BuildContext context, LeadsListModel lead) {
-    showDialog(
-      context: context,
-      builder: (context) => LeaadDetailsPopup(context: context),
-    );
-  }
-
-  TableRow _clickableRow(
-    BuildContext context,
-    LeadsListModel lead,
-    WidgetRef ref,
-  ) {
-    final assignedStaff =
-        (lead.assignedProfile?.displayName?.isNotEmpty ?? false)
-            ? lead.assignedProfile!.displayName!
-            : lead.assignedProfile?.email ?? lead.assignedTo ?? '';
-
-    return TableRow(
-      children: [
-        _clickableCell(context, lead, lead.slNo.toString().padLeft(4, '0')),
-        _clickableCell(context, lead, lead.name ?? ""),
-        _clickableCell(context, lead, lead.freelancerManager ?? ''),
-        _clickableCell(context, lead, lead.freelancer ?? ''),
-        _clickableCell(context, lead, lead.source ?? ''),
-        _clickableCell(context, lead, lead.phone.toString()),
-        _clickableCell(context, lead, lead.status ?? ''),
-        _clickableCell(context, lead, lead.followUp ?? ''),
-        _clickableCell(context, lead, lead.remark ?? ''),
-        _clickableCell(context, lead, assignedStaff),
-        actionCell(
-          "Edit",
-          onTap: () async {
-            await ref
-                .read(leadMangementcontroller.notifier)
-                .setLeadLocally(lead, context);
-            log(
-              'lead info logging from ui before the navigation : ${ref.read(leadMangementcontroller).selectedLead?.toJson()}',
-            );
-            context.go(
-              '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _clickableCell(
-    BuildContext context,
-    LeadsListModel lead,
-    String text,
-  ) {
-    return InkWell(
-      onTap: () => _showLeadDetails(context, lead),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(text, style: myTextstyle(fontSize: 13)),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(1),
-          1: FlexColumnWidth(2),
-          2: FlexColumnWidth(2),
-          3: FlexColumnWidth(2),
-          4: FlexColumnWidth(1.5),
-          5: FlexColumnWidth(2),
-          6: FlexColumnWidth(1.5),
-          7: FlexColumnWidth(2),
-          8: FlexColumnWidth(3),
-          9: FlexColumnWidth(2),
-          10: FlexColumnWidth(2),
-        },
-        border: TableBorder(
-          horizontalInside: BorderSide(color: Colors.grey.shade300, width: 1),
-          bottom: BorderSide(color: Colors.grey.shade300, width: 1),
-        ),
-        children: [
-          // Header Row
-          TableRow(
-            decoration: BoxDecoration(color: Colors.grey.shade100),
-            children: [
-              tableHeaderCell("Sl no"),
-              tableHeaderCell("Lead Name"),
-              tableHeaderCell("Freelancer Manager"),
-              tableHeaderCell("Freelancer"),
-              tableHeaderCell("Source"),
-              tableHeaderCell("Phone"),
-              tableHeaderCell("Status"),
-              tableHeaderCell("Follow-up Date"),
-              tableHeaderCell("Remark"),
-              tableHeaderCell("Assigned Staff"),
-              tableHeaderCell("Action"),
-            ],
-          ),
-          for (var lead in leadList) _clickableRow(context, lead, ref),
-        ],
-      ),
-    );
-  }
-}
-
-Widget tableHeaderCell(String text) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
-    child: Text(
-      text,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-        fontSize: 14,
-      ),
-    ),
-  );
-}
-
-Widget tableCell(String text) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Text(
-      text,
-      style: const TextStyle(color: Colors.black87, fontSize: 112),
-      overflow: TextOverflow.ellipsis,
-    ),
-  );
-}
-
-Widget statusCell(String status) {
-  Color color;
-  switch (status) {
-    case "Present":
-      color = Colors.green;
-      break;
-    case "Checked out":
-      color = Colors.orange;
-      break;
-    case "Absent":
-      color = Colors.red;
-      break;
-    default:
-      color = Colors.grey;
-  }
-
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Text(
-      status,
-      style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12),
-    ),
-  );
-}
-
-Widget actionCell(String label, {required VoidCallback onTap}) {
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: IconButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.blue,
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-        icon: Text(label),
-      ),
-    ),
-  );
 }

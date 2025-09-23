@@ -160,7 +160,10 @@ class _LeadFiltersWidgetState extends ConsumerState<LeadFiltersWidget> {
                   },
                   onClear: () {
                     setState(() => selectedTimePeriod = null);
-                    ref.read(leadMangementcontroller.notifier).applyFilters();
+                    final controller =
+                        ref.read(leadMangementcontroller.notifier);
+                    controller.clearDateFilter();
+                    controller.applyFilters();
                   },
                 ),
               ),

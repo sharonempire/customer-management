@@ -14,6 +14,36 @@ import 'package:management_software/shared/network/network_calls.dart';
 final infoCollectionProgression = StateProvider((ref) => 0);
 final fromNewLead = StateProvider((ref) => false);
 
+enum LeadTab { currentFollowUps, newEnquiries }
+
+final leadTabProvider = StateProvider<LeadTab>((ref) => LeadTab.currentFollowUps);
+
+class LeadDateFilter {
+  final DateTime? start;
+  final DateTime? end;
+
+  const LeadDateFilter({this.start, this.end});
+
+  LeadDateFilter copyWith({DateTime? start, DateTime? end}) {
+    return LeadDateFilter(
+      start: start ?? this.start,
+      end: end ?? this.end,
+    );
+  }
+}
+
+final leadDateFilterProvider = StateProvider<LeadDateFilter>((ref) {
+  return const LeadDateFilter();
+});
+
+final currentFollowUpsProvider = Provider<List<LeadsListModel>>((ref) {
+  final filter = ref.watch(leadDateFilterProvider);
+  final controller = ref.read(leadMangementcontroller.notifier);
+  // Ensure the provider rebuilds when the lead state changes
+  ref.watch(leadMangementcontroller);
+  return controller.currentFollowUps(filter: filter);
+});
+
 final leadMangementcontroller =
     StateNotifierProvider<LeadController, LeadManagementDTO>((ref) {
       final repository = LeadManagementRepo(ref.watch(networkServiceProvider));
@@ -26,6 +56,111 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
   LeadController(this.ref, this._leadManagementRepo)
     : super(const LeadManagementDTO());
+
+  void _replaceLeadList(List<LeadsListModel> leads) {
+    state = state.copyWith(leadsList: leads);
+    applyFilters();
+  }
+
+  void _updateDateFilter({DateTime? start, DateTime? end}) {
+    ref.read(leadDateFilterProvider.notifier).state =
+        LeadDateFilter(start: start, end: end);
+  }
+
+  void setLeadDateFilter({DateTime? start, DateTime? end}) {
+    _updateDateFilter(start: start, end: end);
+  }
+
+  void clearDateFilter() {
+    _updateDateFilter();
+  }
+
+  DateTime? _normalizeDate(DateTime? date) {
+    if (date == null) return null;
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  List<LeadsListModel> _applyCommonFilters(List<LeadsListModel> leads) {
+    var filtered = leads;
+
+    final query = state.searchQuery.trim();
+    if (query.isNotEmpty) {
+      final lowerQuery = query.toLowerCase();
+      filtered = filtered.where((lead) {
+        final nameMatch = lead.name?.toLowerCase().contains(lowerQuery) ?? false;
+        final emailMatch = lead.email?.toLowerCase().contains(lowerQuery) ?? false;
+        final phoneMatch = lead.phone?.toString().contains(lowerQuery) ?? false;
+        return nameMatch || emailMatch || phoneMatch;
+      }).toList();
+    }
+
+    if (state.filterSource.isNotEmpty) {
+      filtered = filtered
+          .where((lead) => lead.source == state.filterSource)
+          .toList();
+    }
+
+    if (state.filterStatus.isNotEmpty) {
+      filtered = filtered
+          .where((lead) => lead.status == state.filterStatus)
+          .toList();
+    }
+
+    if (state.filterFreelancer.isNotEmpty) {
+      filtered = filtered
+          .where((lead) => lead.freelancer == state.filterFreelancer)
+          .toList();
+    }
+
+    if (state.filterLeadType.isNotEmpty) {
+      filtered = filtered
+          .where((lead) => lead.draftStatus == state.filterLeadType)
+          .toList();
+    }
+
+    return filtered;
+  }
+
+  List<LeadsListModel> currentFollowUps({LeadDateFilter? filter}) {
+    final selectedFilter = filter ?? ref.read(leadDateFilterProvider);
+    final filteredLeads = state.filteredLeadsList;
+
+    final normalizedStart = _normalizeDate(selectedFilter.start);
+    final normalizedEnd = _normalizeDate(selectedFilter.end ?? selectedFilter.start);
+
+    bool withinRange(DateTime date) {
+      final normalized = _normalizeDate(date)!;
+      if (normalizedStart != null && normalizedEnd != null) {
+        return !normalized.isBefore(normalizedStart) &&
+            !normalized.isAfter(normalizedEnd);
+      }
+      if (normalizedStart != null) {
+        return !normalized.isBefore(normalizedStart);
+      }
+      if (normalizedEnd != null) {
+        return !normalized.isAfter(normalizedEnd);
+      }
+      return true;
+    }
+
+    final followUps = filteredLeads.where((lead) {
+      final followUpDate = DateTimeHelper.parseDate(lead.followUp);
+      if (followUpDate == null) {
+        return false;
+      }
+      return withinRange(followUpDate);
+    }).toList()
+      ..sort((a, b) {
+        final aDate = DateTimeHelper.parseDate(a.followUp);
+        final bDate = DateTimeHelper.parseDate(b.followUp);
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return aDate.compareTo(bDate);
+      });
+
+    return followUps;
+  }
 
   void increaseProgression() {
     ref.read(infoCollectionProgression.notifier).update((s) => s + 1);
@@ -48,7 +183,8 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   Future<void> fetchAllLeads({required BuildContext context}) async {
     try {
       final leads = await _leadManagementRepo.fetchAllLeads();
-      state = state.copyWith(leadsList: leads, filteredLeadsList: leads);
+      _replaceLeadList(leads);
+      clearDateFilter();
 
       ref.read(snackbarServiceProvider).showSuccess(context, 'Leads loaded');
       log('fetchAllLeads: loaded ${state.leadsList.length} leads');
@@ -96,7 +232,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }) async {
     try {
       final leads = await _leadManagementRepo.fetchLeadsByDate(date);
-      state = state.copyWith(filteredLeadsList: leads);
+      _replaceLeadList(leads);
+      final parsedDate = DateTimeHelper.parseDate(date);
+      setLeadDateFilter(start: parsedDate, end: parsedDate);
       ref
           .read(snackbarServiceProvider)
           .showSuccess(context, 'Leads for selected date loaded');
@@ -111,12 +249,13 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
   void clearFilters() {
     state = state.copyWith(
-      filteredLeadsList: state.leadsList,
       filterSource: '',
       filterStatus: '',
       filterLeadType: '',
       filterFreelancer: '',
     );
+    applyFilters();
+    clearDateFilter();
   }
 
   /// Fetch leads between two dates (inclusive)
@@ -130,7 +269,10 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
         startDate: start,
         endDate: end,
       );
-      state = state.copyWith(filteredLeadsList: leads);
+      _replaceLeadList(leads);
+      final startDate = DateTimeHelper.parseDate(start);
+      final endDate = DateTimeHelper.parseDate(end);
+      setLeadDateFilter(start: startDate, end: endDate);
       ref
           .read(snackbarServiceProvider)
           .showSuccess(context, 'Leads loaded for selected range');
@@ -377,40 +519,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }
 
   void applyFilters() {
-    List<LeadsListModel> leads = state.leadsList;
-
-    if (state.searchQuery.isNotEmpty) {
-      leads =
-          leads.where((lead) {
-            final q = state.searchQuery.toLowerCase();
-            return (lead.name?.toLowerCase().contains(q) ?? false) ||
-                (lead.email?.toLowerCase().contains(q) ?? false) ||
-                (lead.phone?.toString().contains(q) ?? false);
-          }).toList();
-    }
-
-    if (state.filterSource.isNotEmpty) {
-      leads = leads.where((lead) => lead.source == state.filterSource).toList();
-    }
-
-    if (state.filterStatus.isNotEmpty) {
-      leads = leads.where((lead) => lead.status == state.filterStatus).toList();
-    }
-
-    if (state.filterFreelancer.isNotEmpty) {
-      leads =
-          leads
-              .where((lead) => lead.freelancer == state.filterFreelancer)
-              .toList();
-    }
-
-    if (state.filterLeadType.isNotEmpty) {
-      leads =
-          leads
-              .where((lead) => lead.draftStatus == state.filterLeadType)
-              .toList();
-    }
-
+    final leads = _applyCommonFilters(state.leadsList);
     state = state.copyWith(filteredLeadsList: leads);
   }
 
