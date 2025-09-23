@@ -7,6 +7,7 @@ class CommonDateRangePicker extends StatelessWidget {
   final DateTimeRange? value;
   final void Function(DateTimeRange?) onChanged;
   final bool rounded;
+  final VoidCallback? onClear;
 
   const CommonDateRangePicker({
     super.key,
@@ -14,6 +15,7 @@ class CommonDateRangePicker extends StatelessWidget {
     this.value,
     required this.onChanged,
     this.rounded = true,
+    this.onClear,
   });
 
   @override
@@ -57,7 +59,21 @@ class CommonDateRangePicker extends StatelessWidget {
                 borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
-              suffixIcon: const Icon(Icons.date_range, size: 20),
+              suffixIcon: value != null && onClear != null
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          padding: EdgeInsets.zero,
+                          splashRadius: 18,
+                          tooltip: 'Clear selection',
+                          onPressed: onClear,
+                        ),
+                        const Icon(Icons.date_range, size: 20),
+                      ],
+                    )
+                  : const Icon(Icons.date_range, size: 20),
             ),
             child: Text(
               value != null

@@ -53,9 +53,29 @@ final leadMangementcontroller =
 class LeadController extends StateNotifier<LeadManagementDTO> {
   final LeadManagementRepo _leadManagementRepo;
   final Ref ref;
+  List<LeadsListModel> _allLeadsCache = const [];
 
   LeadController(this.ref, this._leadManagementRepo)
     : super(const LeadManagementDTO());
+
+  void _setActiveLeads(List<LeadsListModel> leads, {bool updateCache = false}) {
+    final safeLeads = List<LeadsListModel>.unmodifiable(leads);
+    if (updateCache) {
+      _allLeadsCache = safeLeads;
+    }
+    state = state.copyWith(leadsList: safeLeads);
+    applyFilters();
+  }
+
+  void clearDateFilter() {
+    _updateDateFilter();
+    if (_allLeadsCache.isNotEmpty) {
+      state = state.copyWith(
+        leadsList: List<LeadsListModel>.from(_allLeadsCache),
+      );
+    }
+    applyFilters();
+  }
 
   void _updateDateFilter({DateTime? start, DateTime? end}) {
     ref.read(leadDateFilterProvider.notifier).state =
@@ -170,7 +190,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   Future<void> fetchAllLeads({required BuildContext context}) async {
     try {
       final leads = await _leadManagementRepo.fetchAllLeads();
-      state = state.copyWith(leadsList: leads, filteredLeadsList: leads);
+      _setActiveLeads(leads, updateCache: true);
       _updateDateFilter();
 
       ref.read(snackbarServiceProvider).showSuccess(context, 'Leads loaded');
@@ -219,7 +239,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }) async {
     try {
       final leads = await _leadManagementRepo.fetchLeadsByDate(date);
-      state = state.copyWith(filteredLeadsList: leads);
+      _setActiveLeads(leads);
       final parsedDate = DateTimeHelper.parseDate(date);
       _updateDateFilter(start: parsedDate, end: parsedDate);
       ref
@@ -236,13 +256,13 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
   void clearFilters() {
     state = state.copyWith(
-      filteredLeadsList: state.leadsList,
       filterSource: '',
       filterStatus: '',
       filterLeadType: '',
       filterFreelancer: '',
+      searchQuery: '',
     );
-    _updateDateFilter();
+    clearDateFilter();
   }
 
   /// Fetch leads between two dates (inclusive)
@@ -256,7 +276,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
         startDate: start,
         endDate: end,
       );
-      state = state.copyWith(filteredLeadsList: leads);
+      _setActiveLeads(leads);
       final startDate = DateTimeHelper.parseDate(start);
       final endDate = DateTimeHelper.parseDate(end);
       _updateDateFilter(start: startDate, end: endDate);

@@ -156,11 +156,17 @@ class _LeadFiltersWidgetState extends ConsumerState<LeadFiltersWidget> {
                             ),
                           );
                     }
-                    setState(() => selectedTimePeriod = value);
+                    setState(() {
+                      selectedTimePeriod = value;
+                      selectedDateTimeRange = null;
+                    });
                   },
                   onClear: () {
-                    setState(() => selectedTimePeriod = null);
-                    ref.read(leadMangementcontroller.notifier).applyFilters();
+                    setState(() {
+                      selectedTimePeriod = null;
+                      selectedDateTimeRange = null;
+                    });
+                    ref.read(leadMangementcontroller.notifier).clearDateFilter();
                   },
                 ),
               ),
@@ -169,7 +175,12 @@ class _LeadFiltersWidgetState extends ConsumerState<LeadFiltersWidget> {
                 label: "Selected Date Range",
                 value: selectedDateTimeRange,
                 onChanged: (range) {
-                  setState(() => selectedDateTimeRange = range);
+                  setState(() {
+                    selectedDateTimeRange = range;
+                    if (range != null) {
+                      selectedTimePeriod = null;
+                    }
+                  });
                   if (range != null) {
                     ref
                         .read(leadMangementcontroller.notifier)
@@ -179,6 +190,13 @@ class _LeadFiltersWidgetState extends ConsumerState<LeadFiltersWidget> {
                           end: DateTimeHelper.formatDateForLead(range.end),
                         );
                   }
+                },
+                onClear: () {
+                  setState(() {
+                    selectedDateTimeRange = null;
+                    selectedTimePeriod = null;
+                  });
+                  ref.read(leadMangementcontroller.notifier).clearDateFilter();
                 },
               ),
             ],
