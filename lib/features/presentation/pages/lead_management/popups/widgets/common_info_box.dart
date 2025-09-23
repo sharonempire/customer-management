@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:management_software/features/application/attendance/controller/attendance_controller.dart';
 import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
@@ -27,6 +26,8 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
   late TextEditingController remarksController;
   String? selectedStatus;
   DateTime? selectedFollowUpDate;
+  String? selectedMentorId;
+  bool _isLoadingMentors = false;
 
   final List<String> statusOptions = [
     "Lead creation",
@@ -52,22 +53,96 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
     super.initState();
     remarksController = TextEditingController();
 
+    _syncWithSelectedLead();
+
     Future.microtask(() async {
-      final leadListDetails =
-          ref.watch(leadMangementcontroller).selectedLeadLocally;
-      if (leadListDetails != null) {
-        selectedStatus = leadListDetails.status;
-        selectedFollowUpDate = parseCustomDate(leadListDetails.followUp);
-        remarksController.text = leadListDetails.remark ?? "";
-      }
-      setState(() {});
+      await _ensureMentorsLoaded();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant CommonInfoBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.leadId != widget.leadId) {
+      _syncWithSelectedLead(shouldSetState: true);
+    }
   }
 
   @override
   void dispose() {
     remarksController.dispose();
     super.dispose();
+  }
+
+  void _syncWithSelectedLead({bool shouldSetState = false}) {
+    final leadListDetails =
+        ref.read(leadMangementcontroller).selectedLeadLocally;
+
+    final newStatus = leadListDetails?.status;
+    final newFollowUp = parseCustomDate(leadListDetails?.followUp);
+    final newRemarks = leadListDetails?.remark ?? '';
+    final assignedProfileId =
+        leadListDetails?.assignedProfile?.id?.trim() ?? '';
+    final assignedToId = leadListDetails?.assignedTo?.trim() ?? '';
+    final newMentorId = assignedProfileId.isNotEmpty
+        ? assignedProfileId
+        : (assignedToId.isNotEmpty ? assignedToId : null);
+
+    if (shouldSetState && mounted) {
+      setState(() {
+        selectedStatus = newStatus;
+        selectedFollowUpDate = newFollowUp;
+        selectedMentorId = newMentorId;
+      });
+      remarksController.text = newRemarks;
+    } else {
+      selectedStatus = newStatus;
+      selectedFollowUpDate = newFollowUp;
+      selectedMentorId = newMentorId;
+      remarksController.text = newRemarks;
+    }
+  }
+
+  Future<void> _ensureMentorsLoaded() async {
+    if (_isLoadingMentors) return;
+
+    final controller = ref.read(leadMangementcontroller.notifier);
+    final hasMentors =
+        ref.read(leadMangementcontroller).counsellors.isNotEmpty;
+    if (hasMentors) {
+      return;
+    }
+
+    setState(() => _isLoadingMentors = true);
+    try {
+      await controller.fetchCounsellors(context: context);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMentors = false);
+      }
+    }
+  }
+
+  String? _resolveMentorLabel(LeadsListModel? lead) {
+    if (lead == null) return null;
+    final profile = lead.assignedProfile;
+
+    final displayName = profile?.displayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+
+    final email = profile?.email?.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+
+    final assignedTo = lead.assignedTo?.trim();
+    if (assignedTo != null && assignedTo.isNotEmpty) {
+      return assignedTo;
+    }
+
+    return null;
   }
 
   Future<void> _saveDetails(BuildContext context, WidgetRef ref) async {
@@ -84,6 +159,9 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
             selectedFollowUpDate != null
                 ? DateTimeHelper.formatDateForLead(selectedFollowUpDate!)
                 : null,
+        assignedTo: selectedMentorId?.trim().isNotEmpty == true
+            ? selectedMentorId!.trim()
+            : null,
       );
 
       // Call update API
@@ -112,6 +190,17 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
 
   @override
   Widget build(BuildContext context) {
+    final leadState = ref.watch(leadMangementcontroller);
+    final assignedLead = leadState.selectedLeadLocally;
+    final mentors = List<UserProfileModel>.from(leadState.counsellors)
+      ..sort((a, b) {
+        final nameA = (a.displayName ?? a.email ?? '').toLowerCase();
+        final nameB = (b.displayName ?? b.email ?? '').toLowerCase();
+        return nameA.compareTo(nameB);
+      });
+
+    final fallbackMentorLabel = _resolveMentorLabel(assignedLead);
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Container(
@@ -154,25 +243,15 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
               children: [
                 MentorDropDown(
                   label: 'Mentor change',
-                  items:
-                      ref
-                          .read(attendanceServiceProvider)
-                          .allEmployeesAttendance!
-                          .where((attendance) {
-                            return attendance.attendanceStatus == "Present";
-                          })
-                          .toList()
-                          .map((e) => e.profile ?? UserProfileModel())
-                          .toList(),
-                  value:
-                      ref
-                          .watch(leadMangementcontroller)
-                          .selectedLeadLocally
-                          ?.assignedProfile
-                          ?.id
-                          .toString(),
+                  items: mentors,
+                  value: selectedMentorId,
+                  initialDisplayText: fallbackMentorLabel,
+                  isLoading: _isLoadingMentors,
+                  onTap: _ensureMentorsLoaded,
                   onChanged: (val) {
-                    setState(() => selectedStatus = val);
+                    setState(() {
+                      selectedMentorId = val?.trim();
+                    });
                   },
                 ),
               ],
@@ -231,6 +310,10 @@ class MentorDropDown extends StatelessWidget {
   /// returns the selected mentor id
   final void Function(String?) onChanged;
   final bool rounded;
+  final bool isLoading;
+  final String? initialDisplayText;
+  final String emptyLabel;
+  final Future<void> Function()? onTap;
 
   const MentorDropDown({
     super.key,
@@ -239,28 +322,50 @@ class MentorDropDown extends StatelessWidget {
     this.value,
     required this.onChanged,
     this.rounded = true,
+    this.isLoading = false,
+    this.initialDisplayText,
+    this.emptyLabel = 'No mentors available',
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final displayText = _displayText().trim();
+    final hasValue = value != null && value!.trim().isNotEmpty;
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: InkWell(
-          onTap: () async {
-            // show search using display name, but return the id
-            final selected = await showSearch<UserProfileModel?>(
-              context: context,
-              delegate: _MentorSearchDelegate(
-                items: items,
-                label: label,
-                initialQuery: _initialDisplayName(),
-              ),
-            );
-            if (selected != null) {
-              onChanged(selected.id); // <-- pass back the mentor's id
-            }
-          },
+          onTap: isLoading
+              ? null
+              : () async {
+                  if (onTap != null) {
+                    await onTap!();
+                  }
+
+                  if (items.isEmpty) {
+                    return;
+                  }
+
+                  final selected = await showSearch<UserProfileModel?>(
+                    context: context,
+                    delegate: _MentorSearchDelegate(
+                      items: items,
+                      label: label,
+                      initialQuery:
+                          displayText.isNotEmpty ? displayText : null,
+                    ),
+                  );
+                  if (selected != null) {
+                    final selectedId = selected.id?.trim();
+                    onChanged(
+                      selectedId != null && selectedId.isNotEmpty
+                          ? selectedId
+                          : null,
+                    );
+                  }
+                },
           borderRadius: BorderRadius.circular(rounded ? 10 : 0),
           child: InputDecorator(
             decoration: InputDecoration(
@@ -283,40 +388,106 @@ class MentorDropDown extends StatelessWidget {
                 borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
-              suffixIcon: const Icon(Icons.search),
+              suffixIcon: isLoading
+                  ? Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : const Icon(Icons.search),
             ),
-            isEmpty: value == null || value!.isEmpty,
-            child: Text(
-              _selectedDisplayName() ?? label,
-              style: myTextstyle(
-                fontSize: 16,
-                color:
-                    (value == null || value!.isEmpty)
-                        ? Colors.grey
-                        : Colors.black,
-              ),
-            ),
+            isEmpty: !hasValue && displayText.isEmpty,
+            child: _buildContent(displayText, hasValue),
           ),
         ),
       ),
     );
   }
 
-  String? _initialDisplayName() {
-    final match = items.firstWhere(
-      (e) => e.id == value,
-      orElse: () => UserProfileModel(),
-    );
+  Widget _buildContent(String displayText, bool hasValue) {
+    if (isLoading) {
+      return Text(
+        'Loading $label...',
+        style: myTextstyle(fontSize: 16, color: Colors.grey.shade600),
+        overflow: TextOverflow.ellipsis,
+      );
+    }
 
-    return match.id?.toString() ?? "";
+    if (items.isEmpty && displayText.isEmpty) {
+      return Text(
+        emptyLabel,
+        style: myTextstyle(fontSize: 16, color: Colors.grey),
+      );
+    }
+
+    final resolvedText = displayText.isNotEmpty ? displayText : label;
+
+    return Text(
+      resolvedText,
+      style: myTextstyle(
+        fontSize: 16,
+        color: hasValue ? Colors.black : Colors.grey,
+      ),
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
-  String? _selectedDisplayName() {
+  String _displayText() {
+    final selectedProfile = _selectedProfile();
+    if (selectedProfile != null) {
+      return _displayNameFor(selectedProfile);
+    }
+    return initialDisplayText ?? '';
+  }
+
+  UserProfileModel? _selectedProfile() {
+    if (value == null || value!.trim().isEmpty) {
+      return null;
+    }
+
     try {
-      return items.firstWhere((e) => e.id == value).displayName;
+      return items.firstWhere(
+        (element) => element.id?.trim() == value?.trim(),
+      );
     } catch (_) {
       return null;
     }
+  }
+
+  static String _displayNameFor(UserProfileModel profile) {
+    final name = profile.displayName?.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+
+    final email = profile.email?.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+
+    final phone = profile.phone?.toString();
+    if (phone != null && phone.isNotEmpty) {
+      return phone;
+    }
+
+    return profile.id ?? '';
+  }
+
+  static String? _secondaryLabel(UserProfileModel profile) {
+    final designation = profile.designation?.trim();
+    if (designation != null && designation.isNotEmpty) {
+      return designation;
+    }
+
+    final status = profile.attendanceStatus?.trim();
+    if (status != null && status.isNotEmpty) {
+      return 'Status: $status';
+    }
+
+    return null;
   }
 }
 
@@ -360,17 +531,25 @@ class _MentorSearchDelegate extends SearchDelegate<UserProfileModel?> {
 
   Widget _buildList(BuildContext context) {
     final q = query.toLowerCase().trim();
-    final filtered =
-        q.isEmpty
-              ? items
-              : items
-                  .where((e) => e.displayName!.toLowerCase().contains(q))
-                  .toList()
-          ..sort(
-            (a, b) => a.displayName!.toLowerCase().compareTo(
-              b.displayName!.toLowerCase(),
-            ),
-          );
+    final filtered = (q.isEmpty
+            ? List<UserProfileModel>.from(items)
+            : items
+                .where((profile) {
+                  final name =
+                      MentorDropDown._displayNameFor(profile).toLowerCase();
+                  final email = profile.email?.toLowerCase().trim() ?? '';
+                  final secondary =
+                      MentorDropDown._secondaryLabel(profile)?.toLowerCase() ?? '';
+                  return name.contains(q) ||
+                      email.contains(q) ||
+                      secondary.contains(q);
+                })
+                .toList())
+      ..sort(
+        (a, b) => MentorDropDown._displayNameFor(a)
+            .toLowerCase()
+            .compareTo(MentorDropDown._displayNameFor(b).toLowerCase()),
+      );
 
     if (filtered.isEmpty) {
       return Center(
@@ -386,8 +565,23 @@ class _MentorSearchDelegate extends SearchDelegate<UserProfileModel?> {
       separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (context, i) {
         final item = filtered[i];
+        final title = MentorDropDown._displayNameFor(item);
+        final subtitleParts = <String>[];
+
+        final email = item.email?.trim();
+        if (email != null && email.isNotEmpty) {
+          subtitleParts.add(email);
+        }
+
+        final secondary = MentorDropDown._secondaryLabel(item);
+        if (secondary != null && secondary.isNotEmpty) {
+          subtitleParts.add(secondary);
+        }
+
         return ListTile(
-          title: Text(item.displayName ?? ''),
+          title: Text(title),
+          subtitle:
+              subtitleParts.isEmpty ? null : Text(subtitleParts.join(' • ')),
           onTap: () => close(context, item),
         );
       },
