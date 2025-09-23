@@ -59,7 +59,7 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
     final userProfile = ref.watch(authControllerProvider);
     return OverlayEntry(
       builder:
-          (context) => Positioned(
+          (ctx) => Positioned(
             top: kToolbarHeight,
             right: 30,
             child: Material(
@@ -129,7 +129,6 @@ class _CommonAppbarState extends ConsumerState<CommonAppbar>
                                             userProfile.designation ?? '',
                                         phone: userProfile.phone.toString(),
                                         location: userProfile.location ?? '',
-                                                  
                                       ),
                                 );
                               },

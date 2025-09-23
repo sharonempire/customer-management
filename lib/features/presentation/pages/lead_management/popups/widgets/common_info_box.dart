@@ -84,9 +84,10 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
     final assignedProfileId =
         leadListDetails?.assignedProfile?.id?.trim() ?? '';
     final assignedToId = leadListDetails?.assignedTo?.trim() ?? '';
-    final newMentorId = assignedProfileId.isNotEmpty
-        ? assignedProfileId
-        : (assignedToId.isNotEmpty ? assignedToId : null);
+    final newMentorId =
+        assignedProfileId.isNotEmpty
+            ? assignedProfileId
+            : (assignedToId.isNotEmpty ? assignedToId : null);
 
     if (shouldSetState && mounted) {
       setState(() {
@@ -107,8 +108,7 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
     if (_isLoadingMentors) return;
 
     final controller = ref.read(leadMangementcontroller.notifier);
-    final hasMentors =
-        ref.read(leadMangementcontroller).counsellors.isNotEmpty;
+    final hasMentors = ref.read(leadMangementcontroller).counsellors.isNotEmpty;
     if (hasMentors) {
       return;
     }
@@ -159,9 +159,10 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
             selectedFollowUpDate != null
                 ? DateTimeHelper.formatDateForLead(selectedFollowUpDate!)
                 : null,
-        assignedTo: selectedMentorId?.trim().isNotEmpty == true
-            ? selectedMentorId!.trim()
-            : null,
+        assignedTo:
+            selectedMentorId?.trim().isNotEmpty == true
+                ? selectedMentorId!.trim()
+                : null,
       );
 
       // Call update API
@@ -303,11 +304,7 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
 class MentorDropDown extends StatelessWidget {
   final String label;
   final List<UserProfileModel> items;
-
-  /// selected mentor id
   final String? value;
-
-  /// returns the selected mentor id
   final void Function(String?) onChanged;
   final bool rounded;
   final bool isLoading;
@@ -337,35 +334,34 @@ class MentorDropDown extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: InkWell(
-          onTap: isLoading
-              ? null
-              : () async {
-                  if (onTap != null) {
-                    await onTap!();
-                  }
-
-                  if (items.isEmpty) {
-                    return;
-                  }
-
-                  final selected = await showSearch<UserProfileModel?>(
-                    context: context,
-                    delegate: _MentorSearchDelegate(
-                      items: items,
-                      label: label,
-                      initialQuery:
-                          displayText.isNotEmpty ? displayText : null,
-                    ),
-                  );
-                  if (selected != null) {
-                    final selectedId = selected.id?.trim();
-                    onChanged(
-                      selectedId != null && selectedId.isNotEmpty
-                          ? selectedId
-                          : null,
+          onTap:
+              isLoading
+                  ? null
+                  : () async {
+                    if (onTap != null) {
+                      await onTap!();
+                    }
+                    if (items.isEmpty) {
+                      return;
+                    }
+                    final selected = await showSearch<UserProfileModel?>(
+                      context: context,
+                      delegate: _MentorSearchDelegate(
+                        items: items,
+                        label: label,
+                        initialQuery:
+                            displayText.isNotEmpty ? displayText : null,
+                      ),
                     );
-                  }
-                },
+                    if (selected != null) {
+                      final selectedId = selected.id?.trim();
+                      onChanged(
+                        selectedId != null && selectedId.isNotEmpty
+                            ? selectedId
+                            : null,
+                      );
+                    }
+                  },
           borderRadius: BorderRadius.circular(rounded ? 10 : 0),
           child: InputDecorator(
             decoration: InputDecoration(
@@ -388,16 +384,17 @@ class MentorDropDown extends StatelessWidget {
                 borderRadius: BorderRadius.circular(rounded ? 10 : 0),
                 borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
-              suffixIcon: isLoading
-                  ? Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : const Icon(Icons.search),
+              suffixIcon:
+                  isLoading
+                      ? Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : const Icon(Icons.search),
             ),
             isEmpty: !hasValue && displayText.isEmpty,
             child: _buildContent(displayText, hasValue),
@@ -449,9 +446,7 @@ class MentorDropDown extends StatelessWidget {
     }
 
     try {
-      return items.firstWhere(
-        (element) => element.id?.trim() == value?.trim(),
-      );
+      return items.firstWhere((element) => element.id?.trim() == value?.trim());
     } catch (_) {
       return null;
     }
@@ -531,25 +526,25 @@ class _MentorSearchDelegate extends SearchDelegate<UserProfileModel?> {
 
   Widget _buildList(BuildContext context) {
     final q = query.toLowerCase().trim();
-    final filtered = (q.isEmpty
-            ? List<UserProfileModel>.from(items)
-            : items
-                .where((profile) {
-                  final name =
-                      MentorDropDown._displayNameFor(profile).toLowerCase();
-                  final email = profile.email?.toLowerCase().trim() ?? '';
-                  final secondary =
-                      MentorDropDown._secondaryLabel(profile)?.toLowerCase() ?? '';
-                  return name.contains(q) ||
-                      email.contains(q) ||
-                      secondary.contains(q);
-                })
-                .toList())
-      ..sort(
-        (a, b) => MentorDropDown._displayNameFor(a)
-            .toLowerCase()
-            .compareTo(MentorDropDown._displayNameFor(b).toLowerCase()),
-      );
+    final filtered =
+        (q.isEmpty
+              ? List<UserProfileModel>.from(items)
+              : items.where((profile) {
+                final name =
+                    MentorDropDown._displayNameFor(profile).toLowerCase();
+                final email = profile.email?.toLowerCase().trim() ?? '';
+                final secondary =
+                    MentorDropDown._secondaryLabel(profile)?.toLowerCase() ??
+                    '';
+                return name.contains(q) ||
+                    email.contains(q) ||
+                    secondary.contains(q);
+              }).toList())
+          ..sort(
+            (a, b) => MentorDropDown._displayNameFor(a).toLowerCase().compareTo(
+              MentorDropDown._displayNameFor(b).toLowerCase(),
+            ),
+          );
 
     if (filtered.isEmpty) {
       return Center(
@@ -568,9 +563,9 @@ class _MentorSearchDelegate extends SearchDelegate<UserProfileModel?> {
         final title = MentorDropDown._displayNameFor(item);
         final subtitleParts = <String>[];
 
-        final email = item.email?.trim();
-        if (email != null && email.isNotEmpty) {
-          subtitleParts.add(email);
+        final attendance = item.attendanceStatus?.trim();
+        if (attendance != null && attendance.isNotEmpty) {
+          subtitleParts.add(attendance);
         }
 
         final secondary = MentorDropDown._secondaryLabel(item);

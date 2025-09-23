@@ -133,23 +133,31 @@ class LeadManagementRepo {
 
   Future<List<UserProfileModel>> fetchCounsellors() async {
     try {
-      final profilesResponse = await _networkService.pull(
-        table: SupabaseTables.profiles,
-        orderBy: 'diplay_name',
+      final profilesResponse = List<Map<String, dynamic>>.from(
+        await _networkService.pull(
+          table: SupabaseTables.profiles,
+          orderBy: 'diplay_name',
+        ),
       );
 
-      final profiles = profilesResponse
-          .map<UserProfileModel>((profile) => UserProfileModel.fromMap(profile))
-          .toList();
+      final profiles =
+          profilesResponse
+              .map<UserProfileModel>(
+                (profile) => UserProfileModel.fromMap(profile),
+              )
+              .toList();
 
       final attendanceByEmployee = <String, String>{};
+
       try {
         final today = DateTimeHelper.formatDate(DateTime.now());
-        final attendanceResponse = await _networkService.pull(
-          table: SupabaseTables.attendance,
-          filters: {'date': today},
-          orderBy: 'created_at',
-          ascending: false,
+        final attendanceResponse = List<Map<String, dynamic>>.from(
+          await _networkService.pull(
+            table: SupabaseTables.attendance,
+            filters: {'date': today},
+            orderBy: 'created_at',
+            ascending: false,
+          ),
         );
 
         for (final record in attendanceResponse) {
@@ -165,14 +173,18 @@ class LeadManagementRepo {
         log('Attendance lookup failed: $attendanceError\n$stackTrace');
       }
 
-      return profiles
-          .map(
-            (profile) => profile.copyWith(
-              attendanceStatus:
-                  attendanceByEmployee[profile.id?.trim() ?? ''],
-            ),
-          )
-          .toList();
+      final result =
+          profiles
+              .map<UserProfileModel>(
+                (profile) => profile.copyWith(
+                  attendanceStatus:
+                      attendanceByEmployee[profile.id?.trim() ?? ''],
+                ),
+              )
+              .toList();
+
+      log(result.map((e) => e.toJson()).toString());
+      return List<UserProfileModel>.from(result);
     } catch (e) {
       log('Fetch Counsellors Error: $e');
       return [];
