@@ -14,9 +14,11 @@ import 'package:management_software/shared/network/network_calls.dart';
 final infoCollectionProgression = StateProvider((ref) => 0);
 final fromNewLead = StateProvider((ref) => false);
 
-enum LeadTab { currentFollowUps, newEnquiries }
+enum LeadTab { currentFollowUps, drafts, newEnquiries }
 
-final leadTabProvider = StateProvider<LeadTab>((ref) => LeadTab.currentFollowUps);
+final leadTabProvider = StateProvider<LeadTab>(
+  (ref) => LeadTab.currentFollowUps,
+);
 
 class LeadDateFilter {
   final DateTime? start;
@@ -25,10 +27,7 @@ class LeadDateFilter {
   const LeadDateFilter({this.start, this.end});
 
   LeadDateFilter copyWith({DateTime? start, DateTime? end}) {
-    return LeadDateFilter(
-      start: start ?? this.start,
-      end: end ?? this.end,
-    );
+    return LeadDateFilter(start: start ?? this.start, end: end ?? this.end);
   }
 }
 
@@ -44,6 +43,27 @@ final currentFollowUpsProvider = Provider<List<LeadsListModel>>((ref) {
   return controller.currentFollowUps(filter: filter);
 });
 
+class DraftLead {
+  final LeadsListModel lead;
+  final LeadCallLog latestCall;
+  final DateTime latestCallDate;
+  final int totalCalls;
+
+  const DraftLead({
+    required this.lead,
+    required this.latestCall,
+    required this.latestCallDate,
+    required this.totalCalls,
+  });
+}
+
+final draftLeadsProvider = Provider<List<DraftLead>>((ref) {
+  final filter = ref.watch(leadDateFilterProvider);
+  ref.watch(leadMangementcontroller);
+  final controller = ref.read(leadMangementcontroller.notifier);
+  return controller.draftLeads(filter: filter);
+});
+
 final leadMangementcontroller =
     StateNotifierProvider<LeadController, LeadManagementDTO>((ref) {
       final repository = LeadManagementRepo(ref.watch(networkServiceProvider));
@@ -54,6 +74,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   final LeadManagementRepo _leadManagementRepo;
   final Ref ref;
   List<LeadsListModel> _allLeadsCache = const [];
+  Map<int, List<LeadCallLog>> _callLogsByLeadId = <int, List<LeadCallLog>>{};
 
   LeadController(this.ref, this._leadManagementRepo)
     : super(const LeadManagementDTO());
@@ -78,8 +99,10 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }
 
   void _updateDateFilter({DateTime? start, DateTime? end}) {
-    ref.read(leadDateFilterProvider.notifier).state =
-        LeadDateFilter(start: start, end: end);
+    ref.read(leadDateFilterProvider.notifier).state = LeadDateFilter(
+      start: start,
+      end: end,
+    );
   }
 
   DateTime? _normalizeDate(DateTime? date) {
@@ -93,39 +116,93 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     final query = state.searchQuery.trim();
     if (query.isNotEmpty) {
       final lowerQuery = query.toLowerCase();
-      filtered = filtered.where((lead) {
-        final nameMatch = lead.name?.toLowerCase().contains(lowerQuery) ?? false;
-        final emailMatch = lead.email?.toLowerCase().contains(lowerQuery) ?? false;
-        final phoneMatch = lead.phone?.toString().contains(lowerQuery) ?? false;
-        return nameMatch || emailMatch || phoneMatch;
-      }).toList();
+      filtered =
+          filtered.where((lead) {
+            final nameMatch =
+                lead.name?.toLowerCase().contains(lowerQuery) ?? false;
+            final emailMatch =
+                lead.email?.toLowerCase().contains(lowerQuery) ?? false;
+            final phoneMatch =
+                lead.phone?.toString().contains(lowerQuery) ?? false;
+            return nameMatch || emailMatch || phoneMatch;
+          }).toList();
     }
 
     if (state.filterSource.isNotEmpty) {
-      filtered = filtered
-          .where((lead) => lead.source == state.filterSource)
-          .toList();
+      filtered =
+          filtered.where((lead) => lead.source == state.filterSource).toList();
     }
 
     if (state.filterStatus.isNotEmpty) {
-      filtered = filtered
-          .where((lead) => lead.status == state.filterStatus)
-          .toList();
+      filtered =
+          filtered.where((lead) => lead.status == state.filterStatus).toList();
     }
 
     if (state.filterFreelancer.isNotEmpty) {
-      filtered = filtered
-          .where((lead) => lead.freelancer == state.filterFreelancer)
-          .toList();
+      filtered =
+          filtered
+              .where((lead) => lead.freelancer == state.filterFreelancer)
+              .toList();
     }
 
     if (state.filterLeadType.isNotEmpty) {
-      filtered = filtered
-          .where((lead) => lead.draftStatus == state.filterLeadType)
-          .toList();
+      filtered =
+          filtered
+              .where((lead) => lead.draftStatus == state.filterLeadType)
+              .toList();
     }
 
     return filtered;
+  }
+
+  DateTime? _extractCallLogDate(LeadCallLog log) {
+    return log.callDateTime ??
+        log.endTime ??
+        log.startTime ??
+        DateTimeHelper.parseDate(log.callDateLabel);
+  }
+
+  LeadCallLog? _latestCallLog(List<LeadCallLog> callLogs) {
+    LeadCallLog? latest;
+    DateTime? latestDate;
+    for (final log in callLogs) {
+      final callDate = _extractCallLogDate(log);
+      if (callDate == null) continue;
+      if (latestDate == null || callDate.isAfter(latestDate)) {
+        latest = log;
+        latestDate = callDate;
+      }
+    }
+    return latest;
+  }
+
+  Future<void> _loadCallLogs(List<LeadsListModel> leads) async {
+    try {
+      if (leads.isEmpty) {
+        _callLogsByLeadId = <int, List<LeadCallLog>>{};
+        return;
+      }
+
+      final callLogs = await _leadManagementRepo.fetchLeadCallLogs();
+      if (callLogs.isEmpty) {
+        _callLogsByLeadId = <int, List<LeadCallLog>>{};
+        return;
+      }
+
+      final sanitized = <int, List<LeadCallLog>>{};
+      callLogs.forEach((id, logs) {
+        if (logs != null && logs.isNotEmpty) {
+          sanitized[id] = List<LeadCallLog>.unmodifiable(logs);
+        }
+      });
+
+      _callLogsByLeadId = sanitized;
+    } catch (e, stackTrace) {
+      log('_loadCallLogs error: $e\n$stackTrace');
+      _callLogsByLeadId = <int, List<LeadCallLog>>{};
+    } finally {
+      applyFilters();
+    }
   }
 
   List<LeadsListModel> currentFollowUps({LeadDateFilter? filter}) {
@@ -133,7 +210,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     final filteredLeads = _applyCommonFilters(state.leadsList);
 
     final normalizedStart = _normalizeDate(selectedFilter?.start);
-    final normalizedEnd = _normalizeDate(selectedFilter?.end ?? selectedFilter?.start);
+    final normalizedEnd = _normalizeDate(
+      selectedFilter?.end ?? selectedFilter?.start,
+    );
 
     bool withinRange(DateTime date) {
       final normalized = _normalizeDate(date)!;
@@ -150,23 +229,89 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       return true;
     }
 
-    final followUps = filteredLeads.where((lead) {
-      final followUpDate = DateTimeHelper.parseDate(lead.followUp);
-      if (followUpDate == null) {
-        return false;
-      }
-      return withinRange(followUpDate);
-    }).toList()
-      ..sort((a, b) {
-        final aDate = DateTimeHelper.parseDate(a.followUp);
-        final bDate = DateTimeHelper.parseDate(b.followUp);
-        if (aDate == null && bDate == null) return 0;
-        if (aDate == null) return 1;
-        if (bDate == null) return -1;
-        return aDate.compareTo(bDate);
-      });
+    final followUps =
+        filteredLeads.where((lead) {
+            final followUpDate = DateTimeHelper.parseDate(lead.followUp);
+            if (followUpDate == null) {
+              return false;
+            }
+            return withinRange(followUpDate);
+          }).toList()
+          ..sort((a, b) {
+            final aDate = DateTimeHelper.parseDate(a.followUp);
+            final bDate = DateTimeHelper.parseDate(b.followUp);
+            if (aDate == null && bDate == null) return 0;
+            if (aDate == null) return 1;
+            if (bDate == null) return -1;
+            return aDate.compareTo(bDate);
+          });
 
     return followUps;
+  }
+
+  List<DraftLead> draftLeads({LeadDateFilter? filter}) {
+    final selectedFilter = filter ?? ref.read(leadDateFilterProvider);
+    final filteredLeads = _applyCommonFilters(state.leadsList);
+
+    final normalizedStart = _normalizeDate(selectedFilter?.start);
+    final normalizedEnd = _normalizeDate(
+      selectedFilter?.end ?? selectedFilter?.start,
+    );
+
+    bool withinRange(DateTime date) {
+      final normalized = _normalizeDate(date)!;
+      if (normalizedStart != null && normalizedEnd != null) {
+        return !normalized.isBefore(normalizedStart) &&
+            !normalized.isAfter(normalizedEnd);
+      }
+      if (normalizedStart != null) {
+        return !normalized.isBefore(normalizedStart);
+      }
+      if (normalizedEnd != null) {
+        return !normalized.isAfter(normalizedEnd);
+      }
+      return true;
+    }
+
+    final drafts = <DraftLead>[];
+
+    for (final lead in filteredLeads) {
+      final id = lead.id;
+      if (id == null) continue;
+
+      final normalizedStatus =
+          (lead.status ?? '')
+              .toLowerCase()
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+      if (normalizedStatus == 'course sent') {
+        continue;
+      }
+
+      final callLogs = _callLogsByLeadId[id];
+      if (callLogs == null || callLogs.isEmpty) continue;
+
+      final latestCall = _latestCallLog(callLogs);
+      if (latestCall == null) continue;
+
+      final callDateTime = _extractCallLogDate(latestCall);
+      if (callDateTime == null) continue;
+
+      if (!withinRange(callDateTime)) continue;
+
+      drafts.add(
+        DraftLead(
+          lead: lead,
+          latestCall: latestCall,
+          latestCallDate: callDateTime,
+          totalCalls: callLogs.length,
+        ),
+      );
+    }
+
+    drafts.sort((a, b) => b.latestCallDate.compareTo(a.latestCallDate));
+
+    return drafts;
   }
 
   void increaseProgression() {
@@ -191,6 +336,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     try {
       final leads = await _leadManagementRepo.fetchAllLeads();
       _setActiveLeads(leads, updateCache: true);
+      await _loadCallLogs(leads);
       _updateDateFilter();
 
       ref.read(snackbarServiceProvider).showSuccess(context, 'Leads loaded');
@@ -240,6 +386,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     try {
       final leads = await _leadManagementRepo.fetchLeadsByDate(date);
       _setActiveLeads(leads);
+      await _loadCallLogs(leads);
       final parsedDate = DateTimeHelper.parseDate(date);
       _updateDateFilter(start: parsedDate, end: parsedDate);
       ref
@@ -277,6 +424,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
         endDate: end,
       );
       _setActiveLeads(leads);
+      await _loadCallLogs(leads);
       final startDate = DateTimeHelper.parseDate(start);
       final endDate = DateTimeHelper.parseDate(end);
       _updateDateFilter(start: startDate, end: endDate);

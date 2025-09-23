@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_list_table.dart';
+import 'package:management_software/shared/consts/color_consts.dart';
 
 class CurrentFollowUpsView extends ConsumerWidget {
   const CurrentFollowUpsView({super.key});
@@ -16,6 +17,9 @@ class CurrentFollowUpsView extends ConsumerWidget {
       );
     }
 
-    return LeadListTable(leads: followUps);
+    return LeadListTable(
+      leads: followUps,
+      rowBackgroundColor: ColorConsts.greyContainer,
+    );
   }
 }

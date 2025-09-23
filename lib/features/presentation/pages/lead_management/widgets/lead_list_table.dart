@@ -9,9 +9,22 @@ import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
 class LeadListTable extends ConsumerWidget {
-  const LeadListTable({super.key, required this.leads});
+  const LeadListTable({
+    super.key,
+    required this.leads,
+    this.rowBackgroundColor,
+    this.followUpTextBuilder,
+    this.remarkTextBuilder,
+    this.followUpHeaderLabel = 'Follow-up Date',
+    this.remarkHeaderLabel = 'Remark',
+  });
 
   final List<LeadsListModel> leads;
+  final Color? rowBackgroundColor;
+  final String Function(LeadsListModel lead)? followUpTextBuilder;
+  final String Function(LeadsListModel lead)? remarkTextBuilder;
+  final String followUpHeaderLabel;
+  final String remarkHeaderLabel;
 
   void _showLeadDetails(BuildContext context, LeadsListModel lead) {
     showDialog(
@@ -34,27 +47,34 @@ class LeadListTable extends ConsumerWidget {
     return followUp;
   }
 
-  TableRow _buildRow(
-    BuildContext context,
-    LeadsListModel lead,
-    WidgetRef ref,
-  ) {
+  TableRow _buildRow(BuildContext context, LeadsListModel lead, WidgetRef ref) {
     final assignedStaff =
         (lead.assignedProfile?.displayName?.isNotEmpty ?? false)
             ? lead.assignedProfile!.displayName!
             : lead.assignedProfile?.email ?? lead.assignedTo ?? '';
+    final followUpText =
+        followUpTextBuilder?.call(lead) ?? _formatFollowUp(lead);
+    final remarkText = remarkTextBuilder?.call(lead) ?? (lead.remark ?? '');
 
     return TableRow(
+      decoration:
+          rowBackgroundColor != null
+              ? BoxDecoration(color: rowBackgroundColor)
+              : null,
       children: [
-        _clickableCell(context, lead, lead.slNo?.toString().padLeft(4, '0') ?? ''),
+        _clickableCell(
+          context,
+          lead,
+          lead.slNo?.toString().padLeft(4, '0') ?? '',
+        ),
         _clickableCell(context, lead, lead.name ?? ''),
         _clickableCell(context, lead, lead.freelancerManager ?? ''),
         _clickableCell(context, lead, lead.freelancer ?? ''),
         _clickableCell(context, lead, lead.source ?? ''),
         _clickableCell(context, lead, lead.phone?.toString() ?? ''),
         _clickableCell(context, lead, lead.status ?? ''),
-        _clickableCell(context, lead, _formatFollowUp(lead)),
-        _clickableCell(context, lead, lead.remark ?? ''),
+        _clickableCell(context, lead, followUpText),
+        _clickableCell(context, lead, remarkText),
         _clickableCell(context, lead, assignedStaff),
         _actionCell(
           context,
@@ -98,7 +118,10 @@ class LeadListTable extends ConsumerWidget {
           onPressed: onTap,
           style: TextButton.styleFrom(
             foregroundColor: Colors.blue,
-            textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            textStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           child: Text(label),
         ),
@@ -107,7 +130,7 @@ class LeadListTable extends ConsumerWidget {
   }
 
   TableRow _headerRow() {
-    const headers = [
+    final headers = [
       'Sl no',
       'Lead Name',
       'Freelancer Manager',
@@ -115,8 +138,8 @@ class LeadListTable extends ConsumerWidget {
       'Source',
       'Phone',
       'Status',
-      'Follow-up Date',
-      'Remark',
+      followUpHeaderLabel,
+      remarkHeaderLabel,
       'Assigned Staff',
       'Action',
     ];

@@ -131,6 +131,35 @@ class LeadManagementRepo {
     }
   }
 
+  Future<Map<int, List<LeadCallLog>>> fetchLeadCallLogs() async {
+    try {
+      final response = await _networkService.pull(
+        table: SupabaseTables.leadInfo,
+        columns: 'id, call_info',
+      );
+
+      final result = <int, List<LeadCallLog>>{};
+
+      for (final record in response) {
+        try {
+          final info = LeadInfoModel.fromJson(record);
+          final id = info.id;
+          final calls = info.callInfo;
+          if (id != null && calls != null && calls.isNotEmpty) {
+            result[id] = List<LeadCallLog>.unmodifiable(calls);
+          }
+        } catch (e) {
+          log('Call log parse error: $e');
+        }
+      }
+
+      return result;
+    } catch (e) {
+      log('Fetch Call Logs Error: $e');
+      return {};
+    }
+  }
+
   Future<List<UserProfileModel>> fetchCounsellors() async {
     try {
       final profilesResponse = List<Map<String, dynamic>>.from(

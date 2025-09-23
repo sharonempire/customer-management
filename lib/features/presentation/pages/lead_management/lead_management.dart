@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/current_follow_ups_view.dart';
+import 'package:management_software/features/presentation/pages/lead_management/widgets/drafts_view.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/new_enquiries_view.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/search_lead_widget.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart'
@@ -28,7 +29,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: LeadTab.values.length, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
       final tab = LeadTab.values[_tabController.index];
@@ -60,6 +61,21 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
           _tabController.animateTo(targetIndex);
         }
       });
+    }
+
+    late final Widget tabContent;
+    switch (selectedTab) {
+      case LeadTab.currentFollowUps:
+        tabContent = const CurrentFollowUpsView(
+          key: ValueKey('current-follow-ups'),
+        );
+        break;
+      case LeadTab.drafts:
+        tabContent = const DraftsView(key: ValueKey('drafts'));
+        break;
+      case LeadTab.newEnquiries:
+        tabContent = const NewEnquiriesView(key: ValueKey('new-enquiries'));
+        break;
     }
 
     return Scaffold(
@@ -102,12 +118,12 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                 height20,
                 const LeadFiltersWidget(),
                 height10,
-           
+
                 height20,
                 Center(
                   child: Container(
                     height: 50,
-                    width: screenWidth / 2.5,
+                    width: screenWidth * 0.6,
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: ColorConsts.backgroundColorScaffold,
@@ -115,11 +131,13 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                     ),
                     child: TabBar(
                       controller: _tabController,
-                      onTap: (index) => ref
-                          .read(leadTabProvider.notifier)
-                          .state = LeadTab.values[index],
+                      onTap:
+                          (index) =>
+                              ref.read(leadTabProvider.notifier).state =
+                                  LeadTab.values[index],
                       tabs: const [
                         Tab(text: "Current Follow ups"),
+                        Tab(text: "Drafts"),
                         Tab(text: "New Enquiries"),
                       ],
                       indicator: BoxDecoration(
@@ -139,13 +157,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                 height20,
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  child: selectedTab == LeadTab.currentFollowUps
-                      ? const CurrentFollowUpsView(
-                          key: ValueKey('current-follow-ups'),
-                        )
-                      : const NewEnquiriesView(
-                          key: ValueKey('new-enquiries'),
-                        ),
+                  child: tabContent,
                 ),
               ],
             ),
