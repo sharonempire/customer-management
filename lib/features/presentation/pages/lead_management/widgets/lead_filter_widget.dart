@@ -5,11 +5,27 @@ import 'package:management_software/features/presentation/pages/lead_management/
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/date_time_helper.dart';
 
-class LeadFiltersWidget extends ConsumerWidget {
+class LeadFiltersWidget extends ConsumerStatefulWidget {
   const LeadFiltersWidget({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeadFiltersWidget> createState() => _LeadFiltersWidgetState();
+}
+
+class _LeadFiltersWidgetState extends ConsumerState<LeadFiltersWidget> {
+  DateTimeRange? selectedDateTimeRange;
+  String? selectedTimePeriod;
+
+  final List<String> timePeriodList = [
+    "Today",
+    "Yesterday",
+    "This Week",
+    "Last Week",
+    "This Month",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     final leadState = ref.watch(leadMangementcontroller);
 
     return Container(
@@ -110,15 +126,10 @@ class LeadFiltersWidget extends ConsumerWidget {
               Expanded(
                 child: _buildDropdownWithClear(
                   label: "Period",
-                  value: null,
-                  items: [
-                    "Today",
-                    "Yesterday",
-                    "This Week",
-                    "Last Week",
-                    "This Month",
-                  ],
+                  value: selectedTimePeriod,
+                  items: timePeriodList,
                   onChanged: (value) {
+                    if (value == null) return;
                     if (value == "Today") {
                       ref
                           .read(leadMangementcontroller.notifier)
@@ -141,16 +152,16 @@ class LeadFiltersWidget extends ConsumerWidget {
                           .fetchLeadsByDate(
                             context: context,
                             date: DateTimeHelper.formatDateForLead(
-                              DateTime(
-                                DateTime.now().year,
-                                DateTime.now().month,
-                                DateTime.now().day - 1,
-                              ),
+                              DateTime.now().subtract(const Duration(days: 1)),
                             ),
                           );
                     }
+                    setState(() => selectedTimePeriod = value);
                   },
-                  onClear: () {},
+                  onClear: () {
+                    setState(() => selectedTimePeriod = null);
+                    ref.read(leadMangementcontroller.notifier).applyFilters();
+                  },
                 ),
               ),
               width10,
@@ -158,18 +169,16 @@ class LeadFiltersWidget extends ConsumerWidget {
                 label: "Selected Date Range",
                 value: selectedDateTimeRange,
                 onChanged: (range) {
-                  selectedDateTimeRange = range;
-                  ref
-                      .read(leadMangementcontroller.notifier)
-                      .fetchLeadsByRange(
-                        context: context,
-                        start: DateTimeHelper.formatDateForLead(
-                          range?.start ?? DateTime.now(),
-                        ),
-                        end: DateTimeHelper.formatDateForLead(
-                          range?.end ?? DateTime.now(),
-                        ),
-                      );
+                  setState(() => selectedDateTimeRange = range);
+                  if (range != null) {
+                    ref
+                        .read(leadMangementcontroller.notifier)
+                        .fetchLeadsByRange(
+                          context: context,
+                          start: DateTimeHelper.formatDateForLead(range.start),
+                          end: DateTimeHelper.formatDateForLead(range.end),
+                        );
+                  }
                 },
               ),
             ],
@@ -181,11 +190,13 @@ class LeadFiltersWidget extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               ElevatedButton.icon(
-                onPressed:
-                    () =>
-                        ref
-                            .read(leadMangementcontroller.notifier)
-                            .clearFilters(),
+                onPressed: () {
+                  ref.read(leadMangementcontroller.notifier).clearFilters();
+                  setState(() {
+                    selectedTimePeriod = null;
+                    selectedDateTimeRange = null;
+                  });
+                },
                 icon: const Icon(Icons.clear),
                 label: const Text("Clear All Filters"),
               ),
@@ -221,5 +232,3 @@ class LeadFiltersWidget extends ConsumerWidget {
     );
   }
 }
-
-DateTimeRange? selectedDateTimeRange;
