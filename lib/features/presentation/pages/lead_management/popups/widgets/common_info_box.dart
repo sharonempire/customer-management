@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
+import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/common_date_picker.dart';
+import 'package:management_software/features/presentation/pages/lead_management/popups/widgets/lead_call_history_section.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart'
     show PrimaryButton;
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
@@ -192,6 +194,9 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
   @override
   Widget build(BuildContext context) {
     final leadState = ref.watch(leadMangementcontroller);
+    final callHistory =
+        leadState.selectedLead?.callInfo ?? const <LeadCallLog>[];
+    final hasCallHistory = callHistory.isNotEmpty;
     final assignedLead = leadState.selectedLeadLocally;
     final mentors = List<UserProfileModel>.from(leadState.counsellors)
       ..sort((a, b) {
@@ -294,6 +299,12 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
                 ),
               ],
             ),
+            if (hasCallHistory) ...[
+              height20,
+              const Divider(height: 32, thickness: 0.8),
+              height20,
+              LeadCallHistorySection(callLogs: callHistory),
+            ],
           ],
         ),
       ),

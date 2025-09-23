@@ -9,6 +9,7 @@ class LeadInfoModel {
   BudgetInfo? budgetInfo;
   Preferences? preferences;
   EnglishProficiency? englishProficiency;
+  List<LeadCallLog>? callInfo;
 
   LeadInfoModel({
     this.id,
@@ -19,6 +20,7 @@ class LeadInfoModel {
     this.budgetInfo,
     this.preferences,
     this.englishProficiency,
+    this.callInfo,
   });
 
   LeadInfoModel copyWith({
@@ -30,6 +32,7 @@ class LeadInfoModel {
     BudgetInfo? budgetInfo,
     Preferences? preferences,
     EnglishProficiency? englishProficiency,
+    List<LeadCallLog>? callInfo,
   }) {
     return LeadInfoModel(
       id: id ?? this.id,
@@ -40,6 +43,7 @@ class LeadInfoModel {
       budgetInfo: budgetInfo ?? this.budgetInfo,
       preferences: preferences ?? this.preferences,
       englishProficiency: englishProficiency ?? this.englishProficiency,
+      callInfo: callInfo ?? this.callInfo,
     );
   }
 
@@ -53,6 +57,7 @@ class LeadInfoModel {
     final budgetMap = _ensureMap(json['budget_info']);
     final prefMap = _ensureMap(json['preferences']);
     final englishMap = _ensureMap(json['english_proficiency']);
+    final callInfoList = _ensureList(json['call_info']);
 
     return LeadInfoModel(
       id: _toInt(json['id']),
@@ -68,6 +73,7 @@ class LeadInfoModel {
       preferences: prefMap != null ? Preferences.fromJson(prefMap) : null,
       englishProficiency:
           englishMap != null ? EnglishProficiency.fromJson(englishMap) : null,
+      callInfo: callInfoList?.map((m) => LeadCallLog.fromJson(m)).toList(),
     );
   }
 
@@ -88,6 +94,9 @@ class LeadInfoModel {
     if (preferences != null) map['preferences'] = preferences!.toJson();
     if (englishProficiency != null) {
       map['english_proficiency'] = englishProficiency!.toJson();
+    }
+    if (callInfo != null) {
+      map['call_info'] = callInfo!.map((e) => e.toJson()).toList();
     }
 
     return map;
@@ -183,6 +192,187 @@ List<Map<String, dynamic>>? _ensureList(dynamic value) {
   }
 
   return null;
+}
+
+class LeadCallLog {
+  final String? callUuid;
+  final String? callerNumber;
+  final String? calledNumber;
+  final String? agentNumber;
+  final String? callerId;
+  final String? status;
+  final DateTime? startTime;
+  final DateTime? endTime;
+  final DateTime? callDateTime;
+  final int? totalDurationSeconds;
+  final int? conversationDurationSeconds;
+  final String? recordingUrl;
+  final String? dtmf;
+  final String? transferredNumber;
+  final String? callDateLabel;
+
+  const LeadCallLog({
+    this.callUuid,
+    this.callerNumber,
+    this.calledNumber,
+    this.agentNumber,
+    this.callerId,
+    this.status,
+    this.startTime,
+    this.endTime,
+    this.callDateTime,
+    this.totalDurationSeconds,
+    this.conversationDurationSeconds,
+    this.recordingUrl,
+    this.dtmf,
+    this.transferredNumber,
+    this.callDateLabel,
+  });
+
+  factory LeadCallLog.fromJson(Map<String, dynamic> json) {
+    final callDateLabel =
+        _firstNonEmptyString(json, const ['call_date', 'callDate', 'date']);
+    final callDateTime = _parseDateTime(callDateLabel);
+
+    return LeadCallLog(
+      callUuid: _firstNonEmptyString(
+        json,
+        const ['call_uuid', 'CallUUID', 'callUuid', 'call_id', 'callId'],
+      ),
+      callerNumber: _firstNonEmptyString(
+        json,
+        const ['caller_number', 'callerNumber', 'caller', 'source', 'user_no'],
+      ),
+      calledNumber: _firstNonEmptyString(
+        json,
+        const ['called_number', 'calledNumber', 'destination'],
+      ),
+      agentNumber: _firstNonEmptyString(
+        json,
+        const ['agent_number', 'AgentNumber', 'agentNumber', 'extension'],
+      ),
+      callerId: _firstNonEmptyString(
+        json,
+        const ['callerid', 'caller_id', 'callerId'],
+      ),
+      status: _firstNonEmptyString(json, const ['callStatus', 'status']),
+      startTime: _parseDateTime(
+        _firstNonEmptyString(
+          json,
+          const [
+            'call_start_time',
+            'callStartTime',
+            'start_time',
+            'startTime',
+          ],
+        ),
+      ),
+      endTime: _parseDateTime(
+        _firstNonEmptyString(
+          json,
+          const [
+            'call_end_time',
+            'callEndTime',
+            'end_time',
+            'endTime',
+          ],
+        ),
+      ),
+      callDateTime: callDateTime,
+      totalDurationSeconds: _toInt(
+        _firstNonEmptyString(
+          json,
+          const ['total_call_duration', 'totalCallDuration', 'duration'],
+        ),
+      ),
+      conversationDurationSeconds: _toInt(
+        _firstNonEmptyString(
+          json,
+          const ['conversationDuration', 'conversation_duration'],
+        ),
+      ),
+      recordingUrl: _firstNonEmptyString(
+        json,
+        const ['recording_url', 'recording_URL', 'recordingUrl'],
+      ),
+      dtmf: _firstNonEmptyString(json, const ['dtmf']),
+      transferredNumber: _firstNonEmptyString(
+        json,
+        const ['transferredNumber', 'transferred_number'],
+      ),
+      callDateLabel: callDateLabel,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (callUuid != null) map['call_uuid'] = callUuid;
+    if (callerNumber != null) map['caller_number'] = callerNumber;
+    if (calledNumber != null) map['called_number'] = calledNumber;
+    if (agentNumber != null) map['agent_number'] = agentNumber;
+    if (callerId != null) map['caller_id'] = callerId;
+    if (status != null) map['status'] = status;
+    if (startTime != null) {
+      map['call_start_time'] = startTime!.toIso8601String();
+    }
+    if (endTime != null) {
+      map['call_end_time'] = endTime!.toIso8601String();
+    }
+    if (callDateTime != null) {
+      map['call_date'] = callDateTime!.toIso8601String();
+    } else if (callDateLabel != null) {
+      map['call_date'] = callDateLabel;
+    }
+    if (totalDurationSeconds != null) {
+      map['total_call_duration'] = totalDurationSeconds;
+    }
+    if (conversationDurationSeconds != null) {
+      map['conversationDuration'] = conversationDurationSeconds;
+    }
+    if (recordingUrl != null) map['recording_url'] = recordingUrl;
+    if (dtmf != null) map['dtmf'] = dtmf;
+    if (transferredNumber != null) {
+      map['transferredNumber'] = transferredNumber;
+    }
+    if (callDateLabel != null) {
+      map['call_date_label'] = callDateLabel;
+    }
+    return map;
+  }
+
+  static String? _firstNonEmptyString(
+    Map<String, dynamic> json,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value == null) continue;
+      final stringValue = value.toString().trim();
+      if (stringValue.isNotEmpty) {
+        return stringValue;
+      }
+    }
+    return null;
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    final raw = value.toString().trim();
+    if (raw.isEmpty) return null;
+
+    DateTime? parsed = DateTime.tryParse(raw);
+    if (parsed != null) return parsed;
+
+    final sanitized = raw
+        .replaceAll('/', '-')
+        .replaceFirst(' ', 'T')
+        .replaceFirst(RegExp(r'(\d{2}):(\d{2}):(\d{2})\.(\d+)'), r'$1:$2:$3');
+    parsed = DateTime.tryParse(sanitized);
+    if (parsed != null) return parsed;
+
+    return null;
+  }
 }
 
 /// ------------------ BASIC INFO ------------------
