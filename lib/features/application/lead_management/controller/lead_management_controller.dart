@@ -112,8 +112,8 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     final selectedFilter = filter ?? ref.read(leadDateFilterProvider);
     final filteredLeads = _applyCommonFilters(state.leadsList);
 
-    final normalizedStart = _normalizeDate(selectedFilter.start);
-    final normalizedEnd = _normalizeDate(selectedFilter.end ?? selectedFilter.start);
+    final normalizedStart = _normalizeDate(selectedFilter?.start);
+    final normalizedEnd = _normalizeDate(selectedFilter?.end ?? selectedFilter?.start);
 
     bool withinRange(DateTime date) {
       final normalized = _normalizeDate(date)!;
