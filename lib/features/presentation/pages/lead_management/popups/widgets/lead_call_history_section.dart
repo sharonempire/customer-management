@@ -403,3 +403,41 @@ Color _statusColor(String status) {
 }
 
 bool _isNotEmpty(String? value) => value != null && value.trim().isNotEmpty;
+
+
+final sampleCallLogs = [
+  LeadCallLog(
+    callerNumber: '+91 98765 43210',
+    calledNumber: '+91 91234 56789',
+    agentNumber: '100',
+    callerId: 'Main Line',
+    status: 'ANSWERED',
+    callUuid: 'abc-123-uuid',
+    dtmf: '1,5',
+    transferredNumber: '+91 90000 11111',
+    callDateLabel: 'Monday, 23 Sept 2025',
+    callDateTime: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
+    startTime: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
+    endTime: DateTime.now().subtract(const Duration(days: 1, hours: 1, minutes: 45)),
+    totalDurationSeconds: 900, // 15 minutes
+    conversationDurationSeconds: 720, // 12 minutes
+    recordingUrl: 'https://example.com/recordings/sample-call-1.mp3',
+  ),
+  LeadCallLog(
+    callerNumber: '+91 99999 88888',
+    calledNumber: '+91 91234 56789',
+    agentNumber: '101',
+    callerId: 'Support Desk',
+    status: 'NOANSWER',
+    callUuid: 'def-456-uuid',
+    dtmf: null,
+    transferredNumber: null,
+    callDateLabel: 'Tuesday, 24 Sept 2025',
+    callDateTime: DateTime.now().subtract(const Duration(hours: 3)),
+    startTime: DateTime.now().subtract(const Duration(hours: 3)),
+    endTime: DateTime.now().subtract(const Duration(hours: 2, minutes: 50)),
+    totalDurationSeconds: 0, // not answered
+    conversationDurationSeconds: 0,
+    recordingUrl: null,
+  ),
+];
