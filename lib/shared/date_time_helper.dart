@@ -32,11 +32,29 @@ class DateTimeHelper {
   }
 
   static DateTime? parseDate(String? dateString) {
-    if (dateString == null || dateString.isEmpty) return null;
+    if (dateString == null || dateString.trim().isEmpty) return null;
+    final value = dateString.trim();
+
     try {
-      return DateTime.parse(dateString);
-    } catch (_) {
-      return null;
+      return DateTime.parse(value);
+    } catch (_) {}
+
+    const patterns = [
+      'MMMM d, y',
+      'MMMM d, yyyy',
+      'MMM d, y',
+      'y-MM-dd',
+      'yyyy-MM-dd',
+      'dd-MM-yyyy',
+      'dd/MM/yyyy',
+    ];
+
+    for (final pattern in patterns) {
+      try {
+        return DateFormat(pattern).parse(value);
+      } catch (_) {}
     }
+
+    return null;
   }
 }
