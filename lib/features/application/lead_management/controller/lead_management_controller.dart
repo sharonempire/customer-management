@@ -85,7 +85,7 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       _allLeadsCache = safeLeads;
     }
     state = state.copyWith(leadsList: safeLeads);
-    applyFilters();
+    _refreshFilters();
   }
 
   void clearDateFilter() {
@@ -113,11 +113,56 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
       start: start,
       end: end,
     );
+    _refreshFilters();
   }
 
   DateTime? _normalizeDate(DateTime? date) {
     if (date == null) return null;
     return DateTime(date.year, date.month, date.day);
+  }
+
+  void _refreshFilters() {
+    final dateFilter = ref.read(leadDateFilterProvider);
+    final filtered = _applyCreatedAtFilter(
+      _applyCommonFilters(state.leadsList),
+      dateFilter,
+    );
+    state = state.copyWith(filteredLeadsList: filtered);
+  }
+
+  List<LeadsListModel> _applyCreatedAtFilter(
+    List<LeadsListModel> leads,
+    LeadDateFilter filter,
+  ) {
+    final normalizedStart = _normalizeDate(filter.start);
+    final normalizedEnd = _normalizeDate(filter.end ?? filter.start);
+    if (normalizedStart == null && normalizedEnd == null) {
+      return leads;
+    }
+
+    bool withinRange(DateTime createdAt) {
+      final normalizedCreated = _normalizeDate(createdAt);
+      if (normalizedCreated == null) return false;
+      if (normalizedStart != null && normalizedEnd != null) {
+        return !normalizedCreated.isBefore(normalizedStart) &&
+            !normalizedCreated.isAfter(normalizedEnd);
+      }
+      if (normalizedStart != null) {
+        return !normalizedCreated.isBefore(normalizedStart);
+      }
+      if (normalizedEnd != null) {
+        return !normalizedCreated.isAfter(normalizedEnd);
+      }
+      return true;
+    }
+
+    return leads.where((lead) {
+      final createdAt = lead.createdAt;
+      if (createdAt == null) {
+        return normalizedStart == null && normalizedEnd == null;
+      }
+      return withinRange(createdAt.toLocal());
+    }).toList();
   }
 
   List<LeadsListModel> _applyCommonFilters(List<LeadsListModel> leads) {
@@ -662,32 +707,31 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
 
   void changeStatus(String status) {
     state = state.copyWith(filterStatus: status);
-    applyFilters();
+    _refreshFilters();
   }
 
   void changeSource(String source) {
     state = state.copyWith(filterSource: source);
-    applyFilters();
+    _refreshFilters();
   }
 
   void changeFreelancer(String freelancer) {
     state = state.copyWith(filterFreelancer: freelancer);
-    applyFilters();
+    _refreshFilters();
   }
 
   void changeLeadType(String leadType) {
     state = state.copyWith(filterLeadType: leadType);
-    applyFilters();
+    _refreshFilters();
   }
 
   void changeSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
-    applyFilters();
+    _refreshFilters();
   }
 
   void applyFilters() {
-    final leads = _applyCommonFilters(state.leadsList);
-    state = state.copyWith(filteredLeadsList: leads);
+    _refreshFilters();
   }
 
   void selectLeadLocally(LeadsListModel lead) {

@@ -33,7 +33,7 @@ class MyApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'CRM',
+      title: 'Empire Management Software',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: ThemeData.light(useMaterial3: true),
