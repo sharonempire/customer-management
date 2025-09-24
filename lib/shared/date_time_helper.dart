@@ -3,21 +3,34 @@ import 'dart:developer';
 import 'package:intl/intl.dart';
 
 class DateTimeHelper {
-
-  /// Converts "September 12, 2025" to "2025-09-12T00:00:00Z"
+  /// Converts friendly date strings (e.g. "September 12, 2025") to an ISO8601 day boundary in UTC.
   static String toIsoDate(String date, {bool isStart = true}) {
-    try {
-      final parsedDate = DateFormat("MMMM d, yyyy").parse(date);
-      final dateTime = isStart
-          ? DateTime(parsedDate.year, parsedDate.month, parsedDate.day, 0, 0, 0)
-          : DateTime(parsedDate.year, parsedDate.month, parsedDate.day, 23, 59, 59);
-      return dateTime.toUtc().toIso8601String();
-    } catch (e) {
-      log("Date parse error: $e");
+    final parsedDate = parseDate(date);
+    if (parsedDate == null) {
+      log('Date parse error: could not parse "$date"');
       return DateTime.now().toUtc().toIso8601String(); // fallback
     }
-  }
 
+    final normalized =
+        isStart
+            ? DateTime(
+              parsedDate.year,
+              parsedDate.month,
+              parsedDate.day,
+              0,
+              0,
+              0,
+            )
+            : DateTime(
+              parsedDate.year,
+              parsedDate.month,
+              parsedDate.day,
+              23,
+              59,
+              59,
+            );
+    return normalized.toUtc().toIso8601String();
+  }
 
   static String formatDate(DateTime date) {
     return DateFormat('EEEE, MMMM d, y').format(date);

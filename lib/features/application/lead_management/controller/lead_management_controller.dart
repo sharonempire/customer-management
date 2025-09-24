@@ -98,6 +98,16 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
     applyFilters();
   }
 
+  List<LeadsListModel> _fallbackLeads() {
+    if (_allLeadsCache.isNotEmpty) {
+      return List<LeadsListModel>.from(_allLeadsCache);
+    }
+    if (state.leadsList.isNotEmpty) {
+      return List<LeadsListModel>.from(state.leadsList);
+    }
+    return <LeadsListModel>[];
+  }
+
   void _updateDateFilter({DateTime? start, DateTime? end}) {
     ref.read(leadDateFilterProvider.notifier).state = LeadDateFilter(
       start: start,
@@ -385,8 +395,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
   }) async {
     try {
       final leads = await _leadManagementRepo.fetchLeadsByDate(date);
-      _setActiveLeads(leads);
-      await _loadCallLogs(leads);
+      final effectiveLeads = leads.isNotEmpty ? leads : _fallbackLeads();
+      _setActiveLeads(effectiveLeads);
+      await _loadCallLogs(effectiveLeads);
       final parsedDate = DateTimeHelper.parseDate(date);
       _updateDateFilter(start: parsedDate, end: parsedDate);
       ref
@@ -423,8 +434,9 @@ class LeadController extends StateNotifier<LeadManagementDTO> {
         startDate: start,
         endDate: end,
       );
-      _setActiveLeads(leads);
-      await _loadCallLogs(leads);
+      final effectiveLeads = leads.isNotEmpty ? leads : _fallbackLeads();
+      _setActiveLeads(effectiveLeads);
+      await _loadCallLogs(effectiveLeads);
       final startDate = DateTimeHelper.parseDate(start);
       final endDate = DateTimeHelper.parseDate(end);
       _updateDateFilter(start: startDate, end: endDate);

@@ -166,13 +166,15 @@ class _LeadFiltersWidgetState extends ConsumerState<LeadFiltersWidget> {
                       selectedTimePeriod = null;
                       selectedDateTimeRange = null;
                     });
-                    ref.read(leadMangementcontroller.notifier).clearDateFilter();
+                    ref
+                        .read(leadMangementcontroller.notifier)
+                        .clearDateFilter();
                   },
                 ),
               ),
               width10,
               CommonDateRangePicker(
-                label: "Selected Date Range",
+                label: "Date range",
                 value: selectedDateTimeRange,
                 onChanged: (range) {
                   setState(() {
