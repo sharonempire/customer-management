@@ -7,20 +7,62 @@ import 'package:management_software/shared/styles/textstyles.dart';
 
 class LeadCallHistorySection extends StatelessWidget {
   final List<LeadCallLog> callLogs;
+  final List<LeadStatusChangeLog> statusChanges;
 
-  const LeadCallHistorySection({super.key, required this.callLogs});
+  const LeadCallHistorySection({
+    super.key,
+    required this.callLogs,
+    this.statusChanges = const <LeadStatusChangeLog>[],
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (callLogs.isEmpty) {
+    if (callLogs.isEmpty && statusChanges.isEmpty) {
       return const SizedBox.shrink();
+    }
+
+    final entries = <_LeadHistoryEntry>[
+      for (final log in callLogs) _LeadHistoryEntry.fromCall(log),
+      for (final change in statusChanges) _LeadHistoryEntry.fromStatus(change),
+    ]
+      ..sort((a, b) => _compareHistory(a.timestamp, b.timestamp));
+
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    int callCounter = 0;
+    final children = <Widget>[];
+
+    for (var index = 0; index < entries.length; index++) {
+      final entry = entries[index];
+      Widget tile;
+
+      if (entry.isCall) {
+        callCounter += 1;
+        tile = _LeadCallHistoryTile(
+          log: entry.call!,
+          index: callCounter,
+        );
+      } else {
+        tile = _LeadStatusChangeTile(change: entry.statusChange!);
+      }
+
+      children.add(
+        Padding(
+          padding: EdgeInsets.only(
+            bottom: index == entries.length - 1 ? 0 : 12,
+          ),
+          child: tile,
+        ),
+      );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Call History',
+          'Lead History',
           style: myTextstyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -28,20 +70,7 @@ class LeadCallHistorySection extends StatelessWidget {
           ),
         ),
         height10,
-        Column(
-          children: List.generate(
-            callLogs.length,
-            (index) => Padding(
-              padding: EdgeInsets.only(
-                bottom: index == callLogs.length - 1 ? 0 : 12,
-              ),
-              child: _LeadCallHistoryTile(
-                log: callLogs[index],
-                index: index + 1,
-              ),
-            ),
-          ),
-        ),
+        Column(children: children),
       ],
     );
   }
@@ -188,6 +217,114 @@ class _LeadCallHistoryTile extends StatelessWidget {
     }
 
     return chips;
+  }
+}
+
+class _LeadStatusChangeTile extends StatelessWidget {
+  final LeadStatusChangeLog change;
+
+  const _LeadStatusChangeTile({required this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final newStatus = change.status?.trim();
+    final previousStatus = change.previousStatus?.trim();
+    final note = change.note?.trim();
+    final mentorName = change.mentorName?.trim();
+    final mentorId = change.mentorId?.trim();
+    final mentorLabel = _isNotEmpty(mentorName) ? mentorName : mentorId;
+    final statusFlow =
+        _isNotEmpty(previousStatus) && _isNotEmpty(newStatus)
+            ? '${previousStatus!.trim()} → ${newStatus!.trim()}'
+            : null;
+    final updatedAtText = change.changedAt != null
+        ? DateFormat('MMM d, yyyy • h:mm a')
+            .format(change.changedAt!.toLocal())
+        : null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorConsts.greyContainer),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Status Update',
+                style: myTextstyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: ColorConsts.textColor,
+                ),
+              ),
+              const Spacer(),
+              if (_isNotEmpty(newStatus))
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: ColorConsts.primaryColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    newStatus!.toUpperCase(),
+                    style: myTextstyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: ColorConsts.primaryColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (_isNotEmpty(updatedAtText)) ...[
+            height10,
+            _CallDetailRow(
+              icon: Icons.schedule_outlined,
+              label: 'Updated At',
+              value: updatedAtText!,
+            ),
+          ],
+          if (_isNotEmpty(mentorLabel)) ...[
+            height10,
+            _CallDetailRow(
+              icon: Icons.person_outline,
+              label: 'Updated By',
+              value: mentorLabel!,
+            ),
+          ],
+          if (_isNotEmpty(statusFlow)) ...[
+            height10,
+            _CallDetailRow(
+              icon: Icons.swap_horiz_outlined,
+              label: 'Status Change',
+              value: statusFlow!,
+            ),
+          ],
+          if (_isNotEmpty(note)) ...[
+            height10,
+            _CallDetailRow(
+              icon: Icons.sticky_note_2_outlined,
+              label: 'Notes',
+              value: note!,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -367,6 +504,46 @@ String? _formatCallWindow(LeadCallLog log) {
       : DateFormat('MMM d, yyyy • h:mm a');
   final endText = endFormatter.format(localEnd);
   return '$startText – $endText';
+}
+
+DateTime? _callTimestamp(LeadCallLog log) {
+  return log.callDateTime ??
+      log.endTime ??
+      log.startTime ??
+      LeadCallLog._parseDateTime(log.callDateLabel);
+}
+
+int _compareHistory(DateTime? a, DateTime? b) {
+  final left = a ?? DateTime.fromMillisecondsSinceEpoch(0);
+  final right = b ?? DateTime.fromMillisecondsSinceEpoch(0);
+  return right.compareTo(left);
+}
+
+class _LeadHistoryEntry {
+  final bool isCall;
+  final LeadCallLog? call;
+  final LeadStatusChangeLog? statusChange;
+  final DateTime? timestamp;
+
+  const _LeadHistoryEntry._({
+    required this.isCall,
+    required this.timestamp,
+    this.call,
+    this.statusChange,
+  });
+
+  factory _LeadHistoryEntry.fromCall(LeadCallLog call) => _LeadHistoryEntry._(
+        isCall: true,
+        timestamp: _callTimestamp(call),
+        call: call,
+      );
+
+  factory _LeadHistoryEntry.fromStatus(LeadStatusChangeLog change) =>
+      _LeadHistoryEntry._(
+        isCall: false,
+        timestamp: change.changedAt,
+        statusChange: change,
+      );
 }
 
 String? _formatDuration(int? seconds) {

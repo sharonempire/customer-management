@@ -196,7 +196,10 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
     final leadState = ref.watch(leadMangementcontroller);
     final callHistory =
         leadState.selectedLead?.callInfo ?? const <LeadCallLog>[];
-    final hasCallHistory = callHistory.isNotEmpty;
+    final statusHistory =
+        leadState.selectedLead?.changesHistory ??
+            const <LeadStatusChangeLog>[];
+    final hasHistory = callHistory.isNotEmpty || statusHistory.isNotEmpty;
     final assignedLead = leadState.selectedLeadLocally;
     final mentors = List<UserProfileModel>.from(leadState.counsellors)
       ..sort((a, b) {
@@ -299,11 +302,14 @@ class _CommonInfoBoxState extends ConsumerState<CommonInfoBox> {
                 ),
               ],
             ),
-            if (hasCallHistory) ...[
+            if (hasHistory) ...[
               height20,
               const Divider(height: 32, thickness: 0.8),
               height20,
-              LeadCallHistorySection(callLogs: callHistory),
+              LeadCallHistorySection(
+                callLogs: callHistory,
+                statusChanges: statusHistory,
+              ),
             ],
           ],
         ),
