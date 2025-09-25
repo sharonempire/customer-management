@@ -26,10 +26,18 @@ class LeadListTable extends ConsumerWidget {
   final String followUpHeaderLabel;
   final String remarkHeaderLabel;
 
-  void _showLeadDetails(BuildContext context, LeadsListModel lead) {
+  Future<void> _showLeadDetails(
+    BuildContext context,
+    WidgetRef ref,
+    LeadsListModel lead,
+  ) async {
+    await ref
+        .read(leadMangementcontroller.notifier)
+        .setLeadLocally(lead, context);
+
     showDialog(
       context: context,
-      builder: (context) => LeaadDetailsPopup(context: context),
+      builder: (_) => const LeaadDetailsPopup(),
     );
   }
 
@@ -64,18 +72,19 @@ class LeadListTable extends ConsumerWidget {
       children: [
         _clickableCell(
           context,
+          ref,
           lead,
           lead.slNo?.toString().padLeft(4, '0') ?? '',
         ),
-        _clickableCell(context, lead, lead.name ?? ''),
-        _clickableCell(context, lead, lead.freelancerManager ?? ''),
-        _clickableCell(context, lead, lead.freelancer ?? ''),
-        _clickableCell(context, lead, lead.source ?? ''),
-        _clickableCell(context, lead, lead.phone?.toString() ?? ''),
-        _clickableCell(context, lead, lead.status ?? ''),
-        _clickableCell(context, lead, followUpText),
-        _clickableCell(context, lead, remarkText),
-        _clickableCell(context, lead, assignedStaff),
+        _clickableCell(context, ref, lead, lead.name ?? ''),
+        _clickableCell(context, ref, lead, lead.freelancerManager ?? ''),
+        _clickableCell(context, ref, lead, lead.freelancer ?? ''),
+        _clickableCell(context, ref, lead, lead.source ?? ''),
+        _clickableCell(context, ref, lead, lead.phone?.toString() ?? ''),
+        _clickableCell(context, ref, lead, lead.status ?? ''),
+        _clickableCell(context, ref, lead, followUpText),
+        _clickableCell(context, ref, lead, remarkText),
+        _clickableCell(context, ref, lead, assignedStaff),
         _actionCell(
           context,
           label: 'Edit',
@@ -94,11 +103,12 @@ class LeadListTable extends ConsumerWidget {
 
   Widget _clickableCell(
     BuildContext context,
+    WidgetRef ref,
     LeadsListModel lead,
     String text,
   ) {
     return InkWell(
-      onTap: () => _showLeadDetails(context, lead),
+      onTap: () => _showLeadDetails(context, ref, lead),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Text(text, style: myTextstyle(fontSize: 13)),
