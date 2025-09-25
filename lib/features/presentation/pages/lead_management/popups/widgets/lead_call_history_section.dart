@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
+import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/styles/textstyles.dart';
 
 class LeadCallHistorySection extends StatelessWidget {
@@ -24,8 +25,7 @@ class LeadCallHistorySection extends StatelessWidget {
     final entries = <_LeadHistoryEntry>[
       for (final log in callLogs) _LeadHistoryEntry.fromCall(log),
       for (final change in statusChanges) _LeadHistoryEntry.fromStatus(change),
-    ]
-      ..sort((a, b) => _compareHistory(a.timestamp, b.timestamp));
+    ]..sort((a, b) => _compareHistory(a.timestamp, b.timestamp));
 
     if (entries.isEmpty) {
       return const SizedBox.shrink();
@@ -40,10 +40,7 @@ class LeadCallHistorySection extends StatelessWidget {
 
       if (entry.isCall) {
         callCounter += 1;
-        tile = _LeadCallHistoryTile(
-          log: entry.call!,
-          index: callCounter,
-        );
+        tile = _LeadCallHistoryTile(log: entry.call!, index: callCounter);
       } else {
         tile = _LeadStatusChangeTile(change: entry.statusChange!);
       }
@@ -134,11 +131,7 @@ class _LeadCallHistoryTile extends StatelessWidget {
           ],
           if (chips.isNotEmpty) ...[
             height10,
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: chips,
-            ),
+            Wrap(spacing: 12, runSpacing: 12, children: chips),
           ],
           if (_isNotEmpty(log.recordingUrl)) ...[
             height10,
@@ -193,13 +186,7 @@ class _LeadCallHistoryTile extends StatelessWidget {
 
     void addChip(IconData icon, String label, String? value) {
       if (!_isNotEmpty(value)) return;
-      chips.add(
-        _CallInfoChip(
-          icon: icon,
-          label: label,
-          value: value!.trim(),
-        ),
-      );
+      chips.add(_CallInfoChip(icon: icon, label: label, value: value!.trim()));
     }
 
     addChip(Icons.call_received_outlined, 'Caller', log.callerNumber);
@@ -212,8 +199,11 @@ class _LeadCallHistoryTile extends StatelessWidget {
     }
 
     if (conversationDurationLabel != null) {
-      addChip(Icons.record_voice_over_outlined, 'Conversation',
-          conversationDurationLabel);
+      addChip(
+        Icons.record_voice_over_outlined,
+        'Conversation',
+        conversationDurationLabel,
+      );
     }
 
     return chips;
@@ -237,10 +227,12 @@ class _LeadStatusChangeTile extends StatelessWidget {
         _isNotEmpty(previousStatus) && _isNotEmpty(newStatus)
             ? '${previousStatus!.trim()} → ${newStatus!.trim()}'
             : null;
-    final updatedAtText = change.changedAt != null
-        ? DateFormat('MMM d, yyyy • h:mm a')
-            .format(change.changedAt!.toLocal())
-        : null;
+    final updatedAtText =
+        change.changedAt != null
+            ? DateFormat(
+              'MMM d, yyyy • h:mm a',
+            ).format(change.changedAt!.toLocal())
+            : null;
 
     return Container(
       width: double.infinity,
@@ -273,8 +265,10 @@ class _LeadStatusChangeTile extends StatelessWidget {
               const Spacer(),
               if (_isNotEmpty(newStatus))
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: ColorConsts.primaryColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(24),
@@ -446,7 +440,8 @@ class _CallDetailRow extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final display = valueWidget ??
+    final display =
+        valueWidget ??
         Text(
           value!.trim(),
           style: myTextstyle(
@@ -496,12 +491,12 @@ String? _formatCallWindow(LeadCallLog log) {
   }
 
   final localEnd = end.toLocal();
-  final sameDay = localStart.year == localEnd.year &&
+  final sameDay =
+      localStart.year == localEnd.year &&
       localStart.month == localEnd.month &&
       localStart.day == localEnd.day;
-  final endFormatter = sameDay
-      ? DateFormat('h:mm a')
-      : DateFormat('MMM d, yyyy • h:mm a');
+  final endFormatter =
+      sameDay ? DateFormat('h:mm a') : DateFormat('MMM d, yyyy • h:mm a');
   final endText = endFormatter.format(localEnd);
   return '$startText – $endText';
 }
@@ -510,7 +505,7 @@ DateTime? _callTimestamp(LeadCallLog log) {
   return log.callDateTime ??
       log.endTime ??
       log.startTime ??
-      LeadCallLog._parseDateTime(log.callDateLabel);
+      DateTimeHelper.parseDate(log.callDateLabel);
 }
 
 int _compareHistory(DateTime? a, DateTime? b) {
@@ -533,10 +528,10 @@ class _LeadHistoryEntry {
   });
 
   factory _LeadHistoryEntry.fromCall(LeadCallLog call) => _LeadHistoryEntry._(
-        isCall: true,
-        timestamp: _callTimestamp(call),
-        call: call,
-      );
+    isCall: true,
+    timestamp: _callTimestamp(call),
+    call: call,
+  );
 
   factory _LeadHistoryEntry.fromStatus(LeadStatusChangeLog change) =>
       _LeadHistoryEntry._(
@@ -581,7 +576,6 @@ Color _statusColor(String status) {
 
 bool _isNotEmpty(String? value) => value != null && value.trim().isNotEmpty;
 
-
 final sampleCallLogs = [
   LeadCallLog(
     callerNumber: '+91 98765 43210',
@@ -595,7 +589,9 @@ final sampleCallLogs = [
     callDateLabel: 'Monday, 23 Sept 2025',
     callDateTime: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
     startTime: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
-    endTime: DateTime.now().subtract(const Duration(days: 1, hours: 1, minutes: 45)),
+    endTime: DateTime.now().subtract(
+      const Duration(days: 1, hours: 1, minutes: 45),
+    ),
     totalDurationSeconds: 900, // 15 minutes
     conversationDurationSeconds: 720, // 12 minutes
     recordingUrl: 'https://example.com/recordings/sample-call-1.mp3',
