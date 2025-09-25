@@ -10,6 +10,7 @@ class LeadInfoModel {
   Preferences? preferences;
   EnglishProficiency? englishProficiency;
   List<LeadCallLog>? callInfo;
+  List<LeadStatusChangeLog>? changesHistory;
 
   LeadInfoModel({
     this.id,
@@ -21,6 +22,7 @@ class LeadInfoModel {
     this.preferences,
     this.englishProficiency,
     this.callInfo,
+    this.changesHistory,
   });
 
   LeadInfoModel copyWith({
@@ -33,6 +35,7 @@ class LeadInfoModel {
     Preferences? preferences,
     EnglishProficiency? englishProficiency,
     List<LeadCallLog>? callInfo,
+    List<LeadStatusChangeLog>? changesHistory,
   }) {
     return LeadInfoModel(
       id: id ?? this.id,
@@ -44,6 +47,7 @@ class LeadInfoModel {
       preferences: preferences ?? this.preferences,
       englishProficiency: englishProficiency ?? this.englishProficiency,
       callInfo: callInfo ?? this.callInfo,
+      changesHistory: changesHistory ?? this.changesHistory,
     );
   }
 
@@ -58,6 +62,7 @@ class LeadInfoModel {
     final prefMap = _ensureMap(json['preferences']);
     final englishMap = _ensureMap(json['english_proficiency']);
     final callInfoList = _ensureList(json['call_info']);
+    final statusHistoryList = _ensureList(json['changes_history']);
 
     return LeadInfoModel(
       id: _toInt(json['id']),
@@ -74,6 +79,8 @@ class LeadInfoModel {
       englishProficiency:
           englishMap != null ? EnglishProficiency.fromJson(englishMap) : null,
       callInfo: callInfoList?.map((m) => LeadCallLog.fromJson(m)).toList(),
+      changesHistory:
+          statusHistoryList?.map((m) => LeadStatusChangeLog.fromJson(m)).toList(),
     );
   }
 
@@ -97,6 +104,10 @@ class LeadInfoModel {
     }
     if (callInfo != null) {
       map['call_info'] = callInfo!.map((e) => e.toJson()).toList();
+    }
+    if (changesHistory != null) {
+      map['changes_history'] =
+          changesHistory!.map((e) => e.toJson()).toList();
     }
 
     return map;
@@ -126,6 +137,17 @@ double? _toDouble(dynamic v) {
   if (v == null) return null;
   if (v is num) return v.toDouble();
   return double.tryParse(v.toString());
+}
+
+dynamic _firstNonNull(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (!json.containsKey(key)) continue;
+    final value = json[key];
+    if (value != null) {
+      return value;
+    }
+  }
+  return null;
 }
 
 /// Ensure we return Map<String,dynamic>? whether input is Map or JSON string
@@ -372,6 +394,114 @@ class LeadCallLog {
     if (parsed != null) return parsed;
 
     return null;
+  }
+}
+
+class LeadStatusChangeLog {
+  final String? status;
+  final String? previousStatus;
+  final String? mentorName;
+  final String? mentorId;
+  final String? note;
+  final DateTime? changedAt;
+
+  const LeadStatusChangeLog({
+    this.status,
+    this.previousStatus,
+    this.mentorName,
+    this.mentorId,
+    this.note,
+    this.changedAt,
+  });
+
+  factory LeadStatusChangeLog.fromJson(Map<String, dynamic> json) {
+    final status = LeadCallLog._firstNonEmptyString(
+      json,
+      const ['status', 'new_status', 'current_status', 'to_status'],
+    );
+    final previousStatus = LeadCallLog._firstNonEmptyString(
+      json,
+      const ['previous_status', 'old_status', 'from_status'],
+    );
+    final mentorName = LeadCallLog._firstNonEmptyString(
+      json,
+      const [
+        'mentor_name',
+        'mentor',
+        'changed_by_name',
+        'updated_by_name',
+        'mentor_display_name',
+      ],
+    );
+    final mentorId = LeadCallLog._firstNonEmptyString(
+      json,
+      const ['mentor_id', 'changed_by', 'updated_by', 'mentorId'],
+    );
+    final note = LeadCallLog._firstNonEmptyString(
+      json,
+      const ['note', 'remarks', 'comment', 'description'],
+    );
+
+    final changedAtRaw = _firstNonNull(
+      json,
+      const [
+        'changed_at',
+        'timestamp',
+        'updated_at',
+        'created_at',
+        'time',
+        'status_changed_at',
+      ],
+    );
+
+    DateTime? changedAt;
+    if (changedAtRaw is int) {
+      final useMillis = changedAtRaw.toString().length > 10
+          ? changedAtRaw
+          : changedAtRaw * 1000;
+      changedAt = DateTime.fromMillisecondsSinceEpoch(useMillis, isUtc: true)
+          .toLocal();
+    } else if (changedAtRaw is double) {
+      final useMillis = changedAtRaw >= 1000000000000
+          ? changedAtRaw.toInt()
+          : (changedAtRaw * 1000).toInt();
+      changedAt = DateTime.fromMillisecondsSinceEpoch(useMillis, isUtc: true)
+          .toLocal();
+    } else if (changedAtRaw is String) {
+      final trimmed = changedAtRaw.trim();
+      final numeric = int.tryParse(trimmed);
+      if (numeric != null) {
+        final useMillis = trimmed.length > 10 ? numeric : numeric * 1000;
+        changedAt = DateTime.fromMillisecondsSinceEpoch(useMillis, isUtc: true)
+            .toLocal();
+      } else {
+        changedAt = LeadCallLog._parseDateTime(trimmed);
+      }
+    } else {
+      changedAt = LeadCallLog._parseDateTime(changedAtRaw);
+    }
+
+    return LeadStatusChangeLog(
+      status: status,
+      previousStatus: previousStatus,
+      mentorName: mentorName,
+      mentorId: mentorId,
+      note: note,
+      changedAt: changedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (status != null) map['status'] = status;
+    if (previousStatus != null) map['previous_status'] = previousStatus;
+    if (mentorName != null) map['mentor_name'] = mentorName;
+    if (mentorId != null) map['mentor_id'] = mentorId;
+    if (note != null) map['note'] = note;
+    if (changedAt != null) {
+      map['changed_at'] = changedAt!.toIso8601String();
+    }
+    return map;
   }
 }
 
