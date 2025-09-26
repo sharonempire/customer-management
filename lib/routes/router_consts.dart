@@ -49,6 +49,14 @@ class RouterConsts {
     },
   );
 
+  final RouteModel courseFinder = RouteModel(
+    '/course-finder',
+    'Course Finder',
+    (context, state) {
+      return const LeadManagement();
+    },
+  );
+
   final RouteModel employeeManagement = RouteModel(
     '/employee-management',
     'Employee Management',
@@ -64,12 +72,13 @@ class RouterConsts {
     return const LeadInfoPopup();
   });
 
-    final RouteModel attendanceHistory = RouteModel('attendance-history', 'Attendance History', (
-    context,
-    state,
-  ) {
-    return const AttendanceHistory();
-  });
+  final RouteModel attendanceHistory = RouteModel(
+    'attendance-history',
+    'Attendance History',
+    (context, state) {
+      return const AttendanceHistory();
+    },
+  );
 }
 
 class RouteModel {
