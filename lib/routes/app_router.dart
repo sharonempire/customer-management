@@ -90,13 +90,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: routeConsts.courseFinder.route,
             name: routeConsts.courseFinder.name,
             builder: routeConsts.courseFinder.builder,
-            routes: [
-              GoRoute(
-                path: routeConsts.leadInfo.route,
-                name: routeConsts.leadInfo.name,
-                builder: routeConsts.leadInfo.builder,
-              ),
-            ],
           ),
           GoRoute(
             path: routeConsts.freelancerMangement.route,
