@@ -4,6 +4,7 @@ import 'package:management_software/features/presentation/pages/attendance/atten
 import 'package:management_software/features/presentation/pages/attendance/attendance_history.dart';
 import 'package:management_software/features/presentation/pages/auth/signup.dart';
 import 'package:management_software/features/presentation/pages/auth/login_page.dart';
+import 'package:management_software/features/presentation/pages/courses/courses.dart';
 import 'package:management_software/features/presentation/pages/employee_mangement/employee_management.dart';
 import 'package:management_software/features/presentation/pages/dashboard/dashboard.dart';
 import 'package:management_software/features/presentation/pages/lead_management/lead_management.dart';
@@ -53,7 +54,7 @@ class RouterConsts {
     '/course-finder',
     'Course Finder',
     (context, state) {
-      return const LeadManagement();
+      return const CoursesScreen();
     },
   );
 
