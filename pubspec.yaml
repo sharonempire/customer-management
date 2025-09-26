@@ -24,6 +24,7 @@ dependencies:
   supabase_flutter: ^2.10.0
   image_picker: ^1.0.5
   uuid: ^4.2.1
+  just_audio: ^0.9.36
 
 
 

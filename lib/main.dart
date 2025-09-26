@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
@@ -6,12 +7,16 @@ import 'package:management_software/shared/providers/theme_providers.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
+import 'package:just_audio_web/just_audio_web.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize Supabase
   await Supabase.initialize(url: SUPABASEURL, anonKey: SUPABASEKEY);
-
+  if (kIsWeb) {
+    JustAudioPlatform.instance = JustAudioPlugin();
+  }
   final prefs = await SharedPreferences.getInstance();
 
   runApp(

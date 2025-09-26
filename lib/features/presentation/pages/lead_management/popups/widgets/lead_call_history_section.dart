@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:intl/intl.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
@@ -137,15 +139,8 @@ class _LeadCallHistoryTile extends StatelessWidget {
             height10,
             _CallDetailRow(
               icon: Icons.mic_none_outlined,
-              label: 'Recording URL',
-              valueWidget: SelectableText(
-                log.recordingUrl!,
-                style: myTextstyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: ColorConsts.primaryColor,
-                ),
-              ),
+              label: 'Recording',
+              valueWidget: _CallRecordingPlayer(url: log.recordingUrl!.trim()),
             ),
           ],
           if (_isNotEmpty(log.callUuid)) ...[
@@ -419,6 +414,293 @@ class _CallInfoChip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CallRecordingPlayer extends StatefulWidget {
+  final String url;
+
+  const _CallRecordingPlayer({required this.url});
+
+  @override
+  State<_CallRecordingPlayer> createState() => _CallRecordingPlayerState();
+}
+
+class _CallRecordingPlayerState extends State<_CallRecordingPlayer> {
+  late final AudioPlayer _player;
+  StreamSubscription<Duration?>? _durationSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<PlayerState>? _playerStateSub;
+
+  Duration _position = Duration.zero;
+  Duration? _totalDuration;
+  bool _initializing = true;
+  bool _isBuffering = false;
+  bool _isPlaying = false;
+  bool _loadError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = AudioPlayer();
+    _durationSub = _player.durationStream.listen((duration) {
+      if (!mounted) return;
+      setState(() => _totalDuration = duration);
+    });
+    _positionSub = _player.positionStream.listen((position) {
+      if (!mounted) return;
+      setState(() => _position = position);
+    });
+    _playerStateSub = _player.playerStateStream.listen((state) {
+      final buffering =
+          state.processingState == ProcessingState.loading ||
+          state.processingState == ProcessingState.buffering;
+      if (state.processingState == ProcessingState.completed) {
+        unawaited(_player.seek(Duration.zero));
+        unawaited(_player.pause());
+      }
+      if (!mounted) return;
+      setState(() {
+        _isBuffering = buffering;
+        _isPlaying = state.playing && !buffering;
+      });
+    });
+    _loadSource();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CallRecordingPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _resetState();
+      _loadSource();
+    }
+  }
+
+  void _resetState() {
+    setState(() {
+      _position = Duration.zero;
+      _totalDuration = null;
+      _initializing = true;
+      _isBuffering = false;
+      _isPlaying = false;
+      _loadError = false;
+    });
+    unawaited(_player.stop());
+  }
+
+  Future<void> _loadSource() async {
+    try {
+      await _player.setUrl(widget.url);
+      if (!mounted) return;
+      setState(() => _initializing = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = true;
+        _initializing = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _playerStateSub?.cancel();
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayback() async {
+    if (_loadError) {
+      _resetState();
+      await _loadSource();
+      return;
+    }
+
+    if (_isPlaying) {
+      await _player.pause();
+    } else {
+      await _player.play();
+    }
+  }
+
+  Future<void> _seekTo(double milliseconds) async {
+    await _player.seek(Duration(milliseconds: milliseconds.round()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loadError) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.withOpacity(0.24)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent),
+                width10,
+                Expanded(
+                  child: Text(
+                    'Unable to load the recording. Tap retry to try again.',
+                    style: myTextstyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: ColorConsts.textColor,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _resetState();
+                    _loadSource();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+          height10,
+          SelectableText(
+            widget.url,
+            style: myTextstyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: ColorConsts.primaryColor,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final waiting = _initializing || _isBuffering;
+    final totalMs = _totalDuration?.inMilliseconds ?? 0;
+    final sliderMax = totalMs <= 0 ? 1.0 : totalMs.toDouble();
+    final sliderValue =
+        totalMs <= 0
+            ? 0.0
+            : _position.inMilliseconds.clamp(0, totalMs).toDouble();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: ColorConsts.lightGrey,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: ColorConsts.greyContainer),
+          ),
+          child: Row(
+            children: [
+              _buildControlButton(waiting),
+              width10,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Slider(
+                      value: sliderValue,
+                      min: 0,
+                      max: sliderMax,
+                      onChanged:
+                          (waiting || totalMs <= 0)
+                              ? null
+                              : (value) => _seekTo(value),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatAudioPosition(_position),
+                          style: myTextstyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: ColorConsts.secondaryColor,
+                          ),
+                        ),
+                        Text(
+                          _formatAudioPosition(_totalDuration),
+                          style: myTextstyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: ColorConsts.secondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        height10,
+        SelectableText(
+          widget.url,
+          style: myTextstyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: ColorConsts.primaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildControlButton(bool waiting) {
+    final background = ColorConsts.primaryColor.withOpacity(0.12);
+
+    if (waiting) {
+      return Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+        child: const Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Material(
+        color: background,
+        shape: const CircleBorder(),
+        child: IconButton(
+          onPressed: () {
+            _togglePlayback();
+          },
+          icon: Icon(
+            _isPlaying ? Icons.pause : Icons.play_arrow,
+            color: ColorConsts.primaryColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _formatAudioPosition(Duration? duration) {
+  if (duration == null) return '--:--';
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  if (hours > 0) {
+    return '${hours.toString().padLeft(2, '0')}:$minutes:$seconds';
+  }
+  return '$minutes:$seconds';
 }
 
 class _CallDetailRow extends StatelessWidget {
