@@ -30,7 +30,7 @@ bool operator ==(Object other) {
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(leadsList),const DeepCollectionEquality().hash(filteredLeadsList),const DeepCollectionEquality().hash(counsellors),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(leadsList),const DeepCollectionEquality().hash(filteredLeadsList),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType,const DeepCollectionEquality().hash(counsellors));
 
 @override
 String toString() {
@@ -246,6 +246,7 @@ class _LeadManagementDTO extends LeadManagementDTO {
   return EqualUnmodifiableListView(_counsellors);
 }
 
+
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
@@ -261,7 +262,7 @@ bool operator ==(Object other) {
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_leadsList),const DeepCollectionEquality().hash(_filteredLeadsList),const DeepCollectionEquality().hash(_counsellors),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_leadsList),const DeepCollectionEquality().hash(_filteredLeadsList),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType,const DeepCollectionEquality().hash(_counsellors));
 
 @override
 String toString() {

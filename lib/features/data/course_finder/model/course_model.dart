@@ -1,6 +1,4 @@
 class Course {
-
-
   final int? id;
   final DateTime? createdAt;
   final String? programName;
