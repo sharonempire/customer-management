@@ -642,14 +642,14 @@ class _CallRecordingPlayerState extends State<_CallRecordingPlayer> {
           ),
         ),
         height10,
-        SelectableText(
-          widget.url,
-          style: myTextstyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: ColorConsts.primaryColor,
-          ),
-        ),
+        // SelectableText(
+        //   widget.url,
+        //   style: myTextstyle(
+        //     fontSize: 12,
+        //     fontWeight: FontWeight.w500,
+        //     color: ColorConsts.primaryColor,
+        //   ),
+        // ),
       ],
     );
   }
