@@ -35,10 +35,7 @@ class LeadListTable extends ConsumerWidget {
         .read(leadMangementcontroller.notifier)
         .setLeadLocally(lead, context);
 
-    showDialog(
-      context: context,
-      builder: (_) => const LeaadDetailsPopup(),
-    );
+    showDialog(context: context, builder: (_) => const LeaadDetailsPopup());
   }
 
   String _formatFollowUp(LeadsListModel lead) {
@@ -81,6 +78,7 @@ class LeadListTable extends ConsumerWidget {
         _clickableCell(context, ref, lead, lead.freelancer ?? ''),
         _clickableCell(context, ref, lead, lead.source ?? ''),
         _clickableCell(context, ref, lead, lead.phone?.toString() ?? ''),
+        _callIconCell(lead),
         _clickableCell(context, ref, lead, lead.status ?? ''),
         _clickableCell(context, ref, lead, followUpText),
         _clickableCell(context, ref, lead, remarkText),
@@ -116,6 +114,22 @@ class LeadListTable extends ConsumerWidget {
     );
   }
 
+  Widget _callIconCell(LeadsListModel lead) {
+    final phoneText = lead.phone?.toString().trim();
+    final hasPhone = phoneText != null && phoneText.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Center(
+        child: Icon(
+          Icons.call_outlined,
+          color: hasPhone ? Colors.green : Colors.grey,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
   Widget _actionCell(
     BuildContext context, {
     required String label,
@@ -147,6 +161,7 @@ class LeadListTable extends ConsumerWidget {
       'Freelancer',
       'Source',
       'Phone',
+      'Call',
       'Status',
       followUpHeaderLabel,
       remarkHeaderLabel,
@@ -191,11 +206,12 @@ class LeadListTable extends ConsumerWidget {
           3: FlexColumnWidth(2),
           4: FlexColumnWidth(1.5),
           5: FlexColumnWidth(2),
-          6: FlexColumnWidth(1.5),
-          7: FlexColumnWidth(2),
-          8: FlexColumnWidth(3),
-          9: FlexColumnWidth(2),
+          6: FixedColumnWidth(48),
+          7: FlexColumnWidth(1.5),
+          8: FlexColumnWidth(2),
+          9: FlexColumnWidth(3),
           10: FlexColumnWidth(2),
+          11: FlexColumnWidth(2),
         },
         border: TableBorder(
           horizontalInside: BorderSide(color: Colors.grey.shade300, width: 1),
