@@ -2,7 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
+import 'package:management_software/features/application/lead_management/model/lead_management_dto.dart';
+import 'package:management_software/features/data/lead_management/models/call_event_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/current_follow_ups_view.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/drafts_view.dart';
@@ -26,6 +29,8 @@ class LeadManagement extends ConsumerStatefulWidget {
 class _LeadManagementState extends ConsumerState<LeadManagement>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _callListenerRegistered = false;
+  String? _lastNotifiedCallUuid;
 
   @override
   void initState() {
@@ -56,6 +61,41 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
 
   @override
   Widget build(BuildContext context) {
+    if (!_callListenerRegistered) {
+      _callListenerRegistered = true;
+      ref.listen<LeadManagementDTO>(leadMangementcontroller, (previous, next) {
+        if (!mounted) return;
+        if (next.callEvents.isEmpty) {
+          _lastNotifiedCallUuid = null;
+          return;
+        }
+
+        final latest = next.callEvents.first;
+        final latestUuid = latest.callUuid;
+        if (latestUuid == null || latestUuid.isEmpty) return;
+
+        final hadPrevious = previous?.callEvents.isNotEmpty ?? false;
+        if (!hadPrevious && _lastNotifiedCallUuid == null) {
+          _lastNotifiedCallUuid = latestUuid;
+          return;
+        }
+
+        if (_lastNotifiedCallUuid == latestUuid) return;
+        _lastNotifiedCallUuid = latestUuid;
+
+        final myPhone = ref.read(authControllerProvider).phone?.toString();
+        if (myPhone == null || myPhone.isEmpty) return;
+        if (latest.calledNumber != myPhone) return;
+
+        final route = ModalRoute.of(context);
+        if (route == null || route.isCurrent) {
+          context.push(
+            '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
+          );
+        }
+      });
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
     final selectedTab = ref.watch(leadTabProvider);
     final targetIndex = LeadTab.values.indexOf(selectedTab);

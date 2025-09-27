@@ -395,7 +395,7 @@ class LeadManagementRepo {
     }
   }
 
-  Future<List<CallEventModel>> fetchRecentCallEvents({int limit = 50}) async {
+  Future<List<CallEventModel>> fetchRecentCallEvents({int limit = 100}) async {
     try {
       final response = await _networkService.pull(
         table: SupabaseTables.callEvents,
