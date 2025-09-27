@@ -94,7 +94,6 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          // ✅ Whole page scrolls
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(

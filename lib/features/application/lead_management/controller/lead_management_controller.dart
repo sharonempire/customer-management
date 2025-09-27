@@ -86,11 +86,11 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   final Ref ref;
   List<LeadsListModel> _allLeadsCache = const [];
   Map<int, List<LeadCallLog>> _callLogsByLeadId = <int, List<LeadCallLog>>{};
-  StreamSubscription<List<Map<String, dynamic>>>? _callEventsSubscription;
+  Timer? _callEventsTimer;
 
   static const int _maxRealtimeCallEventsStored = 100;
 
-  bool get isSubscribedToCallEvents => _callEventsSubscription != null;
+  bool get isSubscribedToCallEvents => _callEventsTimer != null;
 
   List<LeadCallLog> get realtimeCallLogs => state.callEvents
       .map((event) => event.toLeadCallLog())
@@ -99,117 +99,51 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   int get realtimeCallCount => state.callEvents.length;
 
   Future<void> loadRecentCallEvents({int limit = 50}) async {
-    final events = await _leadManagementRepo.fetchRecentCallEvents(
-      limit: limit.clamp(1, _maxRealtimeCallEventsStored),
-    );
-
-    if (events.isEmpty) return;
-
-    final trimmed =
-        events.length > _maxRealtimeCallEventsStored
-            ? events.sublist(0, _maxRealtimeCallEventsStored)
-            : events;
-
-    log('Loaded ${trimmed.length} recent call events.');
-
-    state = state.copyWith(
-      callEvents: List<CallEventModel>.unmodifiable(trimmed),
-    );
-  }
-
-  void subscribeToCallEvents() {
-    if (_callEventsSubscription != null) return;
-
-    unawaited(loadRecentCallEvents());
-
-    _callEventsSubscription = _leadManagementRepo.streamCallEvents().listen(
-      (rows) {
-        if (rows.isEmpty) return;
-        final events = rows.map((row) => CallEventModel.fromJson(row)).toList();
-        events.sort(
-          (a, b) => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-              .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
-        );
-
-        final limited =
-            events.length > _maxRealtimeCallEventsStored
-                ? events.sublist(0, _maxRealtimeCallEventsStored)
-                : events;
-
-        state = state.copyWith(
-          callEvents: List<CallEventModel>.unmodifiable(limited),
-        );
-      },
-      onError: (error, stackTrace) {
-        log('Call events stream error: $error', stackTrace: stackTrace);
-      },
-    );
-  }
-
-  Future<void> unsubscribeFromCallEvents() async {
-    final subscription = _callEventsSubscription;
-    if (subscription == null) return;
-    _callEventsSubscription = null;
-    await subscription.cancel();
-  }
-
-  void _upsertCallEvent(
-    Map<String, dynamic>? rawRecord, {
-    Map<String, dynamic>? fallbackOld,
-  }) {
-    final record = rawRecord ?? fallbackOld;
-    if (record == null || record.isEmpty) return;
-
     try {
-      final event = CallEventModel.fromJson(Map<String, dynamic>.from(record));
-      final int? id = event.id;
-      final updated = <CallEventModel>[event];
+      final events = await _leadManagementRepo.fetchRecentCallEvents(
+        limit: limit.clamp(1, _maxRealtimeCallEventsStored),
+      );
 
-      if (id != null) {
-        updated.addAll(state.callEvents.where((existing) => existing.id != id));
-      } else {
-        updated.addAll(state.callEvents);
-      }
+      if (events.isEmpty) return;
 
-      if (updated.length > _maxRealtimeCallEventsStored) {
-        updated.removeRange(_maxRealtimeCallEventsStored, updated.length);
-      }
+      final trimmed =
+          events.length > _maxRealtimeCallEventsStored
+              ? events.sublist(0, _maxRealtimeCallEventsStored)
+              : events;
+
+      log('Loaded ${trimmed.length} recent call events.');
 
       state = state.copyWith(
-        callEvents: List<CallEventModel>.unmodifiable(updated),
+        callEvents: List<CallEventModel>.unmodifiable(trimmed),
       );
     } catch (error, stackTrace) {
-      log('Call event parse error: $error', stackTrace: stackTrace);
+      log('Load call events error: $error', stackTrace: stackTrace);
     }
   }
 
-  void _removeCallEvent(Map<String, dynamic>? rawRecord) {
-    if (rawRecord == null || rawRecord.isEmpty) return;
-    final int? id = _parseRecordId(rawRecord);
-    if (id == null) return;
+  void subscribeToCallEvents() {
+    if (_callEventsTimer != null) return;
 
-    final updated = state.callEvents
-        .where((event) => event.id != id)
-        .toList(growable: false);
-    state = state.copyWith(
-      callEvents: List<CallEventModel>.unmodifiable(updated),
-    );
+    unawaited(loadRecentCallEvents());
+
+    _callEventsTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      unawaited(loadRecentCallEvents());
+    });
   }
 
-  int? _parseRecordId(Map<String, dynamic> record) {
-    final dynamic value = record['id'];
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    if (value is String) return int.tryParse(value);
-    return null;
+  Future<void> unsubscribeFromCallEvents() async {
+    final timer = _callEventsTimer;
+    if (timer == null) return;
+    _callEventsTimer = null;
+    timer.cancel();
   }
 
   @override
   void dispose() {
-    final subscription = _callEventsSubscription;
-    if (subscription != null) {
-      unawaited(subscription.cancel());
-      _callEventsSubscription = null;
+    final timer = _callEventsTimer;
+    if (timer != null) {
+      timer.cancel();
+      _callEventsTimer = null;
     }
     super.dispose();
   }

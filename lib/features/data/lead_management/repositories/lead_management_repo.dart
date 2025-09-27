@@ -395,17 +395,6 @@ class LeadManagementRepo {
     }
   }
 
-  Stream<List<Map<String, dynamic>>> streamCallEvents({
-    String? filterColumn,
-    dynamic filterValue,
-  }) {
-    return _networkService.subscribeToTable(
-      table: SupabaseTables.callEvents,
-      filterColumn: filterColumn,
-      filterValue: filterValue,
-    );
-  }
-
   Future<List<CallEventModel>> fetchRecentCallEvents({int limit = 50}) async {
     try {
       final response = await _networkService.pull(
