@@ -293,6 +293,38 @@ class NetworkService {
     }
   }
 
+  RealtimeChannel subscribeToRealtime({
+    required String table,
+    String schema = 'public',
+    PostgresChangeFilter? filter,
+    void Function(PostgresChangePayload payload)? onInsert,
+    void Function(PostgresChangePayload payload)? onUpdate,
+    void Function(PostgresChangePayload payload)? onDelete,
+  }) {
+    final channel = supabase.channel('realtime:$schema:$table');
+
+    void register(
+      PostgresChangeEvent event,
+      void Function(PostgresChangePayload payload)? handler,
+    ) {
+      if (handler == null) return;
+      channel.onPostgresChanges(
+        event: event,
+        schema: schema,
+        table: table,
+        filter: filter,
+        callback: handler,
+      );
+    }
+
+    register(PostgresChangeEvent.insert, onInsert);
+    register(PostgresChangeEvent.update, onUpdate);
+    register(PostgresChangeEvent.delete, onDelete);
+
+    channel.subscribe();
+    return channel;
+  }
+
   Future<String> uploadFile({
     required String bucketName,
     required String filePath,
