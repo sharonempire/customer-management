@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LeadManagementDTO {
 
- List<LeadsListModel> get leadsList; List<LeadsListModel> get filteredLeadsList; LeadInfoModel? get selectedLead; LeadsListModel? get selectedLeadLocally; String get searchQuery; String get filterSource; String get filterStatus; String get filterFreelancer; String get filterLeadType; List<UserProfileModel> get counsellors;
+ List<LeadsListModel> get leadsList; List<LeadsListModel> get filteredLeadsList; LeadInfoModel? get selectedLead; LeadsListModel? get selectedLeadLocally; String get searchQuery; String get filterSource; String get filterStatus; String get filterFreelancer; String get filterLeadType; List<UserProfileModel> get counsellors; List<CallEventModel> get callEvents;
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $LeadManagementDTOCopyWith<LeadManagementDTO> get copyWith => _$LeadManagementDT
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LeadManagementDTO&&const DeepCollectionEquality().equals(other.leadsList, leadsList)&&const DeepCollectionEquality().equals(other.filteredLeadsList, filteredLeadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead)&&(identical(other.selectedLeadLocally, selectedLeadLocally) || other.selectedLeadLocally == selectedLeadLocally)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.filterSource, filterSource) || other.filterSource == filterSource)&&(identical(other.filterStatus, filterStatus) || other.filterStatus == filterStatus)&&(identical(other.filterFreelancer, filterFreelancer) || other.filterFreelancer == filterFreelancer)&&(identical(other.filterLeadType, filterLeadType) || other.filterLeadType == filterLeadType)&&const DeepCollectionEquality().equals(other.counsellors, counsellors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LeadManagementDTO&&const DeepCollectionEquality().equals(other.leadsList, leadsList)&&const DeepCollectionEquality().equals(other.filteredLeadsList, filteredLeadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead)&&(identical(other.selectedLeadLocally, selectedLeadLocally) || other.selectedLeadLocally == selectedLeadLocally)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.filterSource, filterSource) || other.filterSource == filterSource)&&(identical(other.filterStatus, filterStatus) || other.filterStatus == filterStatus)&&(identical(other.filterFreelancer, filterFreelancer) || other.filterFreelancer == filterFreelancer)&&(identical(other.filterLeadType, filterLeadType) || other.filterLeadType == filterLeadType)&&const DeepCollectionEquality().equals(other.counsellors, counsellors)&&const DeepCollectionEquality().equals(other.callEvents, callEvents));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(leadsList),const DeepCollectionEquality().hash(filteredLeadsList),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType,const DeepCollectionEquality().hash(counsellors));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(leadsList),const DeepCollectionEquality().hash(filteredLeadsList),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType,const DeepCollectionEquality().hash(counsellors),const DeepCollectionEquality().hash(callEvents));
 
 @override
 String toString() {
-  return 'LeadManagementDTO(leadsList: $leadsList, filteredLeadsList: $filteredLeadsList, selectedLead: $selectedLead, selectedLeadLocally: $selectedLeadLocally, searchQuery: $searchQuery, filterSource: $filterSource, filterStatus: $filterStatus, filterFreelancer: $filterFreelancer, filterLeadType: $filterLeadType, counsellors: $counsellors)';
+  return 'LeadManagementDTO(leadsList: $leadsList, filteredLeadsList: $filteredLeadsList, selectedLead: $selectedLead, selectedLeadLocally: $selectedLeadLocally, searchQuery: $searchQuery, filterSource: $filterSource, filterStatus: $filterStatus, filterFreelancer: $filterFreelancer, filterLeadType: $filterLeadType, counsellors: $counsellors, callEvents: $callEvents)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $LeadManagementDTOCopyWith<$Res>  {
   factory $LeadManagementDTOCopyWith(LeadManagementDTO value, $Res Function(LeadManagementDTO) _then) = _$LeadManagementDTOCopyWithImpl;
 @useResult
 $Res call({
- List<LeadsListModel> leadsList, List<LeadsListModel> filteredLeadsList, LeadInfoModel? selectedLead, LeadsListModel? selectedLeadLocally, String searchQuery, String filterSource, String filterStatus, String filterFreelancer, String filterLeadType, List<UserProfileModel> counsellors
+ List<LeadsListModel> leadsList, List<LeadsListModel> filteredLeadsList, LeadInfoModel? selectedLead, LeadsListModel? selectedLeadLocally, String searchQuery, String filterSource, String filterStatus, String filterFreelancer, String filterLeadType, List<UserProfileModel> counsellors, List<CallEventModel> callEvents
 });
 
 
@@ -62,7 +62,7 @@ class _$LeadManagementDTOCopyWithImpl<$Res>
 
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? leadsList = null,Object? filteredLeadsList = null,Object? selectedLead = freezed,Object? selectedLeadLocally = freezed,Object? searchQuery = null,Object? filterSource = null,Object? filterStatus = null,Object? filterFreelancer = null,Object? filterLeadType = null,Object? counsellors = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? leadsList = null,Object? filteredLeadsList = null,Object? selectedLead = freezed,Object? selectedLeadLocally = freezed,Object? searchQuery = null,Object? filterSource = null,Object? filterStatus = null,Object? filterFreelancer = null,Object? filterLeadType = null,Object? counsellors = null,Object? callEvents = null,}) {
   return _then(_self.copyWith(
 leadsList: null == leadsList ? _self.leadsList : leadsList // ignore: cast_nullable_to_non_nullable
 as List<LeadsListModel>,filteredLeadsList: null == filteredLeadsList ? _self.filteredLeadsList : filteredLeadsList // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,8 @@ as String,filterStatus: null == filterStatus ? _self.filterStatus : filterStatus
 as String,filterFreelancer: null == filterFreelancer ? _self.filterFreelancer : filterFreelancer // ignore: cast_nullable_to_non_nullable
 as String,filterLeadType: null == filterLeadType ? _self.filterLeadType : filterLeadType // ignore: cast_nullable_to_non_nullable
 as String,counsellors: null == counsellors ? _self.counsellors : counsellors // ignore: cast_nullable_to_non_nullable
-as List<UserProfileModel>,
+as List<UserProfileModel>,callEvents: null == callEvents ? _self.callEvents : callEvents // ignore: cast_nullable_to_non_nullable
+as List<CallEventModel>,
   ));
 }
 
@@ -159,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  List<LeadsListModel> filteredLeadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally,  String searchQuery,  String filterSource,  String filterStatus,  String filterFreelancer,  String filterLeadType,  List<UserProfileModel> counsellors)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  List<LeadsListModel> filteredLeadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally,  String searchQuery,  String filterSource,  String filterStatus,  String filterFreelancer,  String filterLeadType,  List<UserProfileModel> counsellors,  List<CallEventModel> callEvents)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LeadManagementDTO() when $default != null:
-return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that.selectedLeadLocally,_that.searchQuery,_that.filterSource,_that.filterStatus,_that.filterFreelancer,_that.filterLeadType,_that.counsellors);case _:
+return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that.selectedLeadLocally,_that.searchQuery,_that.filterSource,_that.filterStatus,_that.filterFreelancer,_that.filterLeadType,_that.counsellors,_that.callEvents);case _:
   return orElse();
 
 }
@@ -180,10 +181,10 @@ return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  List<LeadsListModel> filteredLeadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally,  String searchQuery,  String filterSource,  String filterStatus,  String filterFreelancer,  String filterLeadType,  List<UserProfileModel> counsellors)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<LeadsListModel> leadsList,  List<LeadsListModel> filteredLeadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally,  String searchQuery,  String filterSource,  String filterStatus,  String filterFreelancer,  String filterLeadType,  List<UserProfileModel> counsellors,  List<CallEventModel> callEvents)  $default,) {final _that = this;
 switch (_that) {
 case _LeadManagementDTO():
-return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that.selectedLeadLocally,_that.searchQuery,_that.filterSource,_that.filterStatus,_that.filterFreelancer,_that.filterLeadType,_that.counsellors);case _:
+return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that.selectedLeadLocally,_that.searchQuery,_that.filterSource,_that.filterStatus,_that.filterFreelancer,_that.filterLeadType,_that.counsellors,_that.callEvents);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +201,10 @@ return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<LeadsListModel> leadsList,  List<LeadsListModel> filteredLeadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally,  String searchQuery,  String filterSource,  String filterStatus,  String filterFreelancer,  String filterLeadType,  List<UserProfileModel> counsellors)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<LeadsListModel> leadsList,  List<LeadsListModel> filteredLeadsList,  LeadInfoModel? selectedLead,  LeadsListModel? selectedLeadLocally,  String searchQuery,  String filterSource,  String filterStatus,  String filterFreelancer,  String filterLeadType,  List<UserProfileModel> counsellors,  List<CallEventModel> callEvents)?  $default,) {final _that = this;
 switch (_that) {
 case _LeadManagementDTO() when $default != null:
-return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that.selectedLeadLocally,_that.searchQuery,_that.filterSource,_that.filterStatus,_that.filterFreelancer,_that.filterLeadType,_that.counsellors);case _:
+return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that.selectedLeadLocally,_that.searchQuery,_that.filterSource,_that.filterStatus,_that.filterFreelancer,_that.filterLeadType,_that.counsellors,_that.callEvents);case _:
   return null;
 
 }
@@ -215,7 +216,7 @@ return $default(_that.leadsList,_that.filteredLeadsList,_that.selectedLead,_that
 
 
 class _LeadManagementDTO extends LeadManagementDTO {
-  const _LeadManagementDTO({final  List<LeadsListModel> leadsList = const [], final  List<LeadsListModel> filteredLeadsList = const [], this.selectedLead, this.selectedLeadLocally, this.searchQuery = '', this.filterSource = '', this.filterStatus = '', this.filterFreelancer = '', this.filterLeadType = '', final  List<UserProfileModel> counsellors = const []}): _leadsList = leadsList,_filteredLeadsList = filteredLeadsList,_counsellors = counsellors,super._();
+  const _LeadManagementDTO({final  List<LeadsListModel> leadsList = const [], final  List<LeadsListModel> filteredLeadsList = const [], this.selectedLead, this.selectedLeadLocally, this.searchQuery = '', this.filterSource = '', this.filterStatus = '', this.filterFreelancer = '', this.filterLeadType = '', final  List<UserProfileModel> counsellors = const [], final  List<CallEventModel> callEvents = const <CallEventModel>[]}): _leadsList = leadsList,_filteredLeadsList = filteredLeadsList,_counsellors = counsellors,_callEvents = callEvents,super._();
   
 
  final  List<LeadsListModel> _leadsList;
@@ -246,6 +247,13 @@ class _LeadManagementDTO extends LeadManagementDTO {
   return EqualUnmodifiableListView(_counsellors);
 }
 
+ final  List<CallEventModel> _callEvents;
+@override@JsonKey() List<CallEventModel> get callEvents {
+  if (_callEvents is EqualUnmodifiableListView) return _callEvents;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_callEvents);
+}
+
 
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -257,16 +265,16 @@ _$LeadManagementDTOCopyWith<_LeadManagementDTO> get copyWith => __$LeadManagemen
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LeadManagementDTO&&const DeepCollectionEquality().equals(other._leadsList, _leadsList)&&const DeepCollectionEquality().equals(other._filteredLeadsList, _filteredLeadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead)&&(identical(other.selectedLeadLocally, selectedLeadLocally) || other.selectedLeadLocally == selectedLeadLocally)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.filterSource, filterSource) || other.filterSource == filterSource)&&(identical(other.filterStatus, filterStatus) || other.filterStatus == filterStatus)&&(identical(other.filterFreelancer, filterFreelancer) || other.filterFreelancer == filterFreelancer)&&(identical(other.filterLeadType, filterLeadType) || other.filterLeadType == filterLeadType)&&const DeepCollectionEquality().equals(other._counsellors, _counsellors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LeadManagementDTO&&const DeepCollectionEquality().equals(other._leadsList, _leadsList)&&const DeepCollectionEquality().equals(other._filteredLeadsList, _filteredLeadsList)&&(identical(other.selectedLead, selectedLead) || other.selectedLead == selectedLead)&&(identical(other.selectedLeadLocally, selectedLeadLocally) || other.selectedLeadLocally == selectedLeadLocally)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.filterSource, filterSource) || other.filterSource == filterSource)&&(identical(other.filterStatus, filterStatus) || other.filterStatus == filterStatus)&&(identical(other.filterFreelancer, filterFreelancer) || other.filterFreelancer == filterFreelancer)&&(identical(other.filterLeadType, filterLeadType) || other.filterLeadType == filterLeadType)&&const DeepCollectionEquality().equals(other._counsellors, _counsellors)&&const DeepCollectionEquality().equals(other._callEvents, _callEvents));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_leadsList),const DeepCollectionEquality().hash(_filteredLeadsList),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType,const DeepCollectionEquality().hash(_counsellors));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_leadsList),const DeepCollectionEquality().hash(_filteredLeadsList),selectedLead,selectedLeadLocally,searchQuery,filterSource,filterStatus,filterFreelancer,filterLeadType,const DeepCollectionEquality().hash(_counsellors),const DeepCollectionEquality().hash(_callEvents));
 
 @override
 String toString() {
-  return 'LeadManagementDTO(leadsList: $leadsList, filteredLeadsList: $filteredLeadsList, selectedLead: $selectedLead, selectedLeadLocally: $selectedLeadLocally, searchQuery: $searchQuery, filterSource: $filterSource, filterStatus: $filterStatus, filterFreelancer: $filterFreelancer, filterLeadType: $filterLeadType, counsellors: $counsellors)';
+  return 'LeadManagementDTO(leadsList: $leadsList, filteredLeadsList: $filteredLeadsList, selectedLead: $selectedLead, selectedLeadLocally: $selectedLeadLocally, searchQuery: $searchQuery, filterSource: $filterSource, filterStatus: $filterStatus, filterFreelancer: $filterFreelancer, filterLeadType: $filterLeadType, counsellors: $counsellors, callEvents: $callEvents)';
 }
 
 
@@ -277,7 +285,7 @@ abstract mixin class _$LeadManagementDTOCopyWith<$Res> implements $LeadManagemen
   factory _$LeadManagementDTOCopyWith(_LeadManagementDTO value, $Res Function(_LeadManagementDTO) _then) = __$LeadManagementDTOCopyWithImpl;
 @override @useResult
 $Res call({
- List<LeadsListModel> leadsList, List<LeadsListModel> filteredLeadsList, LeadInfoModel? selectedLead, LeadsListModel? selectedLeadLocally, String searchQuery, String filterSource, String filterStatus, String filterFreelancer, String filterLeadType, List<UserProfileModel> counsellors
+ List<LeadsListModel> leadsList, List<LeadsListModel> filteredLeadsList, LeadInfoModel? selectedLead, LeadsListModel? selectedLeadLocally, String searchQuery, String filterSource, String filterStatus, String filterFreelancer, String filterLeadType, List<UserProfileModel> counsellors, List<CallEventModel> callEvents
 });
 
 
@@ -294,7 +302,7 @@ class __$LeadManagementDTOCopyWithImpl<$Res>
 
 /// Create a copy of LeadManagementDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? leadsList = null,Object? filteredLeadsList = null,Object? selectedLead = freezed,Object? selectedLeadLocally = freezed,Object? searchQuery = null,Object? filterSource = null,Object? filterStatus = null,Object? filterFreelancer = null,Object? filterLeadType = null,Object? counsellors = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? leadsList = null,Object? filteredLeadsList = null,Object? selectedLead = freezed,Object? selectedLeadLocally = freezed,Object? searchQuery = null,Object? filterSource = null,Object? filterStatus = null,Object? filterFreelancer = null,Object? filterLeadType = null,Object? counsellors = null,Object? callEvents = null,}) {
   return _then(_LeadManagementDTO(
 leadsList: null == leadsList ? _self._leadsList : leadsList // ignore: cast_nullable_to_non_nullable
 as List<LeadsListModel>,filteredLeadsList: null == filteredLeadsList ? _self._filteredLeadsList : filteredLeadsList // ignore: cast_nullable_to_non_nullable
@@ -306,7 +314,8 @@ as String,filterStatus: null == filterStatus ? _self.filterStatus : filterStatus
 as String,filterFreelancer: null == filterFreelancer ? _self.filterFreelancer : filterFreelancer // ignore: cast_nullable_to_non_nullable
 as String,filterLeadType: null == filterLeadType ? _self.filterLeadType : filterLeadType // ignore: cast_nullable_to_non_nullable
 as String,counsellors: null == counsellors ? _self._counsellors : counsellors // ignore: cast_nullable_to_non_nullable
-as List<UserProfileModel>,
+as List<UserProfileModel>,callEvents: null == callEvents ? _self._callEvents : callEvents // ignore: cast_nullable_to_non_nullable
+as List<CallEventModel>,
   ));
 }
 

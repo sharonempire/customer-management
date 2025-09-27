@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
+import 'package:management_software/features/data/lead_management/models/call_event_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 
@@ -21,7 +22,16 @@ class LeadManagementDTO with _$LeadManagementDTO {
     @Default('') String filterFreelancer,
     @Default('') String filterLeadType,
     @Default([]) List<UserProfileModel> counsellors,
+    @Default(<CallEventModel>[]) List<CallEventModel> callEvents,
   }) = _LeadManagementDTO;
+  
+  @override
+  // TODO: implement callEvents
+  List<CallEventModel> get callEvents => throw UnimplementedError();
+  
+  @override
+  // TODO: implement counsellors
+  List<UserProfileModel> get counsellors => throw UnimplementedError();
   
   @override
   // TODO: implement filterFreelancer
@@ -58,9 +68,4 @@ class LeadManagementDTO with _$LeadManagementDTO {
   @override
   // TODO: implement selectedLeadLocally
   LeadsListModel? get selectedLeadLocally => throw UnimplementedError();
-  
-  @override
-  // TODO: implement counsellors
-  List<UserProfileModel> get counsellors => throw UnimplementedError();
-
 }

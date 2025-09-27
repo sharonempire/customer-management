@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
+import 'package:management_software/features/data/lead_management/models/call_event_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
@@ -7,6 +8,7 @@ import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LeadManagementRepo {
   final NetworkService _networkService;
@@ -391,6 +393,42 @@ class LeadManagementRepo {
     } catch (e) {
       log("Delete Lead Error: $e");
       return false;
+    }
+  }
+
+  RealtimeChannel subscribeToCallEvents({
+    PostgresChangeFilter? filter,
+    void Function(PostgresChangePayload payload)? onInsert,
+    void Function(PostgresChangePayload payload)? onUpdate,
+    void Function(PostgresChangePayload payload)? onDelete,
+  }) {
+    return _networkService.subscribeToRealtime(
+      table: SupabaseTables.callEvents,
+      schema: 'public',
+      filter: filter,
+      onInsert: onInsert,
+      onUpdate: onUpdate,
+      onDelete: onDelete,
+    );
+  }
+
+  Future<List<CallEventModel>> fetchRecentCallEvents({int limit = 50}) async {
+    try {
+      final response = await _networkService.pull(
+        table: SupabaseTables.callEvents,
+        orderBy: 'created_at',
+        ascending: false,
+        limit: limit,
+      );
+
+      final rows = List<Map<String, dynamic>>.from(response);
+
+      return rows
+          .map<CallEventModel>((row) => CallEventModel.fromJson(row))
+          .toList();
+    } catch (error, stackTrace) {
+      log('Fetch call events error: $error', stackTrace: stackTrace);
+      return const <CallEventModel>[];
     }
   }
 }
