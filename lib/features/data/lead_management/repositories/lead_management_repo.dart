@@ -8,7 +8,6 @@ import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LeadManagementRepo {
   final NetworkService _networkService;
@@ -396,19 +395,14 @@ class LeadManagementRepo {
     }
   }
 
-  RealtimeChannel subscribeToCallEvents({
-    PostgresChangeFilter? filter,
-    void Function(PostgresChangePayload payload)? onInsert,
-    void Function(PostgresChangePayload payload)? onUpdate,
-    void Function(PostgresChangePayload payload)? onDelete,
+  Stream<List<Map<String, dynamic>>> streamCallEvents({
+    String? filterColumn,
+    dynamic filterValue,
   }) {
-    return _networkService.subscribeToRealtime(
+    return _networkService.subscribeToTable(
       table: SupabaseTables.callEvents,
-      schema: 'public',
-      filter: filter,
-      onInsert: onInsert,
-      onUpdate: onUpdate,
-      onDelete: onDelete,
+      filterColumn: filterColumn,
+      filterValue: filterValue,
     );
   }
 

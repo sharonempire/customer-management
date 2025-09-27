@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
-import 'package:management_software/features/application/lead_management/model/lead_management_dto.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/current_follow_ups_view.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/drafts_view.dart';
@@ -27,20 +26,10 @@ class LeadManagement extends ConsumerStatefulWidget {
 class _LeadManagementState extends ConsumerState<LeadManagement>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  ProviderSubscription<LeadManagementDTO>? _callEventsSubscription;
 
   @override
   void initState() {
     super.initState();
-    _callEventsSubscription = ref.listenManual<LeadManagementDTO>(
-      leadMangementcontroller,
-      (previous, next) {
-        if (previous?.callEvents.length != next.callEvents.length) {
-          debugPrint('Live call events: ${next.callEvents.length}');
-        }
-      },
-      fireImmediately: true,
-    );
     final initialCount = ref.read(leadMangementcontroller).callEvents.length;
     debugPrint('Live call events: $initialCount');
     ref.read(leadMangementcontroller.notifier).subscribeToCallEvents();
@@ -61,7 +50,6 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   @override
   void dispose() {
     _tabController.dispose();
-    _callEventsSubscription?.close();
     ref.read(leadMangementcontroller.notifier).unsubscribeFromCallEvents();
     super.dispose();
   }

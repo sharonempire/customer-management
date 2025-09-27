@@ -14,7 +14,6 @@ import 'package:management_software/features/data/lead_management/models/lead_li
 import 'package:management_software/features/data/lead_management/repositories/lead_management_repo.dart';
 import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'lead_management_controller_filters.dart';
 part 'lead_management_controller_info.dart';
@@ -87,11 +86,11 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   final Ref ref;
   List<LeadsListModel> _allLeadsCache = const [];
   Map<int, List<LeadCallLog>> _callLogsByLeadId = <int, List<LeadCallLog>>{};
-  RealtimeChannel? _callEventsChannel;
+  StreamSubscription<List<Map<String, dynamic>>>? _callEventsSubscription;
 
   static const int _maxRealtimeCallEventsStored = 100;
 
-  bool get isSubscribedToCallEvents => _callEventsChannel != null;
+  bool get isSubscribedToCallEvents => _callEventsSubscription != null;
 
   List<LeadCallLog> get realtimeCallLogs => state.callEvents
       .map((event) => event.toLeadCallLog())
@@ -118,36 +117,40 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
     );
   }
 
-  void subscribeToCallEvents({PostgresChangeFilter? filter}) {
-    if (_callEventsChannel != null) return;
+  void subscribeToCallEvents() {
+    if (_callEventsSubscription != null) return;
 
     unawaited(loadRecentCallEvents());
 
-    _callEventsChannel = _leadManagementRepo.subscribeToCallEvents(
-      filter: filter,
-      onInsert:
-          (payload) => _upsertCallEvent(
-            payload.newRecord,
-            fallbackOld: payload.oldRecord,
-          ),
-      onUpdate:
-          (payload) => _upsertCallEvent(
-            payload.newRecord,
-            fallbackOld: payload.oldRecord,
-          ),
-      onDelete: (payload) => _removeCallEvent(payload.oldRecord),
+    _callEventsSubscription = _leadManagementRepo.streamCallEvents().listen(
+      (rows) {
+        if (rows.isEmpty) return;
+        final events = rows.map((row) => CallEventModel.fromJson(row)).toList();
+        events.sort(
+          (a, b) => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
+              .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        );
+
+        final limited =
+            events.length > _maxRealtimeCallEventsStored
+                ? events.sublist(0, _maxRealtimeCallEventsStored)
+                : events;
+
+        state = state.copyWith(
+          callEvents: List<CallEventModel>.unmodifiable(limited),
+        );
+      },
+      onError: (error, stackTrace) {
+        log('Call events stream error: $error', stackTrace: stackTrace);
+      },
     );
   }
 
   Future<void> unsubscribeFromCallEvents() async {
-    final channel = _callEventsChannel;
-    if (channel == null) return;
-    _callEventsChannel = null;
-    try {
-      await channel.unsubscribe();
-    } catch (error, stackTrace) {
-      log('Call events unsubscribe error: $error', stackTrace: stackTrace);
-    }
+    final subscription = _callEventsSubscription;
+    if (subscription == null) return;
+    _callEventsSubscription = null;
+    await subscription.cancel();
   }
 
   void _upsertCallEvent(
@@ -203,10 +206,10 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
 
   @override
   void dispose() {
-    final channel = _callEventsChannel;
-    if (channel != null) {
-      unawaited(channel.unsubscribe());
-      _callEventsChannel = null;
+    final subscription = _callEventsSubscription;
+    if (subscription != null) {
+      unawaited(subscription.cancel());
+      _callEventsSubscription = null;
     }
     super.dispose();
   }
