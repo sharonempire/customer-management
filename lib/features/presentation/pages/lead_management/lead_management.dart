@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,6 +74,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
 
         final latest = next.callEvents.first;
         final latestUuid = latest.callUuid;
+        log("calls uuid /////////j ${latestUuid} ");
         if (latestUuid == null || latestUuid.isEmpty) return;
 
         final hadPrevious = previous?.callEvents.isNotEmpty ?? false;
@@ -88,6 +91,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
         if (latest.calledNumber != myPhone) return;
 
         final route = ModalRoute.of(context);
+        log(route.toString());
         if (route == null || route.isCurrent) {
           context.push(
             '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
@@ -95,6 +99,7 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
         }
       });
     }
+    _callListenerRegistered = false;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final selectedTab = ref.watch(leadTabProvider);

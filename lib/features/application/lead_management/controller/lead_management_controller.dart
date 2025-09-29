@@ -98,7 +98,7 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
 
   int get realtimeCallCount => state.callEvents.length;
 
-  Future<void> loadRecentCallEvents({int limit = 50}) async {
+  Future<void> loadRecentCallEvents({int limit = 100}) async {
     try {
       final events = await _leadManagementRepo.fetchRecentCallEvents(
         limit: limit.clamp(1, _maxRealtimeCallEventsStored),
