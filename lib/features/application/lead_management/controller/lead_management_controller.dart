@@ -4,7 +4,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
 import 'package:management_software/features/application/authentification/model/user_profile_model.dart';
 import 'package:management_software/features/application/lead_management/model/lead_management_dto.dart';

@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
 import 'package:management_software/features/application/lead_management/controller/lead_management_controller.dart';
 import 'package:management_software/features/application/lead_management/model/lead_management_dto.dart';
-import 'package:management_software/features/data/lead_management/models/call_event_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/lead_filter_widget.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/current_follow_ups_view.dart';
 import 'package:management_software/features/presentation/pages/lead_management/widgets/drafts_view.dart';
