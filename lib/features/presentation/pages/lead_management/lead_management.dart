@@ -244,10 +244,14 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
                     ),
                     child: TabBar(
                       controller: _tabController,
-                      onTap:
-                          (index) =>
-                              ref.read(leadTabProvider.notifier).state =
-                                  LeadTab.values[index],
+                      onTap: (index) {
+                        if (!mounted) return;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          ref.read(leadTabProvider.notifier).state =
+                              LeadTab.values[index];
+                        });
+                      },
                       tabs: const [
                         Tab(text: "Current Follow ups"),
                         Tab(text: "Drafts"),

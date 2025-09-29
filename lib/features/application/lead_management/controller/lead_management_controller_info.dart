@@ -56,8 +56,8 @@ mixin LeadControllerInfoMixin on LeadControllerBase {
     if (fetched == null) return null;
 
     final fetchedId = fetched.id;
-    final exists = fetchedId != null &&
-        _allLeadsCache.any((lead) => lead.id == fetchedId);
+    final exists =
+        fetchedId != null && _allLeadsCache.any((lead) => lead.id == fetchedId);
     if (!exists) {
       _allLeadsCache = List<LeadsListModel>.from(_allLeadsCache)..add(fetched);
     }
@@ -217,12 +217,9 @@ mixin LeadControllerInfoMixin on LeadControllerBase {
         final currentLead = state.selectedLead;
         if (currentLead != null) {
           final existingLogs = currentLead.callInfo ?? const <LeadCallLog>[];
-          final mergedLogs = <LeadCallLog>[logEntry]
-            ..addAll(
-              existingLogs.where(
-                (entry) => entry.callUuid != logEntry.callUuid,
-              ),
-            );
+          final mergedLogs = <LeadCallLog>[logEntry]..addAll(
+            existingLogs.where((entry) => entry.callUuid != logEntry.callUuid),
+          );
 
           final updatedLead = currentLead.copyWith(callInfo: mergedLogs);
           setLeadInfo(updatedLead);

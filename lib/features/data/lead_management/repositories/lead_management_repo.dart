@@ -417,10 +417,8 @@ class LeadManagementRepo {
 
   Future<LeadsListModel?> fetchLeadByPhone(String phone) async {
     try {
-      final attempts = <String>{
-        phone,
-        phone.replaceAll(RegExp(r'[^0-9]'), ''),
-      }..removeWhere((value) => value.isEmpty);
+      final attempts = <String>{phone, phone.replaceAll(RegExp(r'[^0-9]'), '')}
+        ..removeWhere((value) => value.isEmpty);
 
       for (final attempt in attempts) {
         final rows = await _networkService.pull(

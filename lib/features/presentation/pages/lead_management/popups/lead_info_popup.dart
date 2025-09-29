@@ -247,7 +247,6 @@ class _CommonSwitchState extends State<CommonSwitch> {
   }
 }
 
-
 class CommonTextField extends StatelessWidget {
   final String text;
   final TextEditingController controller;
@@ -379,6 +378,10 @@ class CommonDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final normalizedValue =
+        value != null && items.contains(value) ? value : null;
+    final displayText = normalizedValue ?? value;
+
     if (items.length <= 10) {
       return Expanded(
         child: Padding(
@@ -387,12 +390,11 @@ class CommonDropdown extends StatelessWidget {
             vertical: 10,
           ), // ✅ same padding as TextField
           child: DropdownButtonFormField<String>(
-          
             hint: Text(
               label,
               style: myTextstyle(color: Colors.grey, fontSize: 16),
             ),
-            value: value,
+            value: normalizedValue,
             decoration: InputDecoration(
               labelText: label,
               labelStyle: myTextstyle(color: Colors.grey, fontSize: 16),
@@ -475,13 +477,13 @@ class CommonDropdown extends StatelessWidget {
               ),
               suffixIcon: const Icon(Icons.search),
             ),
-            isEmpty: value == null || value!.isEmpty,
+            isEmpty: displayText == null || displayText.trim().isEmpty,
             child: Text(
-              value?.trim().isNotEmpty == true ? value! : label,
+              displayText?.trim().isNotEmpty == true ? displayText! : label,
               style: myTextstyle(
                 fontSize: 16,
                 color:
-                    (value == null || value!.isEmpty)
+                    (displayText == null || displayText.isEmpty)
                         ? Colors.grey
                         : Colors.black,
               ),
