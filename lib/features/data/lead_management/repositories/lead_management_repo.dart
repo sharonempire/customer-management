@@ -8,6 +8,7 @@ import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LeadManagementRepo {
   final NetworkService _networkService;
@@ -412,6 +413,80 @@ class LeadManagementRepo {
     } catch (error, stackTrace) {
       log('Fetch call events error: $error', stackTrace: stackTrace);
       return const <CallEventModel>[];
+    }
+  }
+
+  RealtimeChannel subscribeToCallEvents({
+    void Function(CallEventModel event)? onInsert,
+    void Function(CallEventModel event)? onUpdate,
+    void Function(CallEventModel event)? onDelete,
+    void Function(RealtimeSubscribeStatus status, Object? error)? onStatus,
+  }) {
+    CallEventModel? _parse(Map<String, dynamic>? record) {
+      if (record == null) return null;
+      try {
+        return CallEventModel.fromJson(record);
+      } catch (error, stackTrace) {
+        log('Call events realtime parse error: $error', stackTrace: stackTrace);
+        return null;
+      }
+    }
+
+    final channel = _networkService.supabase.channel(
+      'public:${SupabaseTables.callEvents}',
+    );
+
+    if (onInsert != null) {
+      channel.onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'public',
+        table: SupabaseTables.callEvents,
+        callback: (payload) {
+          final model = _parse(payload.newRecord);
+          if (model != null) onInsert(model);
+        },
+      );
+    }
+
+    if (onUpdate != null) {
+      channel.onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: SupabaseTables.callEvents,
+        callback: (payload) {
+          final model = _parse(payload.newRecord);
+          if (model != null) onUpdate(model);
+        },
+      );
+    }
+
+    if (onDelete != null) {
+      channel.onPostgresChanges(
+        event: PostgresChangeEvent.delete,
+        schema: 'public',
+        table: SupabaseTables.callEvents,
+        callback: (payload) {
+          final model = _parse(payload.oldRecord);
+          if (model != null) onDelete(model);
+        },
+      );
+    }
+
+    channel.subscribe((status, error) {
+      onStatus?.call(status, error);
+      if (status == RealtimeSubscribeStatus.channelError && error != null) {
+        log('Call events channel error: $error');
+      }
+    });
+
+    return channel;
+  }
+
+  Future<void> removeRealtimeChannel(RealtimeChannel channel) async {
+    try {
+      await _networkService.supabase.removeChannel(channel);
+    } catch (error, stackTrace) {
+      log('Remove realtime channel error: $error', stackTrace: stackTrace);
     }
   }
 

@@ -13,6 +13,7 @@ import 'package:management_software/features/data/lead_management/models/lead_li
 import 'package:management_software/features/data/lead_management/repositories/lead_management_repo.dart';
 import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'lead_management_controller_filters.dart';
 part 'lead_management_controller_info.dart';
@@ -85,11 +86,11 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   final Ref ref;
   List<LeadsListModel> _allLeadsCache = const [];
   Map<int, List<LeadCallLog>> _callLogsByLeadId = <int, List<LeadCallLog>>{};
-  Timer? _callEventsTimer;
+  RealtimeChannel? _callEventsChannel;
 
   static const int _maxRealtimeCallEventsStored = 100;
 
-  bool get isSubscribedToCallEvents => _callEventsTimer != null;
+  bool get isSubscribedToCallEvents => _callEventsChannel != null;
 
   List<LeadCallLog> get realtimeCallLogs => state.callEvents
       .map((event) => event.toLeadCallLog())
@@ -97,53 +98,146 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
 
   int get realtimeCallCount => state.callEvents.length;
 
+  void _replaceCallEvents(List<CallEventModel> events) {
+    final sorted = List<CallEventModel>.from(events)..sort((a, b) {
+      final aDate = a.createdAt;
+      final bDate = b.createdAt;
+      if (aDate == null && bDate == null) return 0;
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return bDate.compareTo(aDate);
+    });
+
+    final limited =
+        sorted.length > _maxRealtimeCallEventsStored
+            ? sorted.sublist(0, _maxRealtimeCallEventsStored)
+            : sorted;
+
+    state = state.copyWith(
+      callEvents: List<CallEventModel>.unmodifiable(limited),
+    );
+  }
+
+  void _upsertCallEvent(CallEventModel event) {
+    final current = state.callEvents;
+    final updated = <CallEventModel>[event]..addAll(
+      current.where((existing) {
+        final matchesId =
+            event.id != null && existing.id != null && existing.id == event.id;
+        final matchesUuid =
+            event.callUuid != null &&
+            existing.callUuid != null &&
+            existing.callUuid == event.callUuid;
+        return !(matchesId || matchesUuid);
+      }),
+    );
+
+    _replaceCallEvents(updated);
+  }
+
+  void _removeCallEvent(CallEventModel event) {
+    final current = state.callEvents;
+    final updated = current
+        .where((existing) {
+          final matchesId =
+              event.id != null &&
+              existing.id != null &&
+              existing.id == event.id;
+          final matchesUuid =
+              event.callUuid != null &&
+              existing.callUuid != null &&
+              existing.callUuid == event.callUuid;
+          return !(matchesId || matchesUuid);
+        })
+        .toList(growable: false);
+
+    if (updated.length == current.length) return;
+    _replaceCallEvents(updated);
+  }
+
   Future<void> loadRecentCallEvents({int limit = 100}) async {
     try {
       final events = await _leadManagementRepo.fetchRecentCallEvents(
         limit: limit.clamp(1, _maxRealtimeCallEventsStored),
       );
 
-      if (events.isEmpty) return;
+      if (events.isEmpty) {
+        _replaceCallEvents(const <CallEventModel>[]);
+        return;
+      }
 
-      final trimmed =
-          events.length > _maxRealtimeCallEventsStored
-              ? events.sublist(0, _maxRealtimeCallEventsStored)
-              : events;
+      log('Loaded ${events.length} recent call events.');
 
-      log('Loaded ${trimmed.length} recent call events.');
-
-      state = state.copyWith(
-        callEvents: List<CallEventModel>.unmodifiable(trimmed),
-      );
+      _replaceCallEvents(events);
     } catch (error, stackTrace) {
       log('Load call events error: $error', stackTrace: stackTrace);
     }
   }
 
   void subscribeToCallEvents() {
-    if (_callEventsTimer != null) return;
+    if (_callEventsChannel != null) return;
 
     unawaited(loadRecentCallEvents());
 
-    _callEventsTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      unawaited(loadRecentCallEvents());
-    });
+    late final RealtimeChannel channel;
+    channel = _leadManagementRepo.subscribeToCallEvents(
+      onInsert: _upsertCallEvent,
+      onUpdate: _upsertCallEvent,
+      onDelete: _removeCallEvent,
+      onStatus: (status, error) {
+        switch (status) {
+          case RealtimeSubscribeStatus.subscribed:
+            log('Call events realtime subscribed.');
+            break;
+          case RealtimeSubscribeStatus.closed:
+            log('Call events realtime channel closed.');
+            if (_callEventsChannel != null &&
+                identical(_callEventsChannel, channel)) {
+              _callEventsChannel = null;
+            }
+            unawaited(_leadManagementRepo.removeRealtimeChannel(channel));
+            unawaited(loadRecentCallEvents());
+            break;
+          case RealtimeSubscribeStatus.channelError:
+            log('Call events realtime channel error: $error');
+            if (_callEventsChannel != null &&
+                identical(_callEventsChannel, channel)) {
+              _callEventsChannel = null;
+            }
+            unawaited(_leadManagementRepo.removeRealtimeChannel(channel));
+            unawaited(loadRecentCallEvents());
+            break;
+          case RealtimeSubscribeStatus.timedOut:
+            log('Call events realtime channel timed out.');
+            unawaited(loadRecentCallEvents());
+            break;
+        }
+      },
+    );
+
+    _callEventsChannel = channel;
   }
 
   Future<void> unsubscribeFromCallEvents() async {
-    final timer = _callEventsTimer;
-    if (timer == null) return;
-    _callEventsTimer = null;
-    timer.cancel();
+    final channel = _callEventsChannel;
+    if (channel == null) return;
+    _callEventsChannel = null;
+
+    try {
+      await channel.unsubscribe();
+    } catch (error, stackTrace) {
+      log(
+        'Call events realtime unsubscribe error: $error',
+        stackTrace: stackTrace,
+      );
+    }
+
+    await _leadManagementRepo.removeRealtimeChannel(channel);
   }
 
   @override
   void dispose() {
-    final timer = _callEventsTimer;
-    if (timer != null) {
-      timer.cancel();
-      _callEventsTimer = null;
-    }
+    unawaited(unsubscribeFromCallEvents());
     super.dispose();
   }
 }

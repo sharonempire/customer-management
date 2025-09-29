@@ -55,9 +55,7 @@ class _BasicInfoCollectionState extends ConsumerState<BasicInfoCollection> {
   @override
   Widget build(BuildContext context) {
     final isFromNewLead = ref.watch(fromNewLead);
-    log("${isFromNewLead.toString()}////////////");
     Future<void> saveBasicInfo() async {
-      log("${isFromNewLead.toString()}////////////");
       if (isFromNewLead) {
         ref.read(leadMangementcontroller.notifier).setFromNewLead(false);
 
