@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/routes/app_router.dart';
+import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/providers/theme_providers.dart';
 import 'package:management_software/shared/supabase/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +44,7 @@ class MyApp extends ConsumerWidget {
       themeMode: themeMode,
       theme: ThemeData.light(useMaterial3: true),
       darkTheme: ThemeData.dark(useMaterial3: true),
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: router,
     );
   }

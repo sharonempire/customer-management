@@ -11,12 +11,25 @@ final networkServiceProvider = Provider<NetworkService>((ref) {
 });
 
 final snackbarServiceProvider = Provider<SnackbarService>((ref) {
-  return SnackbarService();
+  return const SnackbarService();
 });
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 class SnackbarService {
-  void showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  const SnackbarService();
+
+  void showError(BuildContext? context, String message) {
+    final messenger = _resolveMessenger(context);
+    if (messenger == null) {
+      debugPrint(
+        'SnackbarService.showError skipped: no ScaffoldMessenger available. Message: $message',
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
@@ -25,14 +38,37 @@ class SnackbarService {
     );
   }
 
-  void showSuccess(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  void showSuccess(BuildContext? context, String message) {
+    final messenger = _resolveMessenger(context);
+    if (messenger == null) {
+      debugPrint(
+        'SnackbarService.showSuccess skipped: no ScaffoldMessenger available. Message: $message',
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  ScaffoldMessengerState? _resolveMessenger(BuildContext? context) {
+    if (context != null) {
+      try {
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        if (messenger != null) {
+          return messenger;
+        }
+      } catch (error) {
+        debugPrint('SnackbarService context lookup failed: $error');
+      }
+    }
+
+    return rootScaffoldMessengerKey.currentState;
   }
 }
 
