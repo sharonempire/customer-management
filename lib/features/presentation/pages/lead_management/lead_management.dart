@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,6 +31,13 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   late TabController _tabController;
   bool _callListenerRegistered = false;
   String? _lastNotifiedCallUuid;
+  bool _isShowingCallPopup = false;
+  ProviderSubscription<LeadManagementDTO>? _callListenerSubscription;
+
+  String _normalizePhone(String? value) {
+    if (value == null) return '';
+    return value.replaceAll(RegExp(r'[^0-9]'), '');
+  }
 
   @override
   void initState() {
@@ -58,6 +63,9 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   void dispose() {
     _tabController.dispose();
     ref.read(leadMangementcontroller.notifier).unsubscribeFromCallEvents();
+    _callListenerSubscription?.close();
+    _callListenerSubscription = null;
+    _callListenerRegistered = false;
     super.dispose();
   }
 
@@ -65,7 +73,9 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   Widget build(BuildContext context) {
     if (!_callListenerRegistered) {
       _callListenerRegistered = true;
-      ref.listen<LeadManagementDTO>(leadMangementcontroller, (previous, next) {
+      _callListenerSubscription = ref.listenManual<
+        LeadManagementDTO
+      >(leadMangementcontroller, (previous, next) {
         if (!mounted) return;
         if (next.callEvents.isEmpty) {
           _lastNotifiedCallUuid = null;
@@ -74,8 +84,8 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
 
         final latest = next.callEvents.first;
         final latestUuid = latest.callUuid;
-        log("calls uuid /////////j ${latestUuid} ");
         if (latestUuid == null || latestUuid.isEmpty) return;
+        if (_lastNotifiedCallUuid == latestUuid) return;
 
         final hadPrevious = previous?.callEvents.isNotEmpty ?? false;
         if (!hadPrevious && _lastNotifiedCallUuid == null) {
@@ -83,23 +93,64 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
           return;
         }
 
-        if (_lastNotifiedCallUuid == latestUuid) return;
-        _lastNotifiedCallUuid = latestUuid;
-
-        final myPhone = ref.read(authControllerProvider).phone?.toString();
-        if (myPhone == null || myPhone.isEmpty) return;
-        if (latest.calledNumber != myPhone) return;
-
-        final route = ModalRoute.of(context);
-        log(route.toString());
-        if (route == null || route.isCurrent) {
-          context.push(
-            '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
-          );
+        final myPhone = _normalizePhone(
+          ref.read(authControllerProvider).phone?.toString(),
+        );
+        if (myPhone.isEmpty) {
+          _lastNotifiedCallUuid = latestUuid;
+          return;
         }
+
+        final candidateNumbers = <String>{
+          _normalizePhone(latest.agentNumber),
+          _normalizePhone(latest.extension),
+          _normalizePhone(latest.calledNumber),
+        }..removeWhere((value) => value.isEmpty);
+
+        final matchesMyPhone = candidateNumbers.any(
+          (candidate) =>
+              myPhone == candidate ||
+              myPhone.endsWith(candidate) ||
+              candidate.endsWith(myPhone),
+        );
+
+        if (!matchesMyPhone) {
+          _lastNotifiedCallUuid = latestUuid;
+          return;
+        }
+
+        if (_isShowingCallPopup) return;
+        _isShowingCallPopup = true;
+
+        Future<void>.microtask(() async {
+          try {
+            final controller = ref.read(leadMangementcontroller.notifier);
+            final leadPhone =
+                latest.callerNumber ??
+                latest.callerId ??
+                latest.calledNumber ??
+                '';
+            final opened = await controller.openLeadByPhone(
+              phone: leadPhone,
+              callEvent: latest,
+              context: context,
+            );
+
+            _lastNotifiedCallUuid = latestUuid;
+
+            if (!mounted || !opened) return;
+
+            context.push(
+              '${RouterConsts().enquiries.route}/${RouterConsts().leadInfo.route}',
+            );
+          } finally {
+            if (mounted) {
+              _isShowingCallPopup = false;
+            }
+          }
+        });
       });
     }
-    _callListenerRegistered = false;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final selectedTab = ref.watch(leadTabProvider);

@@ -414,4 +414,31 @@ class LeadManagementRepo {
       return const <CallEventModel>[];
     }
   }
+
+  Future<LeadsListModel?> fetchLeadByPhone(String phone) async {
+    try {
+      final attempts = <String>{
+        phone,
+        phone.replaceAll(RegExp(r'[^0-9]'), ''),
+      }..removeWhere((value) => value.isEmpty);
+
+      for (final attempt in attempts) {
+        final rows = await _networkService.pull(
+          table: SupabaseTables.leadList,
+          filters: {'phone': attempt},
+          limit: 1,
+          columns: _leadWithAssignedProfileSelect,
+        );
+
+        final result = List<Map<String, dynamic>>.from(rows);
+        if (result.isNotEmpty) {
+          return LeadsListModel.fromJson(result.first);
+        }
+      }
+    } catch (error, stackTrace) {
+      log('fetchLeadByPhone error: $error', stackTrace: stackTrace);
+    }
+
+    return null;
+  }
 }

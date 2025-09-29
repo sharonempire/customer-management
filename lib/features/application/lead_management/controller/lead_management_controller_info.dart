@@ -17,6 +17,54 @@ mixin LeadControllerInfoMixin on LeadControllerBase {
     return null;
   }
 
+  String _normalizePhoneValue(String? value) {
+    if (value == null) return '';
+    return value.replaceAll(RegExp(r'[^0-9]'), '');
+  }
+
+  LeadsListModel? _findLeadByPhone(String phone) {
+    final normalized = _normalizePhoneValue(phone);
+    if (normalized.isEmpty) return null;
+
+    bool matches(LeadsListModel? lead) {
+      if (lead == null) return false;
+      final candidate = _normalizePhoneValue(lead.phone?.toString());
+      if (candidate.isEmpty) return false;
+      return candidate == normalized ||
+          candidate.endsWith(normalized) ||
+          normalized.endsWith(candidate);
+    }
+
+    if (matches(state.selectedLeadLocally)) return state.selectedLeadLocally;
+
+    for (final lead in state.leadsList) {
+      if (matches(lead)) return lead;
+    }
+
+    for (final lead in _allLeadsCache) {
+      if (matches(lead)) return lead;
+    }
+
+    return null;
+  }
+
+  Future<LeadsListModel?> _fetchLeadByPhone(String phone) async {
+    final normalized = _normalizePhoneValue(phone);
+    if (normalized.isEmpty) return null;
+
+    final fetched = await _leadManagementRepo.fetchLeadByPhone(normalized);
+    if (fetched == null) return null;
+
+    final fetchedId = fetched.id;
+    final exists = fetchedId != null &&
+        _allLeadsCache.any((lead) => lead.id == fetchedId);
+    if (!exists) {
+      _allLeadsCache = List<LeadsListModel>.from(_allLeadsCache)..add(fetched);
+    }
+
+    return fetched;
+  }
+
   LeadInfoModel _buildInfoFromLeadRow(LeadsListModel lead) {
     final id = lead.id;
     final displayName = (lead.name ?? '').trim();
@@ -142,5 +190,51 @@ mixin LeadControllerInfoMixin on LeadControllerBase {
           .showError(context, 'Failed to load lead details: $e');
       return LeadInfoModel();
     }
+  }
+
+  Future<bool> openLeadByPhone({
+    required String phone,
+    CallEventModel? callEvent,
+    required BuildContext context,
+  }) async {
+    final normalized = _normalizePhoneValue(phone);
+    if (normalized.isEmpty) return false;
+
+    var lead = _findLeadByPhone(normalized);
+    lead ??= await _fetchLeadByPhone(normalized);
+    lead ??= await _fetchLeadByPhone(phone);
+
+    if (lead == null) {
+      log('openLeadByPhone: no lead found for phone $phone');
+      return false;
+    }
+
+    await setLeadLocally(lead, context);
+
+    if (callEvent != null) {
+      final logEntry = callEvent.toLeadCallLog();
+      if (logEntry.callUuid != null && logEntry.callUuid!.isNotEmpty) {
+        final currentLead = state.selectedLead;
+        if (currentLead != null) {
+          final existingLogs = currentLead.callInfo ?? const <LeadCallLog>[];
+          final mergedLogs = <LeadCallLog>[logEntry]
+            ..addAll(
+              existingLogs.where(
+                (entry) => entry.callUuid != logEntry.callUuid,
+              ),
+            );
+
+          final updatedLead = currentLead.copyWith(callInfo: mergedLogs);
+          setLeadInfo(updatedLead);
+
+          final leadId = updatedLead.id;
+          if (leadId != null) {
+            _callLogsByLeadId[leadId] = mergedLogs;
+          }
+        }
+      }
+    }
+
+    return true;
   }
 }
