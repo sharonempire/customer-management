@@ -7,7 +7,7 @@ class SupabaseTables {
   static const String profiles = "profiles";
   static const String attendance = "attendance";
   static const String leadList = "leadslist";
-  static const String leadInfo = "lead-info";
+  static const String leadInfo = "lead_info";
   static const String callEvents = "call_events";
 }
 
