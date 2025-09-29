@@ -88,7 +88,8 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   Map<int, List<LeadCallLog>> _callLogsByLeadId = <int, List<LeadCallLog>>{};
   RealtimeChannel? _callEventsChannel;
 
-  static const int _maxRealtimeCallEventsStored = 100;
+  static const int _maxRealtimeCallEventsStored = 500;
+  static const int _callEventsFetchLimit = _maxRealtimeCallEventsStored * 2;
 
   bool get isSubscribedToCallEvents => _callEventsChannel != null;
 
@@ -99,6 +100,12 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   int get realtimeCallCount => state.callEvents.length;
 
   void _replaceCallEvents(List<CallEventModel> events) {
+    if (events.isEmpty) {
+      if (state.callEvents.isEmpty) return;
+      state = state.copyWith(callEvents: const <CallEventModel>[]);
+      return;
+    }
+
     final sorted = List<CallEventModel>.from(events)..sort((a, b) {
       final aDate = a.createdAt;
       final bDate = b.createdAt;
@@ -108,35 +115,53 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
       return bDate.compareTo(aDate);
     });
 
-    final limited =
-        sorted.length > _maxRealtimeCallEventsStored
-            ? sorted.sublist(0, _maxRealtimeCallEventsStored)
-            : sorted;
+    final seenIds = <int>{};
+    final seenUuids = <String>{};
+    final deduped = <CallEventModel>[];
+
+    for (final event in sorted) {
+      var skip = false;
+
+      final id = event.id;
+      if (id != null && !seenIds.add(id)) {
+        skip = true;
+      }
+
+      if (!skip) {
+        final uuid = event.callUuid?.trim();
+        if (uuid != null && uuid.isNotEmpty && !seenUuids.add(uuid)) {
+          skip = true;
+        }
+      }
+
+      if (skip) continue;
+
+      deduped.add(event);
+      if (deduped.length >= _maxRealtimeCallEventsStored) {
+        break;
+      }
+    }
+
+    if (deduped.isEmpty) {
+      if (state.callEvents.isEmpty) return;
+      state = state.copyWith(callEvents: const <CallEventModel>[]);
+      return;
+    }
 
     state = state.copyWith(
-      callEvents: List<CallEventModel>.unmodifiable(limited),
+      callEvents: List<CallEventModel>.unmodifiable(deduped),
     );
   }
 
   void _upsertCallEvent(CallEventModel event) {
-    final current = state.callEvents;
-    final updated = <CallEventModel>[event]..addAll(
-      current.where((existing) {
-        final matchesId =
-            event.id != null && existing.id != null && existing.id == event.id;
-        final matchesUuid =
-            event.callUuid != null &&
-            existing.callUuid != null &&
-            existing.callUuid == event.callUuid;
-        return !(matchesId || matchesUuid);
-      }),
-    );
-
-    _replaceCallEvents(updated);
+    final combined = <CallEventModel>[event, ...state.callEvents];
+    _replaceCallEvents(combined);
   }
 
   void _removeCallEvent(CallEventModel event) {
     final current = state.callEvents;
+    if (current.isEmpty) return;
+
     final updated = current
         .where((existing) {
           final matchesId =
@@ -155,10 +180,11 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
     _replaceCallEvents(updated);
   }
 
-  Future<void> loadRecentCallEvents({int limit = 100}) async {
+  Future<void> loadRecentCallEvents({int limit = _callEventsFetchLimit}) async {
     try {
+      final targetLimit = limit.clamp(1, _callEventsFetchLimit);
       final events = await _leadManagementRepo.fetchRecentCallEvents(
-        limit: limit.clamp(1, _maxRealtimeCallEventsStored),
+        limit: targetLimit,
       );
 
       if (events.isEmpty) {
