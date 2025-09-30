@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/authentification/controller/auth_controller.dart';
@@ -11,6 +12,7 @@ import 'package:management_software/features/data/lead_management/models/call_ev
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
 import 'package:management_software/features/data/lead_management/repositories/lead_management_repo.dart';
+import 'package:management_software/features/data/lead_management/services/voxbay_call_service.dart';
 import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -74,7 +76,10 @@ final draftLeadsProvider = Provider<List<DraftLead>>((ref) {
 
 final leadMangementcontroller =
     StateNotifierProvider<LeadController, LeadManagementDTO>((ref) {
-      final repository = LeadManagementRepo(ref.watch(networkServiceProvider));
+      final repository = LeadManagementRepo(
+        ref.watch(networkServiceProvider),
+        ref.watch(voxbayCallServiceProvider),
+      );
       return LeadController(ref, repository);
     });
 
@@ -89,6 +94,10 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   RealtimeChannel? _callEventsChannel;
   Timer? _callEventsReconnectTimer;
   bool _callEventsReconnectEnabled = false;
+  Timer? _callEventsPollingTimer;
+  final Set<int> _reportedCallEventIds = <int>{};
+  final Set<String> _reportedCallEventUuids = <String>{};
+  final Set<String> _reportedCallEventFingerprints = <String>{};
 
   static const int _maxRealtimeCallEventsStored = 500;
   static const int _callEventsFetchLimit = _maxRealtimeCallEventsStored * 2;
@@ -156,8 +165,145 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   }
 
   void _upsertCallEvent(CallEventModel event) {
+    final isDuplicate = state.callEvents.any(
+      (existing) => _callEventsEqual(existing, event),
+    );
+
     final combined = <CallEventModel>[event, ...state.callEvents];
     _replaceCallEvents(combined);
+
+    if (!isDuplicate) {
+      _handleCallEventForCdr(event);
+    }
+  }
+
+  bool _callEventsEqual(CallEventModel a, CallEventModel b) {
+    final aId = a.id;
+    final bId = b.id;
+    if (aId != null && bId != null && aId == bId) {
+      return true;
+    }
+
+    final aUuid = a.callUuid?.trim();
+    final bUuid = b.callUuid?.trim();
+    if (aUuid != null && aUuid.isNotEmpty && bUuid != null && bUuid.isNotEmpty) {
+      return aUuid == bUuid;
+    }
+
+    return false;
+  }
+
+  void _handleCallEventForCdr(CallEventModel event) {
+    if (!_shouldSendCdr(event)) return;
+    if (!_markCallEventReported(event)) return;
+
+    final extension = _digitsOnly(
+      event.agentNumber ?? event.extension ?? event.callerNumber,
+    );
+    final destination = _digitsOnly(
+      event.calledNumber ?? event.destination ?? event.callerNumber,
+    );
+    if (extension.isEmpty || destination.isEmpty) {
+      return;
+    }
+
+    final candidateCallerId = _digitsOnly(event.callerId);
+    final callerId = candidateCallerId.isNotEmpty
+        ? candidateCallerId
+        : ref.read(voxbayCallServiceProvider).config.defaultCallerId;
+
+    final duration = event.totalDuration ?? event.conversationDuration;
+    final status = (event.callStatus?.isNotEmpty ?? false)
+        ? event.callStatus!
+        : event.eventType;
+    final date = event.callDate ??
+        event.callEndTime?.toIso8601String() ??
+        event.callStartTime?.toIso8601String() ??
+        event.createdAt?.toIso8601String();
+
+    unawaited(() async {
+      try {
+        final result = await _leadManagementRepo.pushCallCdr(
+          extension: extension,
+          destination: destination,
+          callerId: callerId,
+          durationSeconds: duration?.toString(),
+          status: status,
+          dateTime: date,
+          recordingUrl: event.recordingUrl,
+        );
+
+        if (!result.success) {
+          log('Call CDR push failed: ${result.message}');
+        }
+      } catch (error, stackTrace) {
+        log('Call CDR push error: $error', stackTrace: stackTrace);
+      }
+    }());
+  }
+
+  bool _shouldSendCdr(CallEventModel event) {
+    final status = event.callStatus?.toLowerCase();
+    const completedStatuses = <String>{
+      'completed',
+      'complete',
+      'hangup',
+      'hungup',
+      'answered',
+      'no-answer',
+      'busy',
+      'failed',
+      'disconnected',
+    };
+
+    if (status != null && completedStatuses.contains(status)) {
+      return true;
+    }
+
+    final eventType = event.eventType.toLowerCase();
+    if (eventType.contains('cdr') || eventType.contains('hangup')) {
+      return true;
+    }
+
+    if (event.callEndTime != null) return true;
+    if ((event.totalDuration ?? 0) > 0) return true;
+    if ((event.recordingUrl ?? '').isNotEmpty) return true;
+
+    return false;
+  }
+
+  bool _markCallEventReported(CallEventModel event) {
+    final id = event.id;
+    if (id != null && !_reportedCallEventIds.add(id)) {
+      return false;
+    }
+
+    final uuid = event.callUuid?.trim();
+    if (uuid != null && uuid.isNotEmpty && !_reportedCallEventUuids.add(uuid)) {
+      return false;
+    }
+
+    if (id == null && (uuid == null || uuid.isEmpty)) {
+      final fingerprint = <String?>[
+        _digitsOnly(event.agentNumber ?? event.extension ?? event.callerNumber),
+        _digitsOnly(event.calledNumber ?? event.destination ?? event.callerNumber),
+        event.callStartTime?.toIso8601String(),
+        event.callEndTime?.toIso8601String(),
+      ].whereType<String>().join('|');
+
+      if (fingerprint.isNotEmpty &&
+          !_reportedCallEventFingerprints.add(fingerprint)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  String _digitsOnly(String? value) {
+    if (value == null) return '';
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits;
   }
 
   void _removeCallEvent(CallEventModel event) {
@@ -203,6 +349,14 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   }
 
   void _cancelCallEventsReconnect() {
+    if (kIsWeb) {
+      final timer = _callEventsPollingTimer;
+      if (timer != null) {
+        timer.cancel();
+        _callEventsPollingTimer = null;
+      }
+      return;
+    }
     final timer = _callEventsReconnectTimer;
     if (timer != null) {
       timer.cancel();
@@ -211,6 +365,14 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   }
 
   void _scheduleCallEventsReconnect() {
+    if (kIsWeb) {
+      _callEventsPollingTimer ??=
+          Timer.periodic(const Duration(seconds: 6), (timer) {
+        if (!_callEventsReconnectEnabled) return;
+        unawaited(loadRecentCallEvents(limit: _maxRealtimeCallEventsStored));
+      });
+      return;
+    }
     if (!_callEventsReconnectEnabled || _callEventsChannel != null) return;
 
     _cancelCallEventsReconnect();
@@ -222,6 +384,12 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
 
   void subscribeToCallEvents() {
     _callEventsReconnectEnabled = true;
+    if (kIsWeb) {
+      _cancelCallEventsReconnect();
+      unawaited(loadRecentCallEvents());
+      _scheduleCallEventsReconnect();
+      return;
+    }
     if (_callEventsChannel != null) return;
 
     _cancelCallEventsReconnect();
@@ -273,6 +441,10 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   Future<void> unsubscribeFromCallEvents() async {
     _callEventsReconnectEnabled = false;
     _cancelCallEventsReconnect();
+
+    if (kIsWeb) {
+      return;
+    }
 
     final channel = _callEventsChannel;
     if (channel == null) return;

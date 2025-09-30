@@ -78,7 +78,7 @@ class LeadListTable extends ConsumerWidget {
         _clickableCell(context, ref, lead, lead.freelancer ?? ''),
         _clickableCell(context, ref, lead, lead.source ?? ''),
         _clickableCell(context, ref, lead, lead.phone?.toString() ?? ''),
-        _callIconCell(lead),
+        _callIconCell(context, ref, lead),
         _clickableCell(context, ref, lead, lead.status ?? ''),
         _clickableCell(context, ref, lead, followUpText),
         _clickableCell(context, ref, lead, remarkText),
@@ -114,20 +114,36 @@ class LeadListTable extends ConsumerWidget {
     );
   }
 
-  Widget _callIconCell(LeadsListModel lead) {
+  Widget _callIconCell(BuildContext context, WidgetRef ref, LeadsListModel lead) {
     final phoneText = lead.phone?.toString().trim();
     final hasPhone = phoneText != null && phoneText.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Center(
-        child: Icon(
-          Icons.call_outlined,
-          color: hasPhone ? Colors.green : Colors.grey,
-          size: 20,
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          icon: Icon(
+            Icons.call_outlined,
+            color: hasPhone ? Colors.green : Colors.grey,
+            size: 20,
+          ),
+          onPressed: hasPhone ? () => _onCallTap(context, ref, lead) : null,
+          tooltip: hasPhone ? 'Dial lead' : 'No phone number'
         ),
       ),
     );
+  }
+
+  Future<void> _onCallTap(
+    BuildContext context,
+    WidgetRef ref,
+    LeadsListModel lead,
+  ) async {
+    await ref
+        .read(leadMangementcontroller.notifier)
+        .initiateLeadCall(context: context, lead: lead);
   }
 
   Widget _actionCell(

@@ -3,6 +3,7 @@ import 'package:management_software/features/application/authentification/model/
 import 'package:management_software/features/data/lead_management/models/call_event_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_info_model.dart';
 import 'package:management_software/features/data/lead_management/models/lead_list_model.dart';
+import 'package:management_software/features/data/lead_management/services/voxbay_call_service.dart';
 import 'package:management_software/features/data/storage/shared_preferences.dart';
 import 'package:management_software/shared/date_time_helper.dart';
 import 'package:management_software/shared/network/network_calls.dart';
@@ -12,11 +13,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LeadManagementRepo {
   final NetworkService _networkService;
+  final VoxbayCallService _voxbayCallService;
 
   static const String _leadWithAssignedProfileSelect =
       '*, assigned_profile:${SupabaseTables.profiles}!${SupabaseTables.leadList}_assigned_to_fkey(*)';
 
-  LeadManagementRepo(this._networkService);
+  LeadManagementRepo(this._networkService, this._voxbayCallService);
 
   Future<bool> studentExists(String phone) async {
     final prefs = await SharedPreferences.getInstance();
@@ -538,5 +540,53 @@ class LeadManagementRepo {
     }
 
     return null;
+  }
+
+  Future<CallApiResult> triggerClickToCall({
+    required String source,
+    required String destination,
+    required String extension,
+    String? callerId,
+  }) {
+    return _voxbayCallService.initiateClickToCall(
+      source: source,
+      destination: destination,
+      extension: extension,
+      callerId: callerId,
+    );
+  }
+
+  Future<CallApiResult> pushOutgoingCallEvent({
+    required String extension,
+    required String destination,
+    required String callerId,
+    required String callUuid,
+  }) {
+    return _voxbayCallService.sendOutgoingCallEvent(
+      extension: extension,
+      destination: destination,
+      callerId: callerId,
+      callUuid: callUuid,
+    );
+  }
+
+  Future<CallApiResult> pushCallCdr({
+    required String extension,
+    required String destination,
+    required String callerId,
+    String? durationSeconds,
+    String? status,
+    String? dateTime,
+    String? recordingUrl,
+  }) {
+    return _voxbayCallService.sendCallCdr(
+      extension: extension,
+      destination: destination,
+      callerId: callerId,
+      durationSeconds: durationSeconds,
+      status: status,
+      dateTime: dateTime,
+      recordingUrl: recordingUrl,
+    );
   }
 }

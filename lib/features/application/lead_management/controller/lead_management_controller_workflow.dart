@@ -152,6 +152,133 @@ mixin LeadControllerWorkflowMixin
     );
   }
 
+  Future<void> initiateLeadCall({
+    required BuildContext context,
+    required LeadsListModel lead,
+  }) async {
+    final snackbar = ref.read(snackbarServiceProvider);
+
+    const hardcodedSource = '+91 73565 33368';
+    const hardcodedDestination = '+918129130745';
+    const hardcodedExtension = '100';
+    const hardcodedCallerId = '914847173130';
+
+    final agentNumber = hardcodedSource.trim();
+    final destination = hardcodedDestination.trim();
+    if (destination.isEmpty) {
+      snackbar.showError(context, 'Destination number is missing.');
+      return;
+    }
+
+    if (agentNumber.isEmpty) {
+      snackbar.showError(context, 'Source number is missing.');
+      return;
+    }
+
+    final extension = hardcodedExtension.trim();
+    final callerId = hardcodedCallerId.trim();
+
+    try {
+      final clickResult = await _leadManagementRepo.triggerClickToCall(
+        source: agentNumber,
+        destination: destination,
+        extension: extension,
+        callerId: callerId,
+      );
+
+      if (clickResult.success) {
+        snackbar.showSuccess(context, 'Dialling $destination');
+      } else {
+        snackbar.showError(context, clickResult.message);
+      }
+    } catch (error) {
+      snackbar.showError(context, 'Failed to initiate call: $error');
+    }
+  }
+
+  String? _resolveAgentPhone(LeadsListModel lead) {
+    final candidates = <String?>[];
+
+    final assignedProfile = lead.assignedProfile;
+    if (assignedProfile?.phone != null) {
+      candidates.add(assignedProfile!.phone.toString());
+    }
+
+    final assignedId = lead.assignedTo?.trim();
+    if (assignedId != null && assignedId.isNotEmpty) {
+      for (final counsellor in state.counsellors) {
+        final counsellorId = counsellor.id?.trim();
+        if (counsellorId != null && counsellorId == assignedId) {
+          if (counsellor.phone != null) {
+            candidates.add(counsellor.phone.toString());
+          }
+          break;
+        }
+      }
+    }
+
+    final currentUser = ref.read(authControllerProvider);
+    if (currentUser.phone != null) {
+      candidates.add(currentUser.phone.toString());
+    }
+
+    for (final candidate in candidates) {
+      final normalized = _normalizePhoneValue(candidate);
+      if (normalized.isNotEmpty) {
+        return normalized;
+      }
+    }
+
+    return null;
+  }
+
+  String _resolveAgentExtension(LeadsListModel lead, String agentPhone) {
+    final preferred = _extractDigits(
+      lead.assignedProfile?.designation ?? lead.assignedProfile?.freelancerStatus,
+    );
+    if (preferred != null && preferred.isNotEmpty) {
+      return preferred;
+    }
+
+    final assignedId = lead.assignedTo?.trim();
+    if (assignedId != null && assignedId.isNotEmpty) {
+      for (final counsellor in state.counsellors) {
+        final counsellorId = counsellor.id?.trim();
+        if (counsellorId != null && counsellorId == assignedId) {
+          final fallback = _extractDigits(counsellor.designation);
+          if (fallback != null && fallback.isNotEmpty) {
+            return fallback;
+          }
+          break;
+        }
+      }
+    }
+
+    final user = ref.read(authControllerProvider);
+    final userExt = _extractDigits(user.designation);
+    if (userExt != null && userExt.isNotEmpty) {
+      return userExt;
+    }
+
+    return agentPhone;
+  }
+
+  String _resolveCallerId(LeadsListModel lead) {
+    final assignedProfile = lead.assignedProfile;
+    final preferred = _extractDigits(assignedProfile?.location);
+    if (preferred != null && preferred.isNotEmpty) {
+      return preferred;
+    }
+
+    return ref.read(voxbayCallServiceProvider).config.defaultCallerId;
+  }
+
+  String? _extractDigits(String? value) {
+    if (value == null) return null;
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits.isEmpty ? null : digits;
+  }
+
   Future<LeadsListModel> addLead({
     required BuildContext context,
     required LeadsListModel lead,
