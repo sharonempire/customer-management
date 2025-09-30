@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'voxbay_click_launcher.dart';
+
 class VoxbayCallConfig {
   const VoxbayCallConfig({
     this.callBridgeUrl = 'https://pbx.voxbaysolutions.com/vl/callcenterbridging',
@@ -70,10 +72,12 @@ class VoxbayCallService {
               followRedirects: true,
               validateStatus: (status) => status != null && status < 500,
             ),
-          );
+          ),
+      _launcher = const VoxbayClickLauncher();
 
   final VoxbayCallConfig _config;
   final Dio _dio;
+  final VoxbayClickLauncher _launcher;
 
   VoxbayCallConfig get config => _config;
 
@@ -83,24 +87,77 @@ class VoxbayCallService {
     required String extension,
     String? callerId,
   }) async {
-    final uri = _buildClickToCallUri(
-      source: source,
-      destination: destination,
-      extension: extension,
-      callerId: callerId,
+    final cleanSource = _normalizeDialString(source);
+    final cleanDestination = _normalizeDialString(destination);
+    final cleanExtension = _normalizeDialString(extension);
+    final cleanCallerId = _normalizeDialString(
+      callerId ?? _config.defaultCallerId,
     );
+
+    final uri = _buildClickToCallUri(
+      source: cleanSource,
+      destination: cleanDestination,
+      extension: cleanExtension,
+      callerId: cleanCallerId,
+    );
+
+    _logCallAttempt(
+      source: cleanSource,
+      destination: cleanDestination,
+      extension: cleanExtension,
+      callerId: cleanCallerId,
+      uri: uri,
+    );
+
+    if (_launcher.launch(uri)) {
+      _logCallResult(
+        payload: {
+          'source': cleanSource,
+          'destination': cleanDestination,
+          'extension': cleanExtension,
+          'callerid': cleanCallerId,
+          'transport': 'image-ping',
+          'url': uri.toString(),
+        },
+        success: true,
+      );
+      return const CallApiResult(success: true, message: 'Call triggered.');
+    }
 
     try {
       final response = await _dio.getUri(uri);
       final payload = response.data?.toString().trim() ?? '';
       final normalized = payload.toLowerCase();
       final success = normalized.contains('success');
+      _logCallResult(
+        payload: {
+          'source': cleanSource,
+          'destination': cleanDestination,
+          'extension': cleanExtension,
+          'callerid': cleanCallerId,
+          'transport': 'dio-get',
+          'url': uri.toString(),
+          'response': payload,
+        },
+        success: success,
+      );
       final message =
           success
               ? 'Call triggered successfully.'
               : (payload.isEmpty ? 'Click-to-call request failed.' : payload);
       return CallApiResult(success: success, message: message);
     } catch (error) {
+      _logCallError(
+        'dio-get',
+        error,
+        {
+          'source': cleanSource,
+          'destination': cleanDestination,
+          'extension': cleanExtension,
+          'callerid': cleanCallerId,
+          'url': uri.toString(),
+        },
+      );
       return CallApiResult(
         success: false,
         message: 'Click-to-call error: ${error.toString()}',
@@ -152,16 +209,61 @@ class VoxbayCallService {
     String? callerId,
   }) {
     final query = <String, String>{
-      'uid': "azhtu2123h",
-      'pin': "yhet238jgy",
-      'source': "+91 73565 33368",
-      'destination': 8129130745.toString(),
-      'ext': "1000",
-      'callerid': "914847173130",
+      'uid': _config.uid,
+      'pin': _config.pin,
+      'source': source,
+      'destination': destination,
+      'ext': extension,
+      'callerid': callerId ?? _config.defaultCallerId,
     };
 
     final base = Uri.parse(_config.clickToCallBaseUrl);
     return base.replace(queryParameters: query);
+  }
+
+  String _normalizeDialString(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final cleaned = trimmed.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleaned.startsWith('00') && !cleaned.startsWith('+')) {
+      return '+${cleaned.substring(2)}';
+    }
+    return cleaned;
+  }
+
+  void _logCallAttempt({
+    required String source,
+    required String destination,
+    required String extension,
+    required String callerId,
+    required Uri uri,
+  }) {
+    // ignore: avoid_print
+    print(
+      "[Voxbay] Initiating call -> source: $source, destination: $destination, "
+      "extension: $extension, callerid: $callerId, url: ${uri.toString()}",
+    );
+  }
+
+  void _logCallResult({
+    required Map<String, dynamic> payload,
+    required bool success,
+  }) {
+    // ignore: avoid_print
+    final details =
+        payload.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    print('[Voxbay] Call ${success ? 'succeeded' : 'failed'} -> $details');
+  }
+
+  void _logCallError(
+    String transport,
+    Object error,
+    Map<String, dynamic> payload,
+  ) {
+    // ignore: avoid_print
+    final details =
+        payload.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    print('[Voxbay] Call error [$transport] -> $details, error: $error');
   }
 
   Future<CallApiResult> _postToBridge(
@@ -182,11 +284,32 @@ class VoxbayCallService {
       final body = response.data?.toString().trim() ?? '';
       final normalized = body.toLowerCase();
       final success = normalized.contains('success');
+      _logCallResult(
+        payload: {
+          ...payload,
+          'transport': 'dio-post',
+          'bridge': uri.toString(),
+          'url': uri.toString(),
+          'context': contextLabel,
+          'response': body,
+        },
+        success: success,
+      );
       final message =
           success ? 'Success' : (body.isEmpty ? 'Request failed' : body);
 
       return CallApiResult(success: success, message: message);
     } catch (error) {
+      _logCallError(
+        'dio-post',
+        error,
+        {
+          ...payload,
+          'bridge': uri.toString(),
+          'url': uri.toString(),
+          'context': contextLabel,
+        },
+      );
       return CallApiResult(
         success: false,
         message:

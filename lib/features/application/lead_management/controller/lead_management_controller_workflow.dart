@@ -160,7 +160,9 @@ mixin LeadControllerWorkflowMixin
 
     const hardcodedSource = '+91 73565 33368';
     const hardcodedDestination = '+918129130745';
-    const hardcodedExtension = '100';
+    final dynamicExtension = (100000 +
+            DateTime.now().millisecondsSinceEpoch.remainder(900000))
+        .toString();
     const hardcodedCallerId = '914847173130';
 
     final agentNumber = hardcodedSource.trim();
@@ -175,8 +177,14 @@ mixin LeadControllerWorkflowMixin
       return;
     }
 
-    final extension = hardcodedExtension.trim();
+    final extension = dynamicExtension;
     final callerId = hardcodedCallerId.trim();
+
+    log(
+      '[LeadCall] Triggering Voxbay call for lead '
+      '${lead.id ?? '-'} -> source: $agentNumber, destination: $destination, '
+      'extension: $extension, callerId: $callerId',
+    );
 
     try {
       final clickResult = await _leadManagementRepo.triggerClickToCall(
@@ -187,11 +195,14 @@ mixin LeadControllerWorkflowMixin
       );
 
       if (clickResult.success) {
+        log('[LeadCall] Call request succeeded: ${clickResult.message}');
         snackbar.showSuccess(context, 'Dialling $destination');
       } else {
+        log('[LeadCall] Call request failed: ${clickResult.message}');
         snackbar.showError(context, clickResult.message);
       }
     } catch (error) {
+      log('[LeadCall] Call request error: $error');
       snackbar.showError(context, 'Failed to initiate call: $error');
     }
   }

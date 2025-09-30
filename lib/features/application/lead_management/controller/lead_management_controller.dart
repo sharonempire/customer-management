@@ -186,7 +186,10 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
 
     final aUuid = a.callUuid?.trim();
     final bUuid = b.callUuid?.trim();
-    if (aUuid != null && aUuid.isNotEmpty && bUuid != null && bUuid.isNotEmpty) {
+    if (aUuid != null &&
+        aUuid.isNotEmpty &&
+        bUuid != null &&
+        bUuid.isNotEmpty) {
       return aUuid == bUuid;
     }
 
@@ -208,15 +211,18 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
     }
 
     final candidateCallerId = _digitsOnly(event.callerId);
-    final callerId = candidateCallerId.isNotEmpty
-        ? candidateCallerId
-        : ref.read(voxbayCallServiceProvider).config.defaultCallerId;
+    final callerId =
+        candidateCallerId.isNotEmpty
+            ? candidateCallerId
+            : ref.read(voxbayCallServiceProvider).config.defaultCallerId;
 
     final duration = event.totalDuration ?? event.conversationDuration;
-    final status = (event.callStatus?.isNotEmpty ?? false)
-        ? event.callStatus!
-        : event.eventType;
-    final date = event.callDate ??
+    final status =
+        (event.callStatus?.isNotEmpty ?? false)
+            ? event.callStatus!
+            : event.eventType;
+    final date =
+        event.callDate ??
         event.callEndTime?.toIso8601String() ??
         event.callStartTime?.toIso8601String() ??
         event.createdAt?.toIso8601String();
@@ -286,7 +292,9 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
     if (id == null && (uuid == null || uuid.isEmpty)) {
       final fingerprint = <String?>[
         _digitsOnly(event.agentNumber ?? event.extension ?? event.callerNumber),
-        _digitsOnly(event.calledNumber ?? event.destination ?? event.callerNumber),
+        _digitsOnly(
+          event.calledNumber ?? event.destination ?? event.callerNumber,
+        ),
         event.callStartTime?.toIso8601String(),
         event.callEndTime?.toIso8601String(),
       ].whereType<String>().join('|');
@@ -366,8 +374,9 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
 
   void _scheduleCallEventsReconnect() {
     if (kIsWeb) {
-      _callEventsPollingTimer ??=
-          Timer.periodic(const Duration(seconds: 6), (timer) {
+      _callEventsPollingTimer ??= Timer.periodic(const Duration(seconds: 6), (
+        timer,
+      ) {
         if (!_callEventsReconnectEnabled) return;
         unawaited(loadRecentCallEvents(limit: _maxRealtimeCallEventsStored));
       });
@@ -434,7 +443,6 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
         }
       },
     );
-
     _callEventsChannel = channel;
   }
 
