@@ -58,13 +58,18 @@ class SnackbarService {
 
   ScaffoldMessengerState? _resolveMessenger(BuildContext? context) {
     if (context != null) {
-      try {
-        final messenger = ScaffoldMessenger.maybeOf(context);
-        if (messenger != null) {
-          return messenger;
+      final element = context is Element ? context : null;
+      final mounted = element?.mounted ?? false;
+
+      if (mounted) {
+        try {
+          final messenger = ScaffoldMessenger.maybeOf(context);
+          if (messenger != null) {
+            return messenger;
+          }
+        } catch (error) {
+          debugPrint('SnackbarService context lookup failed: $error');
         }
-      } catch (error) {
-        debugPrint('SnackbarService context lookup failed: $error');
       }
     }
 

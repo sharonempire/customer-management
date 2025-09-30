@@ -31,6 +31,8 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   String? _lastNotifiedCallUuid;
   bool _isShowingCallPopup = false;
   ProviderSubscription<LeadManagementDTO>? _callListenerSubscription;
+  late final LeadController _leadController;
+  VoidCallback? _tabListener;
 
   String _normalizePhone(String? value) {
     if (value == null) return '';
@@ -40,27 +42,32 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
   @override
   void initState() {
     super.initState();
+    _leadController = ref.read(leadMangementcontroller.notifier);
     final initialCount = ref.read(leadMangementcontroller).callEvents.length;
     debugPrint('Live call events: $initialCount');
-    ref.read(leadMangementcontroller.notifier).subscribeToCallEvents();
+    _leadController.subscribeToCallEvents();
     _tabController = TabController(length: LeadTab.values.length, vsync: this);
-    _tabController.addListener(() {
+    _tabListener = () {
+      if (!mounted) return;
       if (_tabController.indexIsChanging) return;
       final tab = LeadTab.values[_tabController.index];
       ref.read(leadTabProvider.notifier).state = tab;
-    });
+    };
+    _tabController.addListener(_tabListener!);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(leadMangementcontroller.notifier)
-          .fetchAllLeads(context: context);
+      _leadController.fetchAllLeads(context: context);
     });
   }
 
   @override
   void dispose() {
+    if (_tabListener != null) {
+      _tabController.removeListener(_tabListener!);
+      _tabListener = null;
+    }
     _tabController.dispose();
-    ref.read(leadMangementcontroller.notifier).unsubscribeFromCallEvents();
+    _leadController.unsubscribeFromCallEvents();
     _callListenerSubscription?.close();
     _callListenerSubscription = null;
     _callListenerRegistered = false;
@@ -122,13 +129,13 @@ class _LeadManagementState extends ConsumerState<LeadManagement>
 
         Future<void>.microtask(() async {
           try {
-            final controller = ref.read(leadMangementcontroller.notifier);
             final leadPhone =
                 latest.callerNumber ??
                 latest.callerId ??
                 latest.calledNumber ??
                 '';
-            final opened = await controller.openLeadByPhone(
+            if (!mounted) return;
+            final opened = await _leadController.openLeadByPhone(
               phone: leadPhone,
               callEvent: latest,
               context: context,

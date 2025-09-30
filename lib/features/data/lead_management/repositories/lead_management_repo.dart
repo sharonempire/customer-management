@@ -483,11 +483,36 @@ class LeadManagementRepo {
   }
 
   Future<void> removeRealtimeChannel(RealtimeChannel channel) async {
-    try {
-      await _networkService.supabase.removeChannel(channel);
-    } catch (error, stackTrace) {
-      log('Remove realtime channel error: $error', stackTrace: stackTrace);
+    bool _isBindingsTypeError(Object error) {
+      return error is TypeError &&
+          error.toString().contains("List<dynamic>") &&
+          error.toString().contains('List<Binding>');
     }
+
+    Future<void> _safely<T>(Future<T> Function() action) async {
+      try {
+        await action();
+      } catch (error, stackTrace) {
+        if (_isBindingsTypeError(error)) {
+          log(
+            'Suppressing realtime channel cleanup error attributed to Supabase web bindings bug: $error',
+          );
+          return;
+        }
+        log('Remove realtime channel error: $error', stackTrace: stackTrace);
+      }
+    }
+
+    await _safely(() => channel.unsubscribe());
+
+    await _safely(() async {
+      final supabase = _networkService.supabase;
+      final activeChannels = supabase.getChannels();
+      final isActive = activeChannels.any((item) => identical(item, channel));
+      if (!isActive) return;
+
+      await supabase.removeChannel(channel);
+    });
   }
 
   Future<LeadsListModel?> fetchLeadByPhone(String phone) async {

@@ -87,6 +87,8 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   List<LeadsListModel> _allLeadsCache = const [];
   Map<int, List<LeadCallLog>> _callLogsByLeadId = <int, List<LeadCallLog>>{};
   RealtimeChannel? _callEventsChannel;
+  Timer? _callEventsReconnectTimer;
+  bool _callEventsReconnectEnabled = false;
 
   static const int _maxRealtimeCallEventsStored = 500;
   static const int _callEventsFetchLimit = _maxRealtimeCallEventsStored * 2;
@@ -200,8 +202,29 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
     }
   }
 
+  void _cancelCallEventsReconnect() {
+    final timer = _callEventsReconnectTimer;
+    if (timer != null) {
+      timer.cancel();
+      _callEventsReconnectTimer = null;
+    }
+  }
+
+  void _scheduleCallEventsReconnect() {
+    if (!_callEventsReconnectEnabled || _callEventsChannel != null) return;
+
+    _cancelCallEventsReconnect();
+    _callEventsReconnectTimer = Timer(const Duration(seconds: 3), () {
+      if (!_callEventsReconnectEnabled || _callEventsChannel != null) return;
+      subscribeToCallEvents();
+    });
+  }
+
   void subscribeToCallEvents() {
+    _callEventsReconnectEnabled = true;
     if (_callEventsChannel != null) return;
+
+    _cancelCallEventsReconnect();
 
     unawaited(loadRecentCallEvents());
 
@@ -223,6 +246,7 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
             }
             unawaited(_leadManagementRepo.removeRealtimeChannel(channel));
             unawaited(loadRecentCallEvents());
+            _scheduleCallEventsReconnect();
             break;
           case RealtimeSubscribeStatus.channelError:
             log('Call events realtime channel error: $error');
@@ -232,10 +256,12 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
             }
             unawaited(_leadManagementRepo.removeRealtimeChannel(channel));
             unawaited(loadRecentCallEvents());
+            _scheduleCallEventsReconnect();
             break;
           case RealtimeSubscribeStatus.timedOut:
             log('Call events realtime channel timed out.');
             unawaited(loadRecentCallEvents());
+            _scheduleCallEventsReconnect();
             break;
         }
       },
@@ -245,24 +271,20 @@ abstract class LeadControllerBase extends StateNotifier<LeadManagementDTO> {
   }
 
   Future<void> unsubscribeFromCallEvents() async {
+    _callEventsReconnectEnabled = false;
+    _cancelCallEventsReconnect();
+
     final channel = _callEventsChannel;
     if (channel == null) return;
     _callEventsChannel = null;
-
-    try {
-      await channel.unsubscribe();
-    } catch (error, stackTrace) {
-      log(
-        'Call events realtime unsubscribe error: $error',
-        stackTrace: stackTrace,
-      );
-    }
 
     await _leadManagementRepo.removeRealtimeChannel(channel);
   }
 
   @override
   void dispose() {
+    _callEventsReconnectEnabled = false;
+    _cancelCallEventsReconnect();
     unawaited(unsubscribeFromCallEvents());
     super.dispose();
   }
