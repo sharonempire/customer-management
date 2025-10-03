@@ -7,7 +7,8 @@ import 'voxbay_click_launcher.dart';
 
 class VoxbayCallConfig {
   const VoxbayCallConfig({
-    this.callBridgeUrl = 'https://pbx.voxbaysolutions.com/vl/callcenterbridging',
+    this.callBridgeUrl =
+        'https://pbx.voxbaysolutions.com/vl/callcenterbridging',
     this.clickToCallBaseUrl =
         'https://pbx.voxbaysolutions.com/api/clicktocall.php',
     this.uid = 'azhtu2123h',
@@ -147,17 +148,13 @@ class VoxbayCallService {
               : (payload.isEmpty ? 'Click-to-call request failed.' : payload);
       return CallApiResult(success: success, message: message);
     } catch (error) {
-      _logCallError(
-        'dio-get',
-        error,
-        {
-          'source': cleanSource,
-          'destination': cleanDestination,
-          'extension': cleanExtension,
-          'callerid': cleanCallerId,
-          'url': uri.toString(),
-        },
-      );
+      _logCallError('dio-get', error, {
+        'source': cleanSource,
+        'destination': cleanDestination,
+        'extension': cleanExtension,
+        'callerid': cleanCallerId,
+        'url': uri.toString(),
+      });
       return CallApiResult(
         success: false,
         message: 'Click-to-call error: ${error.toString()}',
@@ -250,8 +247,9 @@ class VoxbayCallService {
     required bool success,
   }) {
     // ignore: avoid_print
-    final details =
-        payload.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    final details = payload.entries
+        .map((e) => '${e.key}: ${e.value}')
+        .join(', ');
     print('[Voxbay] Call ${success ? 'succeeded' : 'failed'} -> $details');
   }
 
@@ -261,8 +259,9 @@ class VoxbayCallService {
     Map<String, dynamic> payload,
   ) {
     // ignore: avoid_print
-    final details =
-        payload.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    final details = payload.entries
+        .map((e) => '${e.key}: ${e.value}')
+        .join(', ');
     print('[Voxbay] Call error [$transport] -> $details, error: $error');
   }
 
@@ -300,16 +299,12 @@ class VoxbayCallService {
 
       return CallApiResult(success: success, message: message);
     } catch (error) {
-      _logCallError(
-        'dio-post',
-        error,
-        {
-          ...payload,
-          'bridge': uri.toString(),
-          'url': uri.toString(),
-          'context': contextLabel,
-        },
-      );
+      _logCallError('dio-post', error, {
+        ...payload,
+        'bridge': uri.toString(),
+        'url': uri.toString(),
+        'context': contextLabel,
+      });
       return CallApiResult(
         success: false,
         message:

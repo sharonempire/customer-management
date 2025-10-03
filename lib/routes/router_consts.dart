@@ -4,6 +4,7 @@ import 'package:management_software/features/presentation/pages/attendance/atten
 import 'package:management_software/features/presentation/pages/attendance/attendance_history.dart';
 import 'package:management_software/features/presentation/pages/auth/signup.dart';
 import 'package:management_software/features/presentation/pages/auth/login_page.dart';
+import 'package:management_software/features/presentation/pages/courses/add_course_landing.dart';
 import 'package:management_software/features/presentation/pages/courses/courses.dart';
 import 'package:management_software/features/presentation/pages/employee_mangement/employee_management.dart';
 import 'package:management_software/features/presentation/pages/dashboard/dashboard.dart';
@@ -55,6 +56,14 @@ class RouterConsts {
     'Course Finder',
     (context, state) {
       return const CoursesScreen();
+    },
+  );
+
+  final RouteModel addCourse = RouteModel(
+    'add-course',
+    'Add Course',
+    (context, state) {
+      return const AddCourseLandingScreen();
     },
   );
 
