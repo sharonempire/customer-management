@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
@@ -51,7 +52,7 @@ class AddCourseLandingScreen extends StatelessWidget {
                     'Upload a CSV or Excel file to bring multiple courses into the system in one go.',
                 actionLabel: 'Bulk Import',
                 iconColor: ColorConsts.primaryColor,
-                onPressed: () => _showComingSoon(context),
+                onPressed: () => _pickBulkImportFile(context),
               ),
               height20,
               _AddCourseOptionCard(
@@ -147,4 +148,19 @@ class _AddCourseOptionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _pickBulkImportFile(BuildContext context) async {
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['csv', 'xlsx', 'xls'],
+  );
+
+  if (result == null || result.files.isEmpty) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Selected file: ${result.files.single.name}'),
+    ),
+  );
 }
