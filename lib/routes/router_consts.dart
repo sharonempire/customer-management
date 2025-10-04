@@ -5,6 +5,7 @@ import 'package:management_software/features/presentation/pages/attendance/atten
 import 'package:management_software/features/presentation/pages/auth/signup.dart';
 import 'package:management_software/features/presentation/pages/auth/login_page.dart';
 import 'package:management_software/features/presentation/pages/courses/add_course_landing.dart';
+import 'package:management_software/features/presentation/pages/courses/add_single_course_form.dart';
 import 'package:management_software/features/presentation/pages/courses/courses.dart';
 import 'package:management_software/features/presentation/pages/employee_mangement/employee_management.dart';
 import 'package:management_software/features/presentation/pages/dashboard/dashboard.dart';
@@ -64,6 +65,14 @@ class RouterConsts {
     'Add Course',
     (context, state) {
       return const AddCourseLandingScreen();
+    },
+  );
+
+  final RouteModel addSingleCourse = RouteModel(
+    'add-single-course',
+    'Add Single Course',
+    (context, state) {
+      return const AddSingleCourseScreen();
     },
   );
 

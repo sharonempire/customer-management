@@ -95,6 +95,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: routeConsts.addCourse.route,
                 name: routeConsts.addCourse.name,
                 builder: routeConsts.addCourse.builder,
+                routes: [
+                  GoRoute(
+                    path: routeConsts.addSingleCourse.route,
+                    name: routeConsts.addSingleCourse.name,
+                    builder: routeConsts.addSingleCourse.builder,
+                  ),
+                ],
               ),
             ],
           ),

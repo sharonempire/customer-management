@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
+import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 
 class AddCourseLandingScreen extends StatelessWidget {
@@ -59,7 +61,12 @@ class AddCourseLandingScreen extends StatelessWidget {
                     'Use guided forms to configure course details, pricing, and availability individually.',
                 actionLabel: 'Add Single Course',
                 iconColor: ColorConsts.activeColor,
-                onPressed: () => _showComingSoon(context),
+                onPressed: () {
+                  final routerConsts = RouterConsts();
+                  context.push(
+                    '${routerConsts.courseFinder.route}/${routerConsts.addCourse.route}/${routerConsts.addSingleCourse.route}',
+                  );
+                },
               ),
             ],
           ),
