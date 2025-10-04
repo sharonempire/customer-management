@@ -9,6 +9,7 @@ class SupabaseTables {
   static const String leadList = "leadslist";
   static const String leadInfo = "lead_info";
   static const String callEvents = "call_events";
+  static const String courses = "courses";
 }
 
 class SupabaseBuckets {

@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:management_software/features/application/course_finder/model/course_finder_state.dart';
-
+import 'package:management_software/features/data/course_finder/repositories/course_repository.dart';
+import 'package:management_software/features/domain/course_finder/course_repository.dart';
+import 'package:management_software/shared/network/network_calls.dart';
 
 final courseFinderRepositoryProvider = Provider<CourseFinderRepository>((ref) {
-  throw UnimplementedError('Provide a CourseFinderRepository implementation.');
+  final networkService = ref.watch(networkServiceProvider);
+  return SupabaseCourseRepository(networkService);
 });
 
 final courseFinderControllerProvider =
@@ -11,11 +14,6 @@ final courseFinderControllerProvider =
       final repository = ref.watch(courseFinderRepositoryProvider);
       return CourseFinderController(repository: repository);
     });
-
-abstract class CourseFinderRepository {
-  Future<List<CourseSummary>> searchCourses({required String query});
-  Future<List<CourseSummary>> fetchFeaturedCourses();
-}
 
 class CourseFinderController extends StateNotifier<CourseFinderState> {
   CourseFinderController({required CourseFinderRepository repository})

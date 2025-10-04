@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/course_finder/controller/course_submission_controller.dart';
+import 'package:management_software/features/data/course_finder/model/course_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart'
     show CommonDropdown, CommonTextField;
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
 import 'package:management_software/features/presentation/widgets/primary_button.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
+import 'package:management_software/shared/network/network_calls.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 
-class AddSingleCourseScreen extends StatefulWidget {
+class AddSingleCourseScreen extends ConsumerStatefulWidget {
   const AddSingleCourseScreen({super.key});
 
   @override
-  State<AddSingleCourseScreen> createState() => _AddSingleCourseScreenState();
+  ConsumerState<AddSingleCourseScreen> createState() => _AddSingleCourseScreenState();
 }
 
-class _AddSingleCourseScreenState extends State<AddSingleCourseScreen> {
+class _AddSingleCourseScreenState
+    extends ConsumerState<AddSingleCourseScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _programName = TextEditingController();
@@ -112,6 +117,34 @@ class _AddSingleCourseScreenState extends State<AddSingleCourseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final submissionState = ref.watch(courseSubmissionControllerProvider);
+
+    ref.listen<AsyncValue<Course?>>(
+      courseSubmissionControllerProvider,
+      (previous, next) {
+        next.when(
+          data: (course) {
+            if (course == null) return;
+            ref.read(snackbarServiceProvider).showSuccess(
+                  context,
+                  'Course added successfully',
+                );
+            Navigator.of(context).pop();
+            ref.read(courseSubmissionControllerProvider.notifier).reset();
+          },
+          error: (error, _) {
+            ref.read(snackbarServiceProvider).showError(
+                  context,
+                  error.toString(),
+                );
+          },
+          loading: () {},
+        );
+      },
+    );
+
+    final isSubmitting = submissionState.isLoading;
+
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(50),
@@ -257,13 +290,14 @@ class _AddSingleCourseScreenState extends State<AddSingleCourseScreen> {
                 Row(
                   children: [
                     PrimaryButton(
-                      onpressed: _handleSubmit,
-                      text: 'Save Course',
+                      onpressed: isSubmitting ? null : _handleSubmit,
+                      text: isSubmitting ? 'Saving...' : 'Save Course',
                       icon: Icons.save_alt,
                     ),
                     width20,
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed:
+                          isSubmitting ? null : () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
                         foregroundColor: ColorConsts.primaryColor,
                       ),
@@ -329,13 +363,77 @@ class _AddSingleCourseScreenState extends State<AddSingleCourseScreen> {
   }
 
   void _handleSubmit() {
-    if (!_formKey.currentState!.validate()) return;
+    if (ref.read(courseSubmissionControllerProvider).isLoading) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Course saved (mock action). Connect to backend to persist.'),
-      ),
+    if (_formKey.currentState?.validate() != true) return;
+
+    FocusScope.of(context).unfocus();
+
+    final submissionController =
+        ref.read(courseSubmissionControllerProvider.notifier);
+
+    final englishProficiency = [
+      _englishProficiency.text.trim(),
+      _englishScoreDetails.text.trim(),
+    ].where((value) => value.isNotEmpty).join(' | ');
+
+    final course = Course(
+      programName: _textOrNull(_programName.text),
+      university: _textOrNull(_university.text),
+      country: _textOrNull(_country.text),
+      city: _textOrNull(_city.text),
+      campus: _textOrNull(_campus.text),
+      applicationFee: _textOrNull(_applicationFee.text),
+      tuitionFee: _textOrNull(_tuitionFee.text),
+      depositAmount: _textOrNull(_depositAmount.text),
+      currency: _textOrNull(_currency.text),
+      duration: _textOrNull(_duration.text),
+      language: _textOrNull(_language.text),
+      studyType: _textOrNull(_studyType.text),
+      programLevel: _textOrNull(_programLevel.text),
+      englishProficiency:
+          englishProficiency.isEmpty ? null : englishProficiency,
+      minimumPercentage: _textOrNull(_minimumPercentage.text),
+      ageLimit: _textOrNull(_ageLimit.text),
+      academicGap: _textOrNull(_academicGap.text),
+      maxBacklogs: _textOrNull(_maxBacklogs.text),
+      workExperienceRequirement:
+          _textOrNull(_workExperienceRequirement.text),
+      requiredSubjects: _splitToList(_requiredSubjects.text),
+      intakes: _splitToList(_intakes.text),
+      links: _splitToList(_links.text),
+      mediaLinks: _splitToList(_mediaLinks.text),
+      courseDescription: _textOrNull(_courseDescription.text),
+      specialRequirements: _textOrNull(_specialRequirements.text),
+      commission: _parseInt(_commission.text),
+      fieldOfStudy: _textOrNull(_fieldOfStudy.text),
     );
+
+    submissionController.submitCourse(course: course);
+  }
+
+  String? _textOrNull(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  int? _parseInt(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    return int.tryParse(trimmed);
+  }
+
+  List<String>? _splitToList(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+
+    final list = trimmed
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+
+    return list.isEmpty ? null : list;
   }
 }
 
