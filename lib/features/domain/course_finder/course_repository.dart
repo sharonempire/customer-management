@@ -5,4 +5,5 @@ abstract class CourseFinderRepository {
   Future<List<CourseSummary>> searchCourses({required String query});
   Future<List<CourseSummary>> fetchFeaturedCourses();
   Future<Course> addCourse(Course course);
+  Future<int> importCourses(List<Course> courses);
 }

@@ -1,24 +1,64 @@
-import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/application/course_finder/controller/course_import_controller.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/routes/router_consts.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
+import 'package:management_software/shared/network/network_calls.dart';
 
-class AddCourseLandingScreen extends StatelessWidget {
+class AddCourseLandingScreen extends ConsumerStatefulWidget {
   const AddCourseLandingScreen({super.key});
 
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('This flow will let you add courses soon.'),
-      ),
+  @override
+  ConsumerState<AddCourseLandingScreen> createState() =>
+      _AddCourseLandingScreenState();
+}
+
+class _AddCourseLandingScreenState
+    extends ConsumerState<AddCourseLandingScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    ref.listen<AsyncValue<int>>(
+      courseImportControllerProvider,
+      (previous, next) {
+        if (previous?.isLoading != true) return;
+
+        next.when(
+          data: (count) {
+            if (count > 0) {
+              ref.read(snackbarServiceProvider).showSuccess(
+                    context,
+                    'Imported $count courses successfully.',
+                  );
+            } else {
+              ref.read(snackbarServiceProvider).showError(
+                    context,
+                    'No valid courses were found in the selected file.',
+                  );
+            }
+            ref.read(courseImportControllerProvider.notifier).reset();
+          },
+          error: (error, _)
+              => ref.read(snackbarServiceProvider).showError(
+                    context,
+                    error.toString(),
+                  ),
+          loading: () {},
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final importState = ref.watch(courseImportControllerProvider);
+    final isImporting = importState.isLoading;
+
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(50),
@@ -39,7 +79,7 @@ class AddCourseLandingScreen extends StatelessWidget {
               ),
               height5,
               Text(
-                'Choose the workflow that fits your needs. Detailed forms will be available in the next iteration.',
+                'Choose the workflow that fits your needs. You can import a prepared sheet or add courses manually.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: ColorConsts.textColor,
                     ),
@@ -50,9 +90,11 @@ class AddCourseLandingScreen extends StatelessWidget {
                 title: 'Bulk import courses',
                 description:
                     'Upload a CSV or Excel file to bring multiple courses into the system in one go.',
-                actionLabel: 'Bulk Import',
+                actionLabel: isImporting ? 'Importing...' : 'Bulk Import',
                 iconColor: ColorConsts.primaryColor,
-                onPressed: () => _pickBulkImportFile(context),
+                onPressed:
+                    isImporting ? null : () => _pickBulkImportFile(context),
+                isLoading: isImporting,
               ),
               height20,
               _AddCourseOptionCard(
@@ -75,24 +117,60 @@ class AddCourseLandingScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _pickBulkImportFile(BuildContext context) async {
+    final notifier = ref.read(courseImportControllerProvider.notifier);
+    final snackbar = ref.read(snackbarServiceProvider);
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['csv', 'xlsx', 'xls'],
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.single;
+      final bytes = file.bytes;
+
+      if (bytes == null) {
+        snackbar.showError(
+          context,
+          'Unable to read the selected file. Please try again.',
+        );
+        return;
+      }
+
+      await notifier.importFromBytes(
+        bytes: bytes,
+        fileName: file.name,
+      );
+    } catch (error) {
+      snackbar.showError(context, error.toString());
+  }
+
+  }
 }
 
 class _AddCourseOptionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final String actionLabel;
-  final Color iconColor;
-  final VoidCallback onPressed;
-
   const _AddCourseOptionCard({
     required this.icon,
     required this.title,
     required this.description,
     required this.actionLabel,
     required this.iconColor,
-    required this.onPressed,
+    this.onPressed,
+    this.isLoading = false,
   });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final String actionLabel;
+  final Color iconColor;
+  final VoidCallback? onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -141,26 +219,31 @@ class _AddCourseOptionCard extends StatelessWidget {
             width20,
             FilledButton(
               onPressed: onPressed,
-              child: Text(actionLabel),
+              child: isLoading
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        width10,
+                        Text('Importing...'),
+                      ],
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.chevron_right),
+                        width5,
+                        Text(actionLabel),
+                      ],
+                    ),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-Future<void> _pickBulkImportFile(BuildContext context) async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
-    allowedExtensions: ['csv', 'xlsx', 'xls'],
-  );
-
-  if (result == null || result.files.isEmpty) return;
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text('Selected file: ${result.files.single.name}'),
-    ),
-  );
 }

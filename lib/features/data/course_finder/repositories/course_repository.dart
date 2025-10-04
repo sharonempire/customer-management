@@ -39,4 +39,27 @@ class SupabaseCourseRepository implements CourseFinderRepository {
     // TODO: Implement search logic when ready.
     return const <CourseSummary>[];
   }
+
+  @override
+  Future<int> importCourses(List<Course> courses) async {
+    if (courses.isEmpty) return 0;
+
+    final payload = courses.map((course) => course.toJson()).toList();
+
+    try {
+      final response = await _networkService.supabase
+          .from(SupabaseTables.courses)
+          .insert(payload)
+          .select('id');
+
+      if (response is List) {
+        return response.length;
+      }
+
+      return payload.length;
+    } catch (error, stackTrace) {
+      log('Bulk import error: $error', stackTrace: stackTrace);
+      rethrow;
+    }
+  }
 }
