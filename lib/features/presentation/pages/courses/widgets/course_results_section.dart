@@ -1,14 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:management_software/features/data/course_finder/model/course_model.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
 import 'package:management_software/shared/consts/color_consts.dart';
 
 class CourseResultsSection extends StatelessWidget {
   final List<CourseListItem> courses;
+  final bool isLoading;
+  final String? errorMessage;
 
-  const CourseResultsSection({super.key, required this.courses});
+  const CourseResultsSection({
+    super.key,
+    required this.courses,
+    this.isLoading = false,
+    this.errorMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
+    Widget content;
+
+    if (isLoading) {
+      content = const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    } else if (errorMessage != null) {
+      content = Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Text(
+          errorMessage!,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      );
+    } else if (courses.isEmpty) {
+      content = Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Text(
+          'No courses match the selected filters yet.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: ColorConsts.textColor,
+              ),
+        ),
+      );
+    } else {
+      content = Column(
+        children: courses
+            .map(
+              (course) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _CourseCard(course: course),
+              ),
+            )
+            .toList(),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -20,16 +69,7 @@ class CourseResultsSection extends StatelessWidget {
               ),
         ),
         height10,
-        Column(
-          children: courses
-              .map(
-                (course) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _CourseCard(course: course),
-                ),
-              )
-              .toList(),
-        ),
+        content,
       ],
     );
   }
@@ -49,6 +89,8 @@ class CourseListItem {
   final String englishRequirement;
   final String commission;
   final String currency;
+  final String fieldOfStudy;
+  final String language;
   final List<String> tags;
 
   const CourseListItem({
@@ -65,8 +107,46 @@ class CourseListItem {
     required this.englishRequirement,
     required this.commission,
     required this.currency,
+    required this.fieldOfStudy,
+    required this.language,
     required this.tags,
   });
+
+  factory CourseListItem.fromCourse(Course course) {
+    final intakes = course.intakes ?? const <String>[];
+    final requiredSubjects = course.requiredSubjects ?? const <String>[];
+
+    final commissionValue = course.commission?.toString();
+    final tags = <String>[];
+    if (requiredSubjects.isNotEmpty) tags.addAll(requiredSubjects);
+    if ((course.fieldOfStudy ?? '').isNotEmpty) {
+      tags.add(course.fieldOfStudy!);
+    }
+
+    if ((course.studyType ?? '').isNotEmpty) {
+      tags.add(course.studyType!);
+    }
+
+    return CourseListItem(
+      programName: course.programName ?? 'Unnamed program',
+      university: course.university ?? 'Unknown university',
+      country: course.country ?? 'Unknown country',
+      city: course.city ?? 'Unknown city',
+      campus: course.campus ?? 'Main campus',
+      tuitionFee: course.tuitionFee ?? 'N/A',
+      studyType: course.studyType ?? 'Not specified',
+      programLevel: course.programLevel ?? 'Not specified',
+      duration: course.duration ?? 'Not specified',
+      intake: intakes.isNotEmpty ? intakes.join(', ') : 'Not specified',
+      englishRequirement: course.englishProficiency ?? 'Not specified',
+      commission:
+          commissionValue != null ? '$commissionValue%' : 'Not specified',
+      currency: course.currency ?? '—',
+      fieldOfStudy: course.fieldOfStudy ?? 'Not specified',
+      language: course.language ?? 'Not specified',
+      tags: tags,
+    );
+  }
 }
 
 class _CourseCard extends StatelessWidget {
@@ -138,8 +218,16 @@ class _CourseCard extends StatelessWidget {
               runSpacing: 12,
               children: [
                 _CourseInfoTile(
+                  label: 'Field of study',
+                  value: course.fieldOfStudy,
+                ),
+                _CourseInfoTile(
                   label: 'Campus',
                   value: '${course.city} · ${course.campus}',
+                ),
+                _CourseInfoTile(
+                  label: 'Language',
+                  value: course.language,
                 ),
                 _CourseInfoTile(
                   label: 'Study type',

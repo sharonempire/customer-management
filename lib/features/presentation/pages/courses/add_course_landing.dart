@@ -1,7 +1,12 @@
+import 'dart:typed_data';
+import 'dart:io' as io;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/application/course_finder/controller/course_finder_controller.dart';
 import 'package:management_software/features/application/course_finder/controller/course_import_controller.dart';
 import 'package:management_software/features/presentation/widgets/common_appbar.dart';
 import 'package:management_software/features/presentation/widgets/space_widgets.dart';
@@ -20,13 +25,12 @@ class AddCourseLandingScreen extends ConsumerStatefulWidget {
 class _AddCourseLandingScreenState
     extends ConsumerState<AddCourseLandingScreen> {
   @override
-  void initState() {
-    super.initState();
-
+  Widget build(BuildContext context) {
     ref.listen<AsyncValue<int>>(
       courseImportControllerProvider,
       (previous, next) {
         if (previous?.isLoading != true) return;
+        if (next.isLoading) return;
 
         next.when(
           data: (count) {
@@ -35,6 +39,7 @@ class _AddCourseLandingScreenState
                     context,
                     'Imported $count courses successfully.',
                   );
+              ref.read(courseFinderControllerProvider.notifier).loadCourses();
             } else {
               ref.read(snackbarServiceProvider).showError(
                     context,
@@ -43,19 +48,18 @@ class _AddCourseLandingScreenState
             }
             ref.read(courseImportControllerProvider.notifier).reset();
           },
-          error: (error, _)
-              => ref.read(snackbarServiceProvider).showError(
-                    context,
-                    error.toString(),
-                  ),
+          error: (error, _) {
+            ref.read(snackbarServiceProvider).showError(
+                  context,
+                  error.toString(),
+                );
+            ref.read(courseImportControllerProvider.notifier).reset();
+          },
           loading: () {},
         );
       },
     );
-  }
 
-  @override
-  Widget build(BuildContext context) {
     final importState = ref.watch(courseImportControllerProvider);
     final isImporting = importState.isLoading;
 
@@ -132,24 +136,20 @@ class _AddCourseLandingScreenState
       if (result == null || result.files.isEmpty) return;
 
       final file = result.files.single;
-      final bytes = file.bytes;
+      Uint8List? bytes = file.bytes;
 
-      if (bytes == null) {
-        snackbar.showError(
-          context,
-          'Unable to read the selected file. Please try again.',
-        );
-        return;
+      if (bytes == null && !kIsWeb && file.path != null) {
+        bytes = await io.File(file.path!).readAsBytes();
       }
 
-      await notifier.importFromBytes(
-        bytes: bytes,
-        fileName: file.name,
-      );
+      if (bytes == null) {
+        throw 'Unable to read the selected file. Please try again.';
+      }
+
+      await notifier.importFromBytes(bytes: bytes, fileName: file.name);
     } catch (error) {
       snackbar.showError(context, error.toString());
-  }
-
+    }
   }
 }
 

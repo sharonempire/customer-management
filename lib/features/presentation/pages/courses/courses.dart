@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:management_software/features/application/course_finder/controller/course_finder_controller.dart';
+import 'package:management_software/features/domain/course_finder/course_repository.dart';
 import 'package:management_software/features/presentation/pages/courses/widgets/course_finder_header.dart';
 import 'package:management_software/features/presentation/pages/courses/widgets/course_filters_panel.dart';
 import 'package:management_software/features/presentation/pages/courses/widgets/course_results_section.dart';
@@ -113,57 +115,6 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
   String? _selectedLanguage;
   String? _selectedEnglishTest;
 
-  final List<CourseListItem> _sampleCourses = const [
-    CourseListItem(
-      programName: 'BSc Computer Science',
-      university: 'University of Toronto',
-      country: 'Canada',
-      city: 'Toronto',
-      campus: 'St. George Campus',
-      tuitionFee: '32,000',
-      studyType: 'On Campus',
-      programLevel: 'Undergraduate',
-      duration: '4 years',
-      intake: 'September 2025',
-      englishRequirement: 'IELTS 6.5 (no band below 6.0)',
-      commission: '15%',
-      currency: 'CAD',
-      tags: ['STEM', 'Scholarship Eligible', 'Co-op Available'],
-    ),
-    CourseListItem(
-      programName: 'MBA (International Business)',
-      university: 'University of Sydney',
-      country: 'Australia',
-      city: 'Sydney',
-      campus: 'Darlington Campus',
-      tuitionFee: '44,500',
-      studyType: 'Hybrid',
-      programLevel: 'Postgraduate',
-      duration: '18 months',
-      intake: 'January 2025',
-      englishRequirement: 'IELTS 7.0 (no band below 6.5)',
-      commission: '18%',
-      currency: 'AUD',
-      tags: ['Management', 'Tier 1 Commission'],
-    ),
-    CourseListItem(
-      programName: 'MSc Data Analytics',
-      university: 'King’s College London',
-      country: 'United Kingdom',
-      city: 'London',
-      campus: 'Strand Campus',
-      tuitionFee: '28,000',
-      studyType: 'On Campus',
-      programLevel: 'Postgraduate',
-      duration: '1 year',
-      intake: 'May 2025',
-      englishRequirement: 'IELTS 6.5 or TOEFL 92',
-      commission: '12%',
-      currency: 'GBP',
-      tags: ['Analytics', 'Internship Support'],
-    ),
-  ];
-
   @override
   void dispose() {
     _programController.dispose();
@@ -171,31 +122,19 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
     super.dispose();
   }
 
-  void _handleSearch() {
-    // TODO: trigger search with repository
-  }
-
-  void _resetFilters() {
-    setState(() {
-      _programController.clear();
-      _minEnglishScoreController.clear();
-      _selectedStudent = null;
-      _selectedIntake = null;
-      _selectedCountry = null;
-      _selectedCity = null;
-      _selectedCommissionTier = null;
-      _selectedStudyType = null;
-      _selectedFieldOfStudy = null;
-      _selectedProgramLevel = null;
-      _selectedCurrency = null;
-      _selectedLanguage = null;
-      _selectedEnglishTest = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final routerConsts = RouterConsts();
+    final courseState = ref.watch(courseFinderControllerProvider);
+    final isResultsLoading = courseState.isLoading;
+    final courseItems = courseState.courses
+        .map(CourseListItem.fromCourse)
+        .toList(growable: false);
+    final resultsPanel = CourseResultsSection(
+      courses: courseItems,
+      isLoading: isResultsLoading,
+      errorMessage: courseState.errorMessage,
+    );
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(50),
@@ -211,8 +150,8 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               sections: filterSections,
               onSearch: _handleSearch,
               onClear: _resetFilters,
+              isProcessing: isResultsLoading,
             );
-            final resultsPanel = CourseResultsSection(courses: _sampleCourses);
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
               child: Column(
@@ -274,6 +213,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 text: 'Program name',
                 controller: _programController,
                 icon: Icons.search,
+                onChanged: (value) {
+                  if (value.isEmpty) {
+                    _applyFilters();
+                  }
+                },
+                onSubmitted: (_) => _applyFilters(),
               ),
             ], addSpacing: false),
           ],
@@ -286,9 +231,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Intake',
                 items: _intakes,
                 value: _selectedIntake,
-                onChanged: (value) => setState(() {
-                  _selectedIntake = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedIntake = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -296,9 +244,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Country',
                 items: _countries,
                 value: _selectedCountry,
-                onChanged: (value) => setState(() {
-                  _selectedCountry = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCountry = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -306,9 +257,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'City',
                 items: _cities,
                 value: _selectedCity,
-                onChanged: (value) => setState(() {
-                  _selectedCity = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCity = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -316,9 +270,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Commission tier',
                 items: _commissionTiers,
                 value: _selectedCommissionTier,
-                onChanged: (value) => setState(() {
-                  _selectedCommissionTier = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCommissionTier = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
           ],
@@ -331,9 +288,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Study type',
                 items: _studyTypes,
                 value: _selectedStudyType,
-                onChanged: (value) => setState(() {
-                  _selectedStudyType = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedStudyType = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -341,9 +301,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Field of study',
                 items: _fieldsOfStudy,
                 value: _selectedFieldOfStudy,
-                onChanged: (value) => setState(() {
-                  _selectedFieldOfStudy = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedFieldOfStudy = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -351,9 +314,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Program level',
                 items: _programLevels,
                 value: _selectedProgramLevel,
-                onChanged: (value) => setState(() {
-                  _selectedProgramLevel = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedProgramLevel = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -361,9 +327,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Currency',
                 items: _currencies,
                 value: _selectedCurrency,
-                onChanged: (value) => setState(() {
-                  _selectedCurrency = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCurrency = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
           ],
@@ -376,9 +345,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'Teaching language',
                 items: _languages,
                 value: _selectedLanguage,
-                onChanged: (value) => setState(() {
-                  _selectedLanguage = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedLanguage = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -386,9 +358,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 label: 'English proficiency test',
                 items: _englishTests,
                 value: _selectedEnglishTest,
-                onChanged: (value) => setState(() {
-                  _selectedEnglishTest = value;
-                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedEnglishTest = value;
+                  });
+                  _applyFilters();
+                },
               ),
             ], addSpacing: false),
             _rowWithControls([
@@ -396,6 +371,8 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
                 text: 'Min. score (e.g. IELTS 6.5)',
                 controller: _minEnglishScoreController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (_) => _applyFilters(),
+                onSubmitted: (_) => _applyFilters(),
               ),
             ], addSpacing: false),
           ],
@@ -420,6 +397,12 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               text: 'Program name',
               controller: _programController,
               icon: Icons.search,
+              onChanged: (value) {
+                if (value.isEmpty) {
+                  _applyFilters();
+                }
+              },
+              onSubmitted: (_) => _applyFilters(),
             ),
           ]),
         ],
@@ -432,17 +415,23 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               label: 'Intake',
               items: _intakes,
               value: _selectedIntake,
-              onChanged: (value) => setState(() {
-                _selectedIntake = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedIntake = value;
+                });
+                _applyFilters();
+              },
             ),
             CommonDropdown(
               label: 'Country',
               items: _countries,
               value: _selectedCountry,
-              onChanged: (value) => setState(() {
-                _selectedCountry = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCountry = value;
+                });
+                _applyFilters();
+              },
             ),
           ]),
           _rowWithControls([
@@ -450,17 +439,23 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               label: 'City',
               items: _cities,
               value: _selectedCity,
-              onChanged: (value) => setState(() {
-                _selectedCity = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCity = value;
+                });
+                _applyFilters();
+              },
             ),
             CommonDropdown(
               label: 'Commission tier',
               items: _commissionTiers,
               value: _selectedCommissionTier,
-              onChanged: (value) => setState(() {
-                _selectedCommissionTier = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCommissionTier = value;
+                });
+                _applyFilters();
+              },
             ),
           ]),
         ],
@@ -473,17 +468,23 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               label: 'Study type',
               items: _studyTypes,
               value: _selectedStudyType,
-              onChanged: (value) => setState(() {
-                _selectedStudyType = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedStudyType = value;
+                });
+                _applyFilters();
+              },
             ),
             CommonDropdown(
               label: 'Field of study',
               items: _fieldsOfStudy,
               value: _selectedFieldOfStudy,
-              onChanged: (value) => setState(() {
-                _selectedFieldOfStudy = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedFieldOfStudy = value;
+                });
+                _applyFilters();
+              },
             ),
           ]),
           _rowWithControls([
@@ -491,17 +492,23 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               label: 'Program level',
               items: _programLevels,
               value: _selectedProgramLevel,
-              onChanged: (value) => setState(() {
-                _selectedProgramLevel = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedProgramLevel = value;
+                });
+                _applyFilters();
+              },
             ),
             CommonDropdown(
               label: 'Currency',
               items: _currencies,
               value: _selectedCurrency,
-              onChanged: (value) => setState(() {
-                _selectedCurrency = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCurrency = value;
+                });
+                _applyFilters();
+              },
             ),
           ]),
         ],
@@ -514,17 +521,23 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               label: 'Teaching language',
               items: _languages,
               value: _selectedLanguage,
-              onChanged: (value) => setState(() {
-                _selectedLanguage = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedLanguage = value;
+                });
+                _applyFilters();
+              },
             ),
             CommonDropdown(
               label: 'English proficiency test',
               items: _englishTests,
               value: _selectedEnglishTest,
-              onChanged: (value) => setState(() {
-                _selectedEnglishTest = value;
-              }),
+              onChanged: (value) {
+                setState(() {
+                  _selectedEnglishTest = value;
+                });
+                _applyFilters();
+              },
             ),
           ]),
           _rowWithControls([
@@ -532,6 +545,8 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
               text: 'Min. score (e.g. IELTS 6.5)',
               controller: _minEnglishScoreController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => _applyFilters(),
+              onSubmitted: (_) => _applyFilters(),
             ),
           ], addSpacing: false),
         ],
@@ -548,5 +563,52 @@ class _CoursesScreenState extends ConsumerState<CoursesScreen> {
       }
     }
     return Row(children: children);
+  }
+
+  void _handleSearch() {
+    _applyFilters();
+  }
+
+  void _resetFilters() {
+    _programController.clear();
+    _minEnglishScoreController.clear();
+    setState(() {
+      _selectedStudent = null;
+      _selectedIntake = null;
+      _selectedCountry = null;
+      _selectedCity = null;
+      _selectedCommissionTier = null;
+      _selectedStudyType = null;
+      _selectedFieldOfStudy = null;
+      _selectedProgramLevel = null;
+      _selectedCurrency = null;
+      _selectedLanguage = null;
+      _selectedEnglishTest = null;
+    });
+    ref.read(courseFinderControllerProvider.notifier).resetFilters();
+  }
+
+  void _applyFilters() {
+    final filters = CourseFinderFilters(
+      programQuery: _valueOrNull(_programController.text),
+      intake: _selectedIntake,
+      country: _selectedCountry,
+      city: _selectedCity,
+      commissionTier: _selectedCommissionTier,
+      studyType: _selectedStudyType,
+      fieldOfStudy: _selectedFieldOfStudy,
+      programLevel: _selectedProgramLevel,
+      currency: _selectedCurrency,
+      language: _selectedLanguage,
+      englishTest: _selectedEnglishTest,
+      minEnglishScore: _valueOrNull(_minEnglishScoreController.text),
+    );
+
+    ref.read(courseFinderControllerProvider.notifier).applyFilters(filters);
+  }
+
+  String? _valueOrNull(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:management_software/features/application/course_finder/controller/course_finder_controller.dart';
 import 'package:management_software/features/application/course_finder/controller/course_submission_controller.dart';
 import 'package:management_software/features/data/course_finder/model/course_model.dart';
 import 'package:management_software/features/presentation/pages/lead_management/popups/lead_info_popup.dart'
@@ -129,6 +130,7 @@ class _AddSingleCourseScreenState
                   context,
                   'Course added successfully',
                 );
+            ref.read(courseFinderControllerProvider.notifier).loadCourses();
             Navigator.of(context).pop();
             ref.read(courseSubmissionControllerProvider.notifier).reset();
           },

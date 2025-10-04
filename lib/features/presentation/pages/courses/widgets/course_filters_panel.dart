@@ -7,12 +7,14 @@ class CourseFiltersPanel extends StatelessWidget {
   final List<CourseFilterSectionData> sections;
   final VoidCallback onSearch;
   final VoidCallback onClear;
+  final bool isProcessing;
 
   const CourseFiltersPanel({
     super.key,
     required this.sections,
     required this.onSearch,
     required this.onClear,
+    this.isProcessing = false,
   });
 
   @override
@@ -50,13 +52,13 @@ class CourseFiltersPanel extends StatelessWidget {
             Row(
               children: [
                 PrimaryButton(
-                  onpressed: onSearch,
-                  text: 'Search Courses',
+                  onpressed: isProcessing ? null : onSearch,
+                  text: isProcessing ? 'Searching…' : 'Search Courses',
                   icon: Icons.search,
                 ),
                 width10,
                 TextButton(
-                  onPressed: onClear,
+                  onPressed: isProcessing ? null : onClear,
                   style: TextButton.styleFrom(
                     foregroundColor: ColorConsts.primaryColor,
                   ),
